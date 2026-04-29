@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sure Finance — Multi-Period Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;color:#1f2937;font-size:13px}
+  .header{background:linear-gradient(135deg,#006b75,#0ea5e9);color:#fff;padding:18px 28px}
+  .header h1{font-size:19px;font-weight:700}
+  .header .sub{font-size:11px;opacity:.8;margin-top:3px}
+  .filters{background:#fff;padding:12px 24px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #e5e7eb;flex-wrap:wrap}
+  .filters label{font-size:11px;color:#6b7280;font-weight:600;margin-right:4px}
+  .filters select,.filters button{padding:5px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#fff;cursor:pointer}
+  .filters button.active{background:#006b75;color:#fff;border-color:#006b75}
+  .main{padding:18px 22px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+  .kpi{background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-top:3px solid #006b75}
+  .kpi .label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+  .kpi .value{font-size:18px;font-weight:700}
+  .section{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:16px;overflow:hidden}
+  .section-title{background:#1f2937;color:#fff;padding:9px 14px;font-size:12px;font-weight:600}
+  table{width:100%;border-collapse:collapse}
+  th{background:#374151;color:#fff;padding:7px 9px;text-align:right;font-size:11px;white-space:nowrap}
+  th.left,td.left{text-align:left}
+  td{padding:6px 9px;text-align:right;border-bottom:1px solid #f1f5f9;font-size:12px}
+  tr:nth-child(even){background:#f9fafb}
+  .tfoot td{background:#006b75;color:#fff;font-weight:700;border:none}
+  .week-table td{font-size:11px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Sure Finance — Multi-Period Performance Dashboard</h1>
+  <div class="sub">History: 1 week(s) &nbsp;·&nbsp; Latest: Mon 30 Mar – Sun 5 Apr 2026 &nbsp;·&nbsp; Updated 06 Apr 2026</div>
+</div>
+
+<div class="filters">
+  <div>
+    <label>VIEW:</label>
+    <button class="active" onclick="setView('summary',this)">Summary</button>
+    <button onclick="setView('weekly',this)">Weekly Drill-down</button>
+  </div>
+  <div>
+    <label>YEAR:</label>
+    <select id="yearSel" onchange="render()"><option value="all">All</option></select>
+  </div>
+  <div>
+    <label>MONTH:</label>
+    <select id="monthSel" onchange="render()"><option value="all">All</option></select>
+  </div>
+  <div>
+    <label>WEEK:</label>
+    <select id="weekSel" onchange="render()"><option value="all">All</option></select>
+  </div>
+</div>
+
+<div class="main">
+  <div id="summaryView"></div>
+  <div id="weeklyView" style="display:none"></div>
+</div>
+
+<script>
+const ALL_DATA = {"2026-03-30_2026-04-05": {"week_title": "Mon 30 Mar \u2013 Sun 5 Apr 2026", "week_start": "2026-03-30", "week_end": "2026-04-05", "totalCases": 285, "totalInv": 360, "totalRev": 2303450, "totalPaid": 2295150, "totalDue": 6500, "totalRefs": 47, "cancelled": 2, "daily": [{"date": "2026-03-30", "centre": "Ilasa Main Centre, Lagos", "cases": 21, "patients": 21, "inv": 26, "rev": 205500, "paid": 205500, "due": 0, "urefs": 10}, {"date": "2026-03-30", "centre": "OAUTH Ilesa Centre", "cases": 28, "patients": 28, "inv": 32, "rev": 202500, "paid": 202500, "due": 0, "urefs": 1}, {"date": "2026-03-30", "centre": "Palm Avenue, Lagos", "cases": 4, "patients": 4, "inv": 4, "rev": 14500, "paid": 14500, "due": 0, "urefs": 3}, {"date": "2026-03-30", "centre": "Sure Ilesha, Osun", "cases": 16, "patients": 16, "inv": 26, "rev": 193400, "paid": 193000, "due": 0, "urefs": 7}, {"date": "2026-03-31", "centre": "Ilasa Main Centre, Lagos", "cases": 4, "patients": 4, "inv": 6, "rev": 24000, "paid": 24000, "due": 0, "urefs": 1}, {"date": "2026-03-31", "centre": "OAUTH Ilesa Centre", "cases": 29, "patients": 29, "inv": 30, "rev": 184500, "paid": 184500, "due": 0, "urefs": 1}, {"date": "2026-03-31", "centre": "Palm Avenue, Lagos", "cases": 2, "patients": 2, "inv": 6, "rev": 45000, "paid": 45000, "due": 0, "urefs": 1}, {"date": "2026-03-31", "centre": "Sure Ilesha, Osun", "cases": 25, "patients": 25, "inv": 33, "rev": 182100, "paid": 181700, "due": 0, "urefs": 8}, {"date": "2026-04-01", "centre": "Ilasa Main Centre, Lagos", "cases": 14, "patients": 14, "inv": 18, "rev": 105500, "paid": 105500, "due": 0, "urefs": 7}, {"date": "2026-04-01", "centre": "OAUTH Ilesa Centre", "cases": 25, "patients": 25, "inv": 28, "rev": 167350, "paid": 167350, "due": 0, "urefs": 1}, {"date": "2026-04-01", "centre": "Palm Avenue, Lagos", "cases": 3, "patients": 3, "inv": 6, "rev": 24000, "paid": 24000, "due": 0, "urefs": 3}, {"date": "2026-04-01", "centre": "Sure Ilesha, Osun", "cases": 13, "patients": 13, "inv": 14, "rev": 93300, "paid": 93300, "due": 0, "urefs": 9}, {"date": "2026-04-02", "centre": "Ilasa Main Centre, Lagos", "cases": 14, "patients": 14, "inv": 22, "rev": 178000, "paid": 178000, "due": 0, "urefs": 9}, {"date": "2026-04-02", "centre": "OAUTH Ilesa Centre", "cases": 21, "patients": 21, "inv": 24, "rev": 146850, "paid": 145850, "due": 0, "urefs": 1}, {"date": "2026-04-02", "centre": "Palm Avenue, Lagos", "cases": 6, "patients": 6, "inv": 9, "rev": 118500, "paid": 118500, "due": 0, "urefs": 3}, {"date": "2026-04-02", "centre": "Sure Ilesha, Osun", "cases": 6, "patients": 6, "inv": 6, "rev": 23750, "paid": 23750, "due": 0, "urefs": 3}, {"date": "2026-04-03", "centre": "Ilasa Main Centre, Lagos", "cases": 8, "patients": 8, "inv": 12, "rev": 73500, "paid": 73500, "due": 0, "urefs": 5}, {"date": "2026-04-03", "centre": "OAUTH Ilesa Centre", "cases": 13, "patients": 13, "inv": 16, "rev": 94500, "paid": 94500, "due": 0, "urefs": 1}, {"date": "2026-04-03", "centre": "Palm Avenue, Lagos", "cases": 3, "patients": 3, "inv": 4, "rev": 25000, "paid": 18500, "due": 6500, "urefs": 3}, {"date": "2026-04-03", "centre": "Sure Ilesha, Osun", "cases": 6, "patients": 6, "inv": 6, "rev": 34700, "paid": 34700, "due": 0, "urefs": 5}, {"date": "2026-04-04", "centre": "Ilasa Main Centre, Lagos", "cases": 6, "patients": 6, "inv": 11, "rev": 61000, "paid": 61000, "due": 0, "urefs": 3}, {"date": "2026-04-04", "centre": "OAUTH Ilesa Centre", "cases": 9, "patients": 9, "inv": 9, "rev": 51000, "paid": 51000, "due": 0, "urefs": 1}, {"date": "2026-04-04", "centre": "Palm Avenue, Lagos", "cases": 3, "patients": 3, "inv": 5, "rev": 14500, "paid": 14500, "due": 0, "urefs": 1}, {"date": "2026-04-04", "centre": "Sure Ilesha, Osun", "cases": 1, "patients": 1, "inv": 1, "rev": 3500, "paid": 3500, "due": 0, "urefs": 1}, {"date": "2026-04-05", "centre": "OAUTH Ilesa Centre", "cases": 4, "patients": 4, "inv": 5, "rev": 31500, "paid": 31500, "due": 0, "urefs": 1}, {"date": "2026-04-05", "centre": "Sure Ilesha, Osun", "cases": 1, "patients": 1, "inv": 1, "rev": 5500, "paid": 5500, "due": 0, "urefs": 1}], "referrers": [{"centre": "OAUTH Ilesa Centre", "ref": "Dr. OAUTHC DOCTORS", "cases": 129, "rev": 878200}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. PVT", "cases": 35, "rev": 307000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. OAUTHC DOCTORS", "cases": 25, "rev": 205350}, {"centre": "Palm Avenue, Lagos", "ref": "Dr. PVT", "cases": 11, "rev": 95500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. PRIVATE ILESHA", "cases": 11, "rev": 49200}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Mrs. AWOTUNDUN (GBAJA HOSP)", "cases": 6, "rev": 62000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. MAYFIELD MEDICAL CLINIC", "cases": 5, "rev": 32850}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. VICTORIA MEDICAL CENTRE", "cases": 4, "rev": 96500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. EBUKA SMC", "cases": 4, "rev": 55000}, {"centre": "Palm Avenue, Lagos", "ref": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL", "cases": 4, "rev": 53000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. BAKARE GENERAL, HOSPITAL", "cases": 3, "rev": 28950}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ADENLE MEMORIAL HOSPITAL", "cases": 3, "rev": 22000}, {"centre": "Sure Ilesha, Osun", "ref": "Walk-in / Self", "cases": 3, "rev": 12600}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ISALE-EKO HOSPITAL", "cases": 2, "rev": 23000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. GBAJA GENERAL HOSPITAL", "cases": 2, "rev": 18500}, {"centre": "Palm Avenue, Lagos", "ref": "Dr. ADEWALE OSHO HOSPITAL", "cases": 2, "rev": 14500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. COVENANT CARE HOSPITAL", "cases": 2, "rev": 14800}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. AIYETORO PHC", "cases": 2, "rev": 14000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ELESHIN HOSPITAL", "cases": 2, "rev": 13200}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ALIMOSHO GH", "cases": 2, "rev": 11500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ORITAMEFA HOSPITAL", "cases": 2, "rev": 11000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ALOBA MEDICAL CENTRE", "cases": 2, "rev": 9600}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Walk-in / Self", "cases": 2, "rev": 8000}, {"centre": "Palm Avenue, Lagos", "ref": "Walk-in / Self", "cases": 2, "rev": 8000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Nurse OJ", "cases": 1, "rev": 19000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. BAYODE GHM (DOCTOR)", "cases": 1, "rev": 4000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "OIC OLADAPO", "cases": 1, "rev": 4000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. OLUWATOFUNMI HOSPITAL,", "cases": 1, "rev": 5500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. DANIEL GENERAL, HOSPITAL", "cases": 1, "rev": 6600}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. GOZIE MGH", "cases": 1, "rev": 5000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. AJEABO ANC", "cases": 1, "rev": 8500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "AYANBODE AJEABO", "cases": 1, "rev": 9000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ADELEYE MCC ITIRE", "cases": 1, "rev": 6500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. OASIS HOSPITAL", "cases": 1, "rev": 6600}, {"centre": "Palm Avenue, Lagos", "ref": "Dr. Astramad", "cases": 1, "rev": 11500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ADEBAYO", "cases": 1, "rev": 8500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ANOINTED HOUSE", "cases": 1, "rev": 7000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. KOLAWOLE MEMORIAL", "cases": 1, "rev": 6500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. MERCY LAND", "cases": 1, "rev": 6000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. SANYA MEMORIAL HOSP", "cases": 1, "rev": 5500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. AJIBOLA MEMORIAL HOSPITAL", "cases": 1, "rev": 5500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ADEDEJI MEDICAL CENTRE", "cases": 1, "rev": 5500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. OSHODI HEALTH CENTRE", "cases": 1, "rev": 5000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ILESA EAST LG", "cases": 1, "rev": 5000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ONIPANU HEALTH CENTRE", "cases": 1, "rev": 4500}, {"centre": "Palm Avenue, Lagos", "ref": "Dr. PROMISE HOSPITAL", "cases": 1, "rev": 8000}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ALATISE MEDICAL CENTRE", "cases": 1, "rev": 4500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. OJO EKO HOSPITAL", "cases": 1, "rev": 4000}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. ABULE EGG HEALTH CENT", "cases": 1, "rev": 3500}, {"centre": "Sure Ilesha, Osun", "ref": "Dr. ABIODUN HOSPITAL", "cases": 1, "rev": 3500}, {"centre": "Ilasa Main Centre, Lagos", "ref": "Dr. AGUDA PHC", "cases": 1, "rev": 3000}], "agents": [{"centre": "Ilasa Main Centre, Lagos", "agent": "Walk-in / Unassigned", "cases": 67, "inv": 95, "rev": 647500}, {"centre": "OAUTH Ilesa Centre", "agent": "RAD OGUNDORO", "cases": 30, "inv": 37, "rev": 232000}, {"centre": "OAUTH Ilesa Centre", "agent": "RAD. WILSON", "cases": 29, "inv": 34, "rev": 224500}, {"centre": "OAUTH Ilesa Centre", "agent": "Walk-in / Unassigned", "cases": 29, "inv": 30, "rev": 178000}, {"centre": "OAUTH Ilesa Centre", "agent": "DR. OLANIYI", "cases": 23, "inv": 25, "rev": 140700}, {"centre": "Palm Avenue, Lagos", "agent": "Walk-in / Unassigned", "cases": 21, "inv": 34, "rev": 241500}, {"centre": "Sure Ilesha, Osun", "agent": "Walk-in / Unassigned", "cases": 21, "inv": 22, "rev": 149350}, {"centre": "Sure Ilesha, Osun", "agent": "MISS VIVIAN", "cases": 19, "inv": 37, "rev": 221800}, {"centre": "OAUTH Ilesa Centre", "agent": "DR. ADEYERA", "cases": 18, "inv": 18, "rev": 103000}, {"centre": "Sure Ilesha, Osun", "agent": "DR. OLANIYI", "cases": 16, "inv": 16, "rev": 93250}, {"centre": "Sure Ilesha, Osun", "agent": "DR. ADEYERA", "cases": 9, "inv": 9, "rev": 49700}, {"centre": "Sure Ilesha, Osun", "agent": "MRS ADERELE", "cases": 2, "inv": 2, "rev": 15000}, {"centre": "Sure Ilesha, Osun", "agent": "RAD OGUNDORO", "cases": 1, "inv": 1, "rev": 7150}]}};
+const CENTRES = ["OAUTH Ilesa Centre","Ilasa Main Centre, Lagos","Palm Avenue, Lagos","Sure Ilesha, Osun"];
+
+let currentView = 'summary';
+
+function setView(v, btn) {
+  currentView = v;
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('summaryView').style.display = v==='summary'?'block':'none';
+  document.getElementById('weeklyView').style.display  = v==='weekly'?'block':'none';
+  render();
+}
+
+function fmtN(n) { return '₦' + Number(n).toLocaleString('en-NG'); }
+function pct(a,b) { return b ? (a/b*100).toFixed(1)+'%' : '—'; }
+
+function initFilters() {
+  const years = new Set(), months = new Set();
+  Object.keys(ALL_DATA).forEach(k => {
+    // key format: YYYY-MM-DD_YYYY-MM-DD
+    const yr = k.substring(0,4);
+    const mo = k.substring(0,7);
+    years.add(yr); months.add(mo);
+  });
+  const ySel = document.getElementById('yearSel');
+  const mSel = document.getElementById('monthSel');
+  const wSel = document.getElementById('weekSel');
+
+  [...years].sort().forEach(y => {
+    const o = document.createElement('option'); o.value=y; o.textContent=y; ySel.appendChild(o);
+  });
+  [...months].sort().forEach(m => {
+    const o = document.createElement('option'); o.value=m;
+    const d = new Date(m+'-01'); o.textContent=d.toLocaleString('en',{month:'long',year:'numeric'});
+    mSel.appendChild(o);
+  });
+  Object.keys(ALL_DATA).sort().reverse().forEach(k => {
+    const o = document.createElement('option'); o.value=k;
+    const w = ALL_DATA[k]; o.textContent = w.week_title || k;
+    wSel.appendChild(o);
+  });
+}
+
+function getFiltered() {
+  const yr = document.getElementById('yearSel').value;
+  const mo = document.getElementById('monthSel').value;
+  const wk = document.getElementById('weekSel').value;
+  return Object.entries(ALL_DATA).filter(([k,v]) => {
+    if (wk !== 'all' && k !== wk) return false;
+    if (yr !== 'all' && !k.startsWith(yr)) return false;
+    if (mo !== 'all' && !k.startsWith(mo)) return false;
+    return true;
+  }).sort(([a],[b]) => a.localeCompare(b));
+}
+
+function render() {
+  if (currentView === 'summary') renderSummary();
+  else renderWeekly();
+}
+
+function renderSummary() {
+  const filtered = getFiltered();
+  if (!filtered.length) { document.getElementById('summaryView').innerHTML='<p style="padding:20px;color:#666">No data for selected filters.</p>'; return; }
+
+  // Aggregate
+  let totCases=0,totInv=0,totRev=0,totPaid=0,totDue=0,totRefs=0;
+  const ctMap = {};
+  CENTRES.forEach(c => ctMap[c]={cases:0,inv:0,rev:0,paid:0,due:0});
+
+  filtered.forEach(([k,w]) => {
+    totCases += w.totalCases||0; totInv += w.totalInv||0;
+    totRev += w.totalRev||0; totPaid += w.totalPaid||0;
+    totDue += w.totalDue||0; totRefs += w.totalRefs||0;
+    (w.daily||[]).forEach(d => {
+      if (ctMap[d.centre]) {
+        ctMap[d.centre].cases += d.cases||0;
+        ctMap[d.centre].inv   += d.inv||0;
+        ctMap[d.centre].rev   += d.rev||0;
+        ctMap[d.centre].paid  += d.paid||0;
+        ctMap[d.centre].due   += d.due||0;
+      }
+    });
+  });
+
+  const nWeeks = filtered.length;
+  const cRows = CENTRES.map(c => {
+    const d = ctMap[c];
+    return `<tr>
+      <td class="left">${c}</td>
+      <td>${d.cases}</td><td>${d.inv}</td>
+      <td>${fmtN(d.rev)}</td><td>${fmtN(d.paid)}</td>
+      <td>${d.due>0?'<span style="color:#dc2626">'+fmtN(d.due)+'</span>':fmtN(d.due)}</td>
+      <td>${pct(d.rev,totRev)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('summaryView').innerHTML = `
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">Weeks</div><div class="value">${nWeeks}</div></div>
+    <div class="kpi"><div class="label">Total Cases</div><div class="value">${totCases}</div></div>
+    <div class="kpi"><div class="label">Investigations</div><div class="value">${totInv}</div></div>
+    <div class="kpi"><div class="label">Total Revenue</div><div class="value" style="font-size:14px">${fmtN(totRev)}</div></div>
+    <div class="kpi"><div class="label">Paid</div><div class="value" style="font-size:14px">${fmtN(totPaid)}</div></div>
+    <div class="kpi ${totDue>0?'':''}" style="${totDue>0?'border-top-color:#dc2626':''}"><div class="label">Due</div><div class="value" style="font-size:14px;${totDue>0?'color:#dc2626':''}">${fmtN(totDue)}</div></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Centre Performance (Aggregated — ${nWeeks} week${nWeeks>1?'s':''})</div>
+    <table>
+      <thead><tr><th class="left">Centre</th><th>Cases</th><th>Inv.</th><th>Revenue</th><th>Paid</th><th>Due</th><th>Rev %</th></tr></thead>
+      <tbody>${cRows}</tbody>
+      <tfoot class="tfoot"><tr><td>TOTAL</td><td>${totCases}</td><td>${totInv}</td><td>${fmtN(totRev)}</td><td>${fmtN(totPaid)}</td><td>${fmtN(totDue)}</td><td>100%</td></tr></tfoot>
+    </table>
+  </div>`;
+}
+
+function renderWeekly() {
+  const filtered = getFiltered();
+  if (!filtered.length) { document.getElementById('weeklyView').innerHTML='<p style="padding:20px;color:#666">No data.</p>'; return; }
+
+  const rows = filtered.map(([k,w]) => {
+    const ct = {};
+    CENTRES.forEach(c => ct[c]={cases:0,rev:0});
+    (w.daily||[]).forEach(d => { if(ct[d.centre]){ ct[d.centre].cases+=d.cases||0; ct[d.centre].rev+=d.rev||0; } });
+    const cCells = CENTRES.map(c => `<td>${ct[c].cases}</td><td style="font-size:11px">${fmtN(ct[c].rev)}</td>`).join('');
+    return `<tr>
+      <td class="left" style="white-space:nowrap">${w.week_title||k}</td>
+      <td>${w.totalCases||0}</td>
+      <td>${fmtN(w.totalRev||0)}</td>
+      <td>${fmtN(w.totalPaid||0)}</td>
+      ${cCells}
+    </tr>`;
+  }).join('');
+
+  const cHeaders = CENTRES.map(c => `<th colspan="2">${c.split(',')[0]}</th>`).join('');
+  const cSubHeaders = CENTRES.map(() => '<th>Cases</th><th>Revenue</th>').join('');
+
+  document.getElementById('weeklyView').innerHTML = `
+  <div class="section">
+    <div class="section-title">Weekly Drill-down (${filtered.length} week${filtered.length>1?'s':''})</div>
+    <table class="week-table">
+      <thead>
+        <tr><th class="left">Week</th><th>Cases</th><th>Revenue</th><th>Paid</th>${cHeaders}</tr>
+        <tr><th></th><th></th><th></th><th></th>${cSubHeaders}</tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+initFilters();
+render();
+</script>
+</body>
+</html>

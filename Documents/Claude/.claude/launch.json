@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Sure Weekly Dashboard",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/Users/mac/Documents/Sure Labsmart Dashboard/weekly", "-p", "3011"],
+      "port": 3011
+    },
+    {
+      "name": "Sure Monthly Dashboard",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/Users/mac/Documents/Sure Labsmart Dashboard/monthly", "-p", "3012"],
+      "port": 3012
+    }
+  ]
+}

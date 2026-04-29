@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabSmartLIS Monthly Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4472C4;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LabSmartLIS Monthly Dashboard</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Month: 3/2026</p>
+
+        <div class="controls">
+            <select id="yearSelect" onchange="updateDashboard()">
+                <option value="2026">2026</option>
+            </select>
+            <select id="monthSelect" onchange="updateDashboard()">
+                <option value="3">3</option>
+            </select>
+            <select id="branchSelect" onchange="updateDashboard()">
+                <option value="">All Branches</option>
+                
+            </select>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+        <h2>Summary Statistics</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Centre</th>
+                    <th>Investigations</th>
+                    <th>Cases</th>
+                    <th>Patients</th>
+                    <th>Revenue</th>
+                    <th>Paid</th>
+                    <th>Due</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        function updateDashboard() {
+            const year = document.getElementById('yearSelect').value;
+            const month = document.getElementById('monthSelect').value;
+            const branch = document.getElementById('branchSelect').value;
+
+            const centres = [];
+            const revenueData = [];
+
+            let filteredCentres = centres;
+            let filteredRevenue = revenueData;
+
+            if (branch) {
+                const idx = centres.indexOf(branch);
+                if (idx !== -1) {
+                    filteredCentres = [centres[idx]];
+                    filteredRevenue = [revenueData[idx]];
+                }
+            }
+
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: filteredCentres,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: filteredRevenue,
+                        backgroundColor: '#4472C4',
+                        borderColor: '#2E5C8A',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Revenue by Centre'
+                        },
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+            });
+        }
+
+        updateDashboard();
+    </script>
+</body>
+</html>

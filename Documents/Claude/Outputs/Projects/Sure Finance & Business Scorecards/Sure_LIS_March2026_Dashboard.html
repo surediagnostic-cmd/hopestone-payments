@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sure Diagnostics — LabsmartLIS March 2026 Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1F4E79; --accent: #2E75B6; --light: #EBF3FB;
+    --oauth:   #C55A11; --ilasa: #2E86AB; --palm: #16A085;
+    --ilesha:  #E67E22; --ikeja: #8E44AD;
+    --bg: #F0F4F8; --card: #FFFFFF; --border: #D0DDE8;
+    --text: #1a2634; --muted: #5a7184;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0D2137 0%, #1F4E79 60%, #2E75B6 100%);
+    color: #fff; padding: 24px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: .5px; }
+  header .sub { font-size: 0.85rem; opacity: .75; margin-top: 4px; }
+  header .badge {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+    padding: 6px 16px; border-radius: 20px; font-size: .85rem; font-weight: 600;
+  }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 1280px; margin: 0 auto; padding: 28px 24px; }
+
+  /* ── SECTION TITLES ── */
+  .section-title {
+    font-size: 1rem; font-weight: 700; color: var(--primary);
+    border-left: 4px solid var(--accent); padding-left: 10px;
+    margin: 28px 0 14px;
+  }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .kpi {
+    background: var(--card); border-radius: 10px; padding: 18px 20px;
+    border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    position: relative; overflow: hidden;
+  }
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+    background: var(--accent);
+  }
+  .kpi.oauth::before { background: var(--oauth); }
+  .kpi.ilasa::before { background: var(--ilasa); }
+  .kpi.palm::before  { background: var(--palm); }
+  .kpi.ilesha::before{ background: var(--ilesha); }
+  .kpi.ikeja::before { background: var(--ikeja); }
+  .kpi.total::before { background: var(--primary); }
+  .kpi-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+  .kpi-sub   { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── TABLE ── */
+  .card {
+    background: var(--card); border-radius: 10px;
+    border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .card-title {
+    background: var(--primary); color: #fff;
+    padding: 10px 18px; font-size: .85rem; font-weight: 700; letter-spacing: .3px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th {
+    background: #2E75B6; color: #fff; text-align: center;
+    padding: 9px 12px; font-weight: 700; font-size: .78rem; letter-spacing: .3px;
+  }
+  th.left { text-align: left; }
+  td { padding: 8px 12px; text-align: center; border-bottom: 1px solid #e8eff6; }
+  td.left { text-align: left; font-weight: 600; }
+  tr:nth-child(even) td { background: var(--light); }
+  tr.grand-total td {
+    background: var(--primary); color: #fff; font-weight: 700; border: none;
+  }
+  tr.subtotal td {
+    font-weight: 700; font-size: .8rem;
+  }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+
+  /* ── CHARTS ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .chart-card {
+    background: var(--card); border-radius: 10px;
+    border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    padding: 20px; min-height: 300px;
+  }
+  .chart-card h3 { font-size: .85rem; color: var(--primary); margin-bottom: 16px; font-weight: 700; }
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* ── REBATE ── */
+  .rebate-section { margin-top: 6px; }
+  .centre-block { margin-bottom: 24px; }
+  .centre-header {
+    padding: 8px 16px; font-weight: 700; font-size: .85rem; color: #fff;
+    border-radius: 6px 6px 0 0;
+  }
+
+  @media (max-width: 768px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Sure Diagnostics — LabsmartLIS</h1>
+    <div class="sub">Monthly Collection Centre Dashboard &nbsp;|&nbsp; March 2026 &nbsp;|&nbsp; All Centres</div>
+  </div>
+  <div class="badge">📅 March 2026 &nbsp; · &nbsp; 1,520 Cases</div>
+</header>
+
+<div class="page">
+
+  <!-- KPI CARDS -->
+  <div class="section-title">At a Glance</div>
+  <div class="kpi-grid">
+    <div class="kpi total">
+      <div class="kpi-label">Total Revenue (Paid+Due)</div>
+      <div class="kpi-value">₦12.96M</div>
+      <div class="kpi-sub">All 5 centres</div>
+    </div>
+    <div class="kpi total">
+      <div class="kpi-label">Total Cases</div>
+      <div class="kpi-value">1,520</div>
+      <div class="kpi-sub">All case types</div>
+    </div>
+    <div class="kpi total">
+      <div class="kpi-label">Unique Patients</div>
+      <div class="kpi-value">1,386</div>
+      <div class="kpi-sub">Across all centres</div>
+    </div>
+    <div class="kpi total">
+      <div class="kpi-label">Total Investigations</div>
+      <div class="kpi-value">2,228</div>
+      <div class="kpi-sub">All modalities</div>
+    </div>
+    <div class="kpi total">
+      <div class="kpi-label">Total Fee Due</div>
+      <div class="kpi-value">₦1.48M</div>
+      <div class="kpi-sub">Outstanding balance</div>
+    </div>
+    <div class="kpi total">
+      <div class="kpi-label">Total Discount</div>
+      <div class="kpi-value">₦402.4K</div>
+      <div class="kpi-sub">Across all centres</div>
+    </div>
+  </div>
+
+  <!-- CENTRE KPI STRIP -->
+  <div class="section-title">Per-Centre Snapshot</div>
+  <div class="kpi-grid">
+    <div class="kpi oauth">
+      <div class="kpi-label">OAUTH Ilesa</div>
+      <div class="kpi-value">₦3.82M</div>
+      <div class="kpi-sub">507 pts · 625 inv</div>
+    </div>
+    <div class="kpi ilesha">
+      <div class="kpi-label">Sure Ilesha, Osun</div>
+      <div class="kpi-value">₦4.96M</div>
+      <div class="kpi-sub">435 pts · 931 inv</div>
+    </div>
+    <div class="kpi ilasa">
+      <div class="kpi-label">Ilasa Main, Lagos</div>
+      <div class="kpi-value">₦2.36M</div>
+      <div class="kpi-sub">278 pts · 386 inv</div>
+    </div>
+    <div class="kpi palm">
+      <div class="kpi-label">Palm Avenue, Lagos</div>
+      <div class="kpi-value">₦1.38M</div>
+      <div class="kpi-sub">139 pts · 216 inv</div>
+    </div>
+    <div class="kpi ikeja">
+      <div class="kpi-label">Ikeja Lagos Centre</div>
+      <div class="kpi-value">₦446K</div>
+      <div class="kpi-sub">27 pts · 70 inv</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="section-title">Revenue & Case Mix</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Revenue by Collection Centre (₦)</h3>
+      <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Case Mix by Type</h3>
+      <div class="chart-wrap"><canvas id="caseTypeChart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-grid" style="margin-top:20px">
+    <div class="chart-card">
+      <h3>Investigations by Centre</h3>
+      <div class="chart-wrap"><canvas id="invChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Revenue Split by Case Type per Centre</h3>
+      <div class="chart-wrap"><canvas id="stackedChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SHEET 1: CENTRE SUMMARY TABLE -->
+  <div class="section-title">1. Collection Centre Summary</div>
+  <div class="card">
+    <div class="card-title">Aggregates — March 2026</div>
+    <table>
+      <thead>
+        <tr>
+          <th class="left" style="width:22%">Collection Centre</th>
+          <th>Unique Patients</th>
+          <th>Total Investigations</th>
+          <th>Dr. PVT Cases</th>
+          <th>Unique Referrers</th>
+          <th>Fee Due (₦)</th>
+          <th>Discount (₦)</th>
+          <th>Fee Paid+Due (₦)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="left"><span class="dot" style="background:var(--oauth)"></span>OAUTH Ilesa Centre</td>
+          <td>507</td><td>625</td><td>0</td><td>2</td>
+          <td>0</td><td>3,000</td><td>3,821,850</td>
+        </tr>
+        <tr>
+          <td class="left"><span class="dot" style="background:var(--ilesha)"></span>Sure Ilesha, Osun</td>
+          <td>435</td><td>931</td><td>0</td><td>41</td>
+          <td>506,500</td><td>397,100</td><td>4,956,050</td>
+        </tr>
+        <tr>
+          <td class="left"><span class="dot" style="background:var(--ilasa)"></span>Ilasa Main Centre, Lagos</td>
+          <td>278</td><td>386</td><td>120</td><td>76</td>
+          <td>289,000</td><td>2,300</td><td>2,361,700</td>
+        </tr>
+        <tr>
+          <td class="left"><span class="dot" style="background:var(--palm)"></span>Palm Avenue, Lagos</td>
+          <td>139</td><td>216</td><td>61</td><td>27</td>
+          <td>285,000</td><td>0</td><td>1,376,500</td>
+        </tr>
+        <tr>
+          <td class="left"><span class="dot" style="background:var(--ikeja)"></span>Ikeja Lagos Centre</td>
+          <td>27</td><td>70</td><td>1</td><td>9</td>
+          <td>401,000</td><td>0</td><td>446,000</td>
+        </tr>
+        <tr class="grand-total">
+          <td>GRAND TOTAL</td>
+          <td>1,386</td><td>2,228</td><td>182</td><td>155</td>
+          <td>1,481,500</td><td>402,400</td><td>12,962,100</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SHEET 2: CASE TYPE PIVOT -->
+  <div class="section-title">2. Case Type × Collection Centre Pivot</div>
+  <div class="card">
+    <div class="card-title">Qty & Revenue (₦) by Case Type and Centre</div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th class="left" rowspan="2">Case Type</th>
+          <th colspan="2" style="background:var(--oauth)">OAUTH Ilesa</th>
+          <th colspan="2" style="background:var(--ilesha)">Sure Ilesha</th>
+          <th colspan="2" style="background:var(--ilasa)">Ilasa Main</th>
+          <th colspan="2" style="background:var(--palm)">Palm Ave</th>
+          <th colspan="2" style="background:var(--ikeja)">Ikeja</th>
+          <th colspan="2" style="background:var(--primary)">ROW TOTAL</th>
+        </tr>
+        <tr>
+          <th>Qty</th><th>Rev (₦)</th>
+          <th>Qty</th><th>Rev (₦)</th>
+          <th>Qty</th><th>Rev (₦)</th>
+          <th>Qty</th><th>Rev (₦)</th>
+          <th>Qty</th><th>Rev (₦)</th>
+          <th>Qty</th><th>Rev (₦)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="left"><strong>Digital X-ray</strong></td>
+          <td>332</td><td>2,568,000</td>
+          <td>24</td><td>163,700</td>
+          <td>23</td><td>278,000</td>
+          <td>1</td><td>10,000</td>
+          <td>—</td><td>—</td>
+          <td><strong>380</strong></td><td><strong>3,019,700</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>USG</strong></td>
+          <td>218</td><td>1,243,850</td>
+          <td>240</td><td>1,510,850</td>
+          <td>146</td><td>838,000</td>
+          <td>48</td><td>262,000</td>
+          <td>—</td><td>—</td>
+          <td><strong>652</strong></td><td><strong>3,854,700</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>Lab</strong></td>
+          <td>3</td><td>10,000</td>
+          <td>198</td><td>3,206,500</td>
+          <td>131</td><td>1,209,700</td>
+          <td>109</td><td>1,095,500</td>
+          <td>32</td><td>446,000</td>
+          <td><strong>473</strong></td><td><strong>5,967,700</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>ECG</strong></td>
+          <td>—</td><td>—</td>
+          <td>10</td><td>75,000</td>
+          <td>4</td><td>36,000</td>
+          <td>1</td><td>9,000</td>
+          <td>—</td><td>—</td>
+          <td><strong>15</strong></td><td><strong>120,000</strong></td>
+        </tr>
+        <tr class="grand-total">
+          <td>COLUMN TOTAL</td>
+          <td>553</td><td>3,821,850</td>
+          <td>472</td><td>4,956,050</td>
+          <td>304</td><td>2,361,700</td>
+          <td>159</td><td>1,376,500</td>
+          <td>32</td><td>446,000</td>
+          <td>1,520</td><td>12,962,050</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- SHEET 3: CENTRE-CASE BREAKDOWN -->
+  <div class="section-title">3. Centre-Case Breakdown (Flat)</div>
+  <div class="card">
+    <div class="card-title">Qty & Revenue per Centre per Case Type</div>
+    <table>
+      <thead>
+        <tr>
+          <th class="left">Collection Centre</th>
+          <th class="left">Case Type</th>
+          <th>Qty</th>
+          <th>Sum Fee Paid+Due (₦)</th>
+        </tr>
+      </thead>
+      <tbody id="breakdownBody">
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SHEET 4: REBATE BY REFERRER -->
+  <div class="section-title">4. Rebate by Referrer by Centre</div>
+  <div class="rebate-section">
+    <div class="centre-block">
+      <div class="centre-header" style="background:var(--ilasa)">Ilasa Main Centre, Lagos</div>
+      <div class="card" style="border-radius:0 0 10px 10px; margin-bottom:0">
+        <table>
+          <thead><tr>
+            <th class="left">Referrer</th><th>Fee Paid (₦)</th><th>Rate</th><th>Rebate (₦)</th>
+          </tr></thead>
+          <tbody id="ilasaRebate"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="centre-block">
+      <div class="centre-header" style="background:var(--palm)">Palm Avenue, Lagos</div>
+      <div class="card" style="border-radius:0 0 10px 10px; margin-bottom:0">
+        <table>
+          <thead><tr>
+            <th class="left">Referrer</th><th>Fee Paid (₦)</th><th>Rate</th><th>Rebate (₦)</th>
+          </tr></thead>
+          <tbody id="palmRebate"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="centre-block">
+      <div class="centre-header" style="background:var(--ikeja)">Ikeja Lagos Centre</div>
+      <div class="card" style="border-radius:0 0 10px 10px; margin-bottom:0">
+        <table>
+          <thead><tr>
+            <th class="left">Referrer</th><th>Fee Paid (₦)</th><th>Rate</th><th>Rebate (₦)</th>
+          </tr></thead>
+          <tbody id="ikejaRebate"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+const centres = ['OAUTH Ilesa Centre','Sure Ilesha, Osun','Ilasa Main Centre, Lagos','Palm Avenue, Lagos','Ikeja Lagos Centre'];
+const centreColors = ['#C55A11','#E67E22','#2E86AB','#16A085','#8E44AD'];
+const shortNames = ['OAUTH','Sure Ilesha','Ilasa','Palm Ave','Ikeja'];
+const revenues = [3821850, 4956050, 2361700, 1376500, 446000];
+const investigations = [625, 931, 386, 216, 70];
+
+const pivot = {
+  'Digital X-ray': {'OAUTH Ilesa Centre':{qty:332,sum:2568000},'Sure Ilesha, Osun':{qty:24,sum:163700},'Ilasa Main Centre, Lagos':{qty:23,sum:278000},'Palm Avenue, Lagos':{qty:1,sum:10000},'Ikeja Lagos Centre':{qty:0,sum:0}},
+  'USG':           {'OAUTH Ilesa Centre':{qty:218,sum:1243850},'Sure Ilesha, Osun':{qty:240,sum:1510850},'Ilasa Main Centre, Lagos':{qty:146,sum:838000},'Palm Avenue, Lagos':{qty:48,sum:262000},'Ikeja Lagos Centre':{qty:0,sum:0}},
+  'Lab':           {'OAUTH Ilesa Centre':{qty:3,sum:10000},'Sure Ilesha, Osun':{qty:198,sum:3206500},'Ilasa Main Centre, Lagos':{qty:131,sum:1209700},'Palm Avenue, Lagos':{qty:109,sum:1095500},'Ikeja Lagos Centre':{qty:32,sum:446000}},
+  'ECG':           {'OAUTH Ilesa Centre':{qty:0,sum:0},'Sure Ilesha, Osun':{qty:10,sum:75000},'Ilasa Main Centre, Lagos':{qty:4,sum:36000},'Palm Avenue, Lagos':{qty:1,sum:9000},'Ikeja Lagos Centre':{qty:0,sum:0}},
+};
+
+const rebateData = {
+  'Ilasa Main Centre, Lagos': [
+    ["Dr. MARIAM  ALI",4000,800],["Dr. PVT",793500,158700],["Dr. GOZIE MGH",13500,2700],
+    ["Dr. MERCY  ORABEL PHARM",21500,4300],["Nurse OJ",38000,7600],["Dr. FOOD CONCEPT CORPORATE",0,0],
+    ["Miss. NURSE akinlawon",71500,14300],["OIC OLADAPO",8000,1600],["Mrs. AWOTUNDUN (GBAJA HOSP)",215500,43100],
+    ["Dr. OLABISI MGH",18000,3600],["MGH",6000,1200],["Dr. BAYODE GHM (DOCTOR)",27500,5500],
+    ["Dr. ugochukwu anthony smc",13000,2600],["Dr. AKINTOLA",74500,14900],["A4H",26000,5200],
+    ["CAC OKE IYE",4000,800],["Dr. ILASA PHC",4000,800],["Dr. sure pvt",7000,1400],
+    ["Mrs. CONFIDENCE PHARM (PHARM)",23500,4700],["Dr. ACCURATE DIAGNOSTICS",36000,7200],
+    ["Dr. THANNI  GHM",39000,7800],["NURSE TEBUN ONAYEMI (AJEABO)",13000,2600],["MRS NURSE BISI",12000,2400],
+    ["SERENE HMO",0,0],["Mrs. SULAIMON AJEABO",50500,10100],["Dr. SALAMAH",4000,800],
+    ["Dr. Nurse Ibitoye",10000,2000],["NURSE ROSEMARY",20000,4000],["Dr. Babafashola",4000,800],
+    ["NURSE OLAYINKA ST KIZITO",15000,3000],["Dr. OBI MODUPE OLUWA CLINIC",22000,4400],
+    ["Dr. STAFF SOFIAT",20000,4000],["Dr. OKAFOR  MGH",15000,3000],["Dr. OLAJIDE AJEABO",10000,2000],
+    ["Dr. ADENIRAN",33200,6640],["Dr. IJEOMA ILASA PHC",17000,3400],["NIGERIAN MACHINE TOOLS",0,0],
+    ["mama COMFORT ADEYERI",21000,4200],["ALL DAY PHARMACY",9000,1800],["Dr. EBUKA SMC",72000,14400],
+    ["NURSE TITI",4000,800],["Dr. AKINYEMI  ITIRE MCC",9000,1800],["Dr. Afunlehim O. H (DOCTOR)",9000,1800],
+    ["Dr. DEBORAH MAY CLINIC",4000,800],["Dr. Oloyede",11500,2300],["Dr. AJALA  (08037245881)",4000,800],
+    ["Dr. AANUOLUWA CLINIC",2000,400],["Dr. ABA",1000,200],["Dr. A.B PHARMACY",1000,200],
+    ["Dr. NURSE Rebecca",10000,2000],["Dr. ADEYEYE (MODUPEOLUWA HOSP)",8000,1600],
+    ["Dr. OGUNJIMI ADDEY JIMMY CLINIC",19000,3800],["NURSE ALABI AJEABO",4000,800],
+    ["Dr. MICHAEL AYOOLA",9000,1800],["Mrs. NURSE OGABI IDI-ARABA PHC",8000,1600],
+    ["Dr. AISHAT HOSIPTAL",2500,500],["may clinic",4000,800],
+    ["Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",31000,6200],["AYOBAMI AJEABO",4000,800],
+    ["Dr. GBEMISOLA IDI ARABA PHC",10000,2000],
+    ["Mrs. STAFF RASHIDAT OLAYIWOLA (NURSE)",12000,2400],["NURSE YETUNDE (8 KEKEROWO)",15000,3000],
+    ["Dr. GOZIE GHM (MCC)",16500,3300],["Dr. UCHE  (MD)",2500,500],["NURSE OLUSI TOYIN",8000,1600],
+    ["Dr. WAKWE MAY CLINIC",9000,1800],["Dr. WOLE OGEDENGBE",6000,1200],["NURSE JOY",4000,800],
+    ["Mrs. YAKUBU STELLA",2000,400],["NURSE KHADIJAH",20000,4000],["Mrs. AKINLAWAN",4000,800],
+    ["Dr. NURSE ALLI",4000,800],["NURSE SEUN GANIU (PRIVATE)",4000,800],["Mrs. SANNI SNM (NURSE)",4000,800],
+    ["Mrs. STAFF NKECHI (NURSE)",11000,2200],["Dr. MODUPEOLUWA HOSPITAL",4000,800],
+  ],
+  'Palm Avenue, Lagos': [
+    ["Dr. General hospital  Mushin",7000,1400],["Dr. JOSEPH OGUNSUYI",49000,9800],["Dr. PVT",498000,99600],
+    ["PHARM DEBORAH MED AXIS",61500,12300],["Dr. FOOD CONCEPT CORPORATE",0,0],["Dr. ADEBAYO",16500,3300],
+    ["Dr. Nurse Oku",6500,1300],["Dr. Babafashola",22000,4400],["Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",149000,29800],
+    ["NIGERIAN MACHINE TOOLS",0,0],["Dr. OBI MODUPE OLUWA CLINIC",56000,11200],["Dr. MODUPEOLUWA HOSPITAL",8000,1600],
+    ["Dr. ADEYEYE (MODUPEOLUWA HOSP)",40500,8100],["Dr. HEALTHY YOU PHARMACY",10000,2000],["Dr. OGUNSUYI J",6000,1200],
+    ["Dr. Afunlehim O. H (DOCTOR)",9000,1800],["Dr. AJAKAYE GHM",15000,3000],["Dr. NURSE JULIET AGUSI",12500,2500],
+    ["Dr. OKAFOR  MGH",6500,1300],["Dr. sure pvt",0,0],["PHARM MONDAY(DENOK)",4000,800],
+    ["Dr. GOZIE GHM (MCC)",0,0],["MEVAN PHARM EMEKA",51500,10300],["Dr. Nurse kafayat",15000,3000],
+    ["Dr. JOHN MGH",30000,6000],["Dr. JAMES JAMES",14000,2800],["Dr. BAYODE GHM (DOCTOR)",4000,800],
+  ],
+  'Ikeja Lagos Centre': [
+    ["Dr. HEALTH PLUS  ADDAS MALL",3500,700],["Dr. PRIVATE P",16000,3200],["HOPE  STONE",21500,4300],
+    ["Dr. NEM HMO",0,0],["Dr. REDEEMED",0,0],["Dr. BASTION HMO",0,0],
+    ["Dr. GREENSHIELD CORPORATE",0,0],["Dr. MULTISHIELDS HMO",0,0],["Dr. sure pvt",4000,800],
+  ],
+};
+
+const fmt = n => n > 0 ? '₦' + n.toLocaleString() : '—';
+const rate = (fee, reb) => fee > 0 && reb > 0 ? (Math.round(reb/fee*100) + '%') : '—';
+
+// ── SHEET 3 FLAT TABLE ───────────────────────────────────────────────────
+const centreOrder = ['OAUTH Ilesa Centre','Sure Ilesha, Osun','Ilasa Main Centre, Lagos','Palm Avenue, Lagos','Ikeja Lagos Centre'];
+const caseTypes = ['Digital X-ray','USG','Lab','ECG'];
+const colours = {'OAUTH Ilesa Centre':'#C55A11','Sure Ilesha, Osun':'#E67E22','Ilasa Main Centre, Lagos':'#2E86AB','Palm Avenue, Lagos':'#16A085','Ikeja Lagos Centre':'#8E44AD'};
+let html3 = '';
+centreOrder.forEach(c => {
+  caseTypes.forEach((ct, i) => {
+    const d = (pivot[ct] || {})[c];
+    if (!d || d.qty === 0) return;
+    const alt = i % 2 === 1;
+    html3 += `<tr${alt?' style="background:#EBF3FB"':''}>
+      <td class="left" style="font-weight:700;color:${colours[c]}">${c}</td>
+      <td class="left">${ct}</td>
+      <td>${d.qty.toLocaleString()}</td>
+      <td>${d.sum.toLocaleString()}</td>
+    </tr>`;
+  });
+});
+document.getElementById('breakdownBody').innerHTML = html3;
+
+// ── REBATE TABLES ────────────────────────────────────────────────────────
+function buildRebateTable(tbodyId, centre) {
+  const rows = rebateData[centre];
+  let total_fee = 0, total_reb = 0;
+  let html = rows.map((r, i) => {
+    total_fee += r[1]; total_reb += r[2];
+    const alt = i % 2 === 1;
+    return `<tr${alt?' style="background:#EBF3FB"':''}>
+      <td class="left">${r[0]}</td>
+      <td>${fmt(r[1])}</td>
+      <td>${rate(r[1], r[2])}</td>
+      <td>${fmt(r[2])}</td>
+    </tr>`;
+  }).join('');
+  html += `<tr class="grand-total">
+    <td>SUBTOTAL</td>
+    <td>${fmt(total_fee)}</td><td>—</td><td>${fmt(total_reb)}</td>
+  </tr>`;
+  document.getElementById(tbodyId).innerHTML = html;
+}
+buildRebateTable('ilasaRebate', 'Ilasa Main Centre, Lagos');
+buildRebateTable('palmRebate', 'Palm Avenue, Lagos');
+buildRebateTable('ikejaRebate', 'Ikeja Lagos Centre');
+
+// ── CHARTS ───────────────────────────────────────────────────────────────
+// 1. Revenue bar
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels: shortNames,
+    datasets: [{
+      label: 'Revenue (₦)',
+      data: revenues,
+      backgroundColor: centreColors,
+      borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => '₦' + ctx.raw.toLocaleString() } }
+    },
+    scales: {
+      y: { ticks: { callback: v => '₦' + (v/1e6).toFixed(1) + 'M' }, grid: { color: '#e8eff6' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 2. Case type donut
+const ctQty = { 'Digital X-ray': 380, 'USG': 652, 'Lab': 473, 'ECG': 15 };
+new Chart(document.getElementById('caseTypeChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(ctQty),
+    datasets: [{ data: Object.values(ctQty), backgroundColor: ['#1F4E79','#2E86AB','#16A085','#E67E22'], borderWidth: 2 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 14, font: { size: 11 } } },
+      tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw + ' cases (' + Math.round(ctx.raw/1520*100) + '%)' } }
+    }
+  }
+});
+
+// 3. Investigations bar
+new Chart(document.getElementById('invChart'), {
+  type: 'bar',
+  data: {
+    labels: shortNames,
+    datasets: [{
+      label: 'Investigations',
+      data: investigations,
+      backgroundColor: centreColors,
+      borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { grid: { color: '#e8eff6' } }, x: { grid: { display: false } } }
+  }
+});
+
+// 4. Stacked bar: revenue by case type per centre
+const ctColors = { 'Digital X-ray': '#1F4E79', 'USG': '#2E86AB', 'Lab': '#16A085', 'ECG': '#E67E22' };
+new Chart(document.getElementById('stackedChart'), {
+  type: 'bar',
+  data: {
+    labels: shortNames,
+    datasets: caseTypes.map(ct => ({
+      label: ct,
+      data: centreOrder.map(c => (pivot[ct]?.[c]?.sum || 0)),
+      backgroundColor: ctColors[ct],
+      borderRadius: 3,
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ₦' + ctx.raw.toLocaleString() } }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, ticks: { callback: v => '₦' + (v/1e6).toFixed(1) + 'M' }, grid: { color: '#e8eff6' } }
+    }
+  }
+});
+</script>
+</body>
+</html>

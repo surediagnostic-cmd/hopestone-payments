@@ -1,0 +1,4125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sure Finance – Performance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--navy:#1F3864;--teal:#2E86AB;--green:#27AE60;--amber:#E67E22;--red:#E74C3C;
+      --purple:#8E44AD;--dgreen:#16A085;--gold:#F39C12;--bg:#F0F4F8;--card:#fff;--border:#DDE3EA;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:var(--bg);color:#2C3E50;font-size:13px;}
+.header{background:var(--navy);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
+.header h1{font-size:16px;font-weight:700;letter-spacing:.4px;}
+.header .meta{font-size:11px;opacity:.75;text-align:right;}
+.ctrl-bar{background:#fff;border-bottom:2px solid var(--border);padding:10px 24px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ctrl-bar label{font-size:11px;font-weight:700;color:#666;margin-right:2px;}
+.ctrl-bar select{font-size:12px;padding:5px 8px;border:1px solid var(--border);
+  border-radius:6px;background:#fff;cursor:pointer;color:var(--navy);font-weight:600;}
+.ctrl-bar select:focus{outline:none;border-color:var(--teal);}
+.mode-wrap{margin-left:auto;display:flex;gap:6px;}
+.mode-btn{padding:6px 16px;border:2px solid var(--border);border-radius:20px;
+  font-size:11px;font-weight:700;cursor:pointer;background:#fff;color:#666;transition:.2s;}
+.mode-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+.centre-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;
+  display:flex;gap:0;overflow-x:auto;}
+.tab{padding:9px 16px;cursor:pointer;font-size:12px;font-weight:600;color:#666;
+  border-bottom:3px solid transparent;transition:.2s;white-space:nowrap;}
+.tab:hover{color:var(--navy);background:#F8FAFC;}
+.tab.active{color:var(--navy);border-bottom-color:var(--teal);}
+.period-label{background:linear-gradient(135deg,var(--teal),var(--navy));color:#fff;
+  padding:7px 24px;font-size:12px;font-weight:700;letter-spacing:.4px;}
+.main{padding:18px 24px;max-width:1600px;margin:0 auto;}
+.section-title{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;
+  letter-spacing:.8px;margin:18px 0 10px;padding-bottom:5px;border-bottom:2px solid var(--border);}
+.kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:18px;}
+.kpi-card{background:var(--card);border-radius:10px;padding:13px 14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:4px solid var(--teal);text-align:center;}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;font-weight:700;}
+.kpi-value{font-size:21px;font-weight:800;color:var(--navy);margin:5px 0 2px;}
+.kpi-sub{font-size:10px;color:#aaa;}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.charts-grid-3{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
+.chart-card{background:var(--card);border-radius:10px;padding:14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.chart-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+.chart-wrap{position:relative;height:210px;}
+.chart-wrap-tall{position:relative;height:260px;}
+.table-card{background:var(--card);border-radius:10px;padding:14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--navy);color:#fff;}
+thead th{padding:7px 9px;font-size:11px;font-weight:700;text-align:center;white-space:nowrap;}
+thead th:first-child{text-align:left;}
+tbody tr:nth-child(even){background:#F7FAFC;}
+tbody tr:hover{background:#EBF5FB;}
+tbody td{padding:6px 9px;border-bottom:1px solid var(--border);font-size:12px;
+  text-align:center;white-space:nowrap;}
+tbody td:first-child{text-align:left;font-weight:600;}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-green{background:#D5F5E3;color:#1E8449;}
+.badge-amber{background:#FCF3CF;color:#9A7D0A;}
+.badge-red{background:#FADBD8;color:#922B21;}
+.badge-gray{background:#EAEDED;color:#555;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.note{background:#FEF9E7;border-left:4px solid var(--gold);padding:7px 12px;
+  font-size:11px;color:#7D6608;border-radius:0 6px 6px 0;margin-bottom:14px;}
+.tgt-row{background:#E8F4FD!important;font-weight:700!important;}
+.total-row td{background:var(--teal)!important;color:#fff!important;font-weight:700;}
+.footer{text-align:center;padding:14px;font-size:10px;color:#aaa;background:#fff;
+  border-top:1px solid var(--border);margin-top:20px;}
+.hidden{display:none;}
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+  .charts-grid,.charts-grid-3{grid-template-columns:1fr;}
+}
+</style></head><body>
+
+<div class="header">
+  <div>
+    <h1>&#128202; SURE FINANCE &amp; BUSINESS — PERFORMANCE DASHBOARD</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px" id="centreList"></div>
+  </div>
+  <div class="meta">
+    <div>Generated: 27 Apr 2026</div>
+    <div style="margin-top:4px" id="weekCount"></div>
+  </div>
+</div>
+
+<div class="ctrl-bar">
+  <label>Year</label>
+  <select id="yrSel" onchange="onYearChange(+this.value)"></select>
+  <label style="margin-left:8px">Month</label>
+  <select id="monSel" onchange="onMonthChange(+this.value)"></select>
+  <label style="margin-left:8px">Week</label>
+  <select id="wkSel" onchange="onWeekChange(this.value)"></select>
+  <div class="mode-wrap">
+    <button class="mode-btn active" id="btnSum" onclick="setMode('summary')">&#128202; Summary</button>
+    <button class="mode-btn" id="btnDrill" onclick="setMode('drill')">&#128269; Weekly View</button>
+  </div>
+</div>
+<div class="centre-bar" id="centreBar">
+  <div class="tab active" onclick="filterCentre('ALL',this)">&#127970; All Centres</div>
+</div>
+<div class="period-label" id="periodLabel"></div>
+
+<div class="main">
+<div class="note" id="topNote"></div>
+
+<!-- ═══════════ SUMMARY VIEW ═══════════ -->
+<div id="summaryView">
+  <div class="section-title">Key Performance Indicators</div>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="border-top-color:var(--teal)">
+      <div class="kpi-label">Total Tests</div>
+      <div class="kpi-value" id="kpi-inv">–</div>
+      <div class="kpi-sub">Individual investigations</div></div>
+    <div class="kpi-card" style="border-top-color:var(--dgreen)">
+      <div class="kpi-label">Cases</div>
+      <div class="kpi-value" id="kpi-cases">–</div>
+      <div class="kpi-sub">Case rows</div></div>
+    <div class="kpi-card" style="border-top-color:var(--purple)">
+      <div class="kpi-label">Unique Referrers</div>
+      <div class="kpi-value" id="kpi-refs">–</div>
+      <div class="kpi-sub">Distinct doctors/sources</div></div>
+    <div class="kpi-card" style="border-top-color:var(--navy)">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="kpi-rev">₦–</div>
+      <div class="kpi-sub" id="kpi-rev-sub">vs target</div></div>
+    <div class="kpi-card" style="border-top-color:var(--green)">
+      <div class="kpi-label">Fee Collected</div>
+      <div class="kpi-value" id="kpi-paid">₦–</div>
+      <div class="kpi-sub">Amount paid</div></div>
+    <div class="kpi-card" style="border-top-color:var(--amber)">
+      <div class="kpi-label">Fee Due</div>
+      <div class="kpi-value" id="kpi-due">₦–</div>
+      <div class="kpi-sub">Outstanding balance</div></div>
+    <div class="kpi-card" style="border-top-color:var(--red)">
+      <div class="kpi-label">Collection Rate</div>
+      <div class="kpi-value" id="kpi-rate">–</div>
+      <div class="kpi-sub">Paid / Total fee</div></div>
+  </div>
+
+  <div class="section-title">Revenue &amp; Performance Trends</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title" id="trendTitle">&#128176; Revenue by Week (₦)</div>
+      <div class="chart-wrap-tall"><canvas id="chartTrend"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-title">&#127919; Revenue vs Target by Centre (₦)</div>
+      <div class="chart-wrap-tall"><canvas id="chartVsTarget"></canvas></div></div>
+  </div>
+
+  <div class="charts-grid" style="margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title" id="invTrendTitle">&#128203; Investigations by Week</div>
+      <div class="chart-wrap"><canvas id="chartInvTrend"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-title">&#128179; Revenue vs Collected by Centre (₦)</div>
+      <div class="chart-wrap"><canvas id="chartRevColl"></canvas></div></div>
+  </div>
+
+  <div class="section-title">Centre Performance Summary</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>Collection Centre</th><th>Investigations</th><th>Cases</th>
+    <th>Total Revenue (₦)</th><th>Collected (₦)</th><th>Due (₦)</th>
+    <th>Period Target (₦)</th><th>Achievement</th><th>Collection %</th>
+    <th>Avg Fee/Case (₦)</th>
+  </tr></thead>
+  <tbody id="centreTbody"></tbody></table></div>
+
+  <div class="section-title">Top Referrers</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>#</th><th>Centre</th><th>Referrer / Doctor</th>
+    <th>Cases</th><th>Revenue (₦)</th><th>% of Centre Rev</th>
+  </tr></thead>
+  <tbody id="refTbody"></tbody></table></div>
+
+  <div class="section-title">Agent Performance</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>#</th><th>Agent</th><th>Investigations</th><th>Cases</th>
+    <th>Revenue (₦)</th><th>Collected (₦)</th><th>Collection %</th>
+  </tr></thead>
+  <tbody id="agentTbody"></tbody></table></div>
+</div><!-- end summaryView -->
+
+<!-- ═══════════ DRILL-DOWN VIEW ═══════════ -->
+<div id="drillView" class="hidden">
+  <div id="drillNote" class="note"></div>
+  <div class="section-title">Key Performance Indicators — Selected Week</div>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="border-top-color:var(--teal)">
+      <div class="kpi-label">Total Tests</div>
+      <div class="kpi-value" id="dkpi-inv">–</div>
+      <div class="kpi-sub">Investigations</div></div>
+    <div class="kpi-card" style="border-top-color:var(--dgreen)">
+      <div class="kpi-label">Cases</div>
+      <div class="kpi-value" id="dkpi-cases">–</div>
+      <div class="kpi-sub">Case rows</div></div>
+    <div class="kpi-card" style="border-top-color:var(--purple)">
+      <div class="kpi-label">Unique Referrers</div>
+      <div class="kpi-value" id="dkpi-refs">–</div>
+      <div class="kpi-sub">Distinct sources</div></div>
+    <div class="kpi-card" style="border-top-color:var(--navy)">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="dkpi-rev">₦–</div>
+      <div class="kpi-sub" id="dkpi-rev-sub">vs weekly target</div></div>
+    <div class="kpi-card" style="border-top-color:var(--green)">
+      <div class="kpi-label">Fee Collected</div>
+      <div class="kpi-value" id="dkpi-paid">₦–</div>
+      <div class="kpi-sub">Amount paid</div></div>
+    <div class="kpi-card" style="border-top-color:var(--amber)">
+      <div class="kpi-label">Fee Due</div>
+      <div class="kpi-value" id="dkpi-due">₦–</div>
+      <div class="kpi-sub">Outstanding</div></div>
+    <div class="kpi-card" style="border-top-color:var(--red)">
+      <div class="kpi-label">Collection Rate</div>
+      <div class="kpi-value" id="dkpi-rate">–</div>
+      <div class="kpi-sub">Paid / Total fee</div></div>
+  </div>
+
+  <div class="section-title">Daily Breakdown Charts</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">&#128197; Daily Investigations by Centre</div>
+      <div class="chart-wrap"><canvas id="dChartDailyInv"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-title">&#128176; Daily Revenue by Centre (₦)</div>
+      <div class="chart-wrap"><canvas id="dChartDailyRev"></canvas></div></div>
+  </div>
+  <div class="charts-grid" style="margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">&#127919; Revenue vs Weekly Target (₦)</div>
+      <div class="chart-wrap"><canvas id="dChartVsTarget"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-title">&#128200; Daily Collection Rate (%)</div>
+      <div class="chart-wrap"><canvas id="dChartCollRate"></canvas></div></div>
+  </div>
+
+  <div class="section-title">Daily Performance Summary</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>Date</th><th>Centre</th><th>Investigations</th><th>Cases</th><th>Patients</th>
+    <th>Unique Referrers</th><th>Total Fee (₦)</th><th>Paid (₦)</th><th>Due (₦)</th>
+    <th>Daily Target (₦)</th><th>Achievement</th><th>Collection %</th>
+  </tr></thead>
+  <tbody id="dailyTbody"></tbody></table></div>
+
+  <div class="section-title">Weekly Centre Summary vs Target</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>Collection Centre</th><th>Investigations</th><th>Cases</th><th>Patients</th>
+    <th>Unique Referrers</th><th>Total Fee (₦)</th><th>Paid (₦)</th><th>Due (₦)</th>
+    <th>Weekly Target (₦)</th><th>Achievement</th><th>Collection %</th>
+  </tr></thead>
+  <tbody id="weeklyTbody"></tbody></table></div>
+
+  <div class="section-title">Top Referrers</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>#</th><th>Centre</th><th>Referrer / Doctor</th>
+    <th>Cases</th><th>Revenue (₦)</th>
+  </tr></thead>
+  <tbody id="dRefTbody"></tbody></table></div>
+
+  <div class="section-title">Agent Performance</div>
+  <div class="table-card"><table>
+  <thead><tr>
+    <th>#</th><th>Agent</th><th>Investigations</th><th>Cases</th>
+    <th>Revenue (₦)</th><th>Collected (₦)</th><th>Collection %</th>
+  </tr></thead>
+  <tbody id="dAgentTbody"></tbody></table></div>
+</div><!-- end drillView -->
+</div><!-- end main -->
+<div class="footer">Sure Finance &amp; Business Scorecards &nbsp;|&nbsp; Auto-generated from LabSmartLIS &nbsp;|&nbsp; Multi-period v3</div>
+<script>
+const HISTORY={
+  "weeks": {
+    "2026-03-23": {
+      "week_label": "Mon 23 \u2013 Sun 29 Mar 2026",
+      "year": 2026,
+      "month": 3,
+      "quarter": "Q1 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-03-23",
+        "2026-03-24",
+        "2026-03-25",
+        "2026-03-26",
+        "2026-03-27",
+        "2026-03-28",
+        "2026-03-29"
+      ],
+      "date_labels": [
+        "Mon 23 Mar",
+        "Tue 24 Mar",
+        "Wed 25 Mar",
+        "Thu 26 Mar",
+        "Fri 27 Mar",
+        "Sat 28 Mar",
+        "Sun 29 Mar"
+      ],
+      "summary": {
+        "total_investigations": 415,
+        "total_cases": 344,
+        "total_patients": 340,
+        "total_unique_referrers": 50,
+        "total_revenue": 2527900,
+        "total_paid": 2460900,
+        "total_due": 13000,
+        "total_discount": 0,
+        "cancelled": 6,
+        "collection_rate": 97.3
+      },
+      "daily": [
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 15,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 56000,
+          "paid": 53500,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 29,
+          "cases": 27,
+          "patients": 27,
+          "revenue": 179250,
+          "paid": 179250,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 45500,
+          "paid": 40000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 48,
+          "cases": 40,
+          "patients": 40,
+          "revenue": 317850,
+          "paid": 316050,
+          "due": 0,
+          "unique_referrers": 12
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 14,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 72500,
+          "paid": 66000,
+          "due": 6500,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 32,
+          "cases": 30,
+          "patients": 30,
+          "revenue": 205500,
+          "paid": 205500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 3,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 11000,
+          "paid": 11000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 22,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 128950,
+          "paid": 128750,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 5,
+          "cases": 5,
+          "patients": 5,
+          "revenue": 18000,
+          "paid": 18000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 24,
+          "cases": 22,
+          "patients": 22,
+          "revenue": 148500,
+          "paid": 148500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 43500,
+          "paid": 43500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 28,
+          "cases": 23,
+          "patients": 23,
+          "revenue": 179700,
+          "paid": 179500,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 58500,
+          "paid": 58500,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 20,
+          "cases": 19,
+          "patients": 19,
+          "revenue": 130500,
+          "paid": 130500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 36500,
+          "paid": 36500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 22,
+          "cases": 18,
+          "patients": 18,
+          "revenue": 143050,
+          "paid": 142850,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 6,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 36500,
+          "paid": 30000,
+          "due": 6500,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 25,
+          "cases": 17,
+          "patients": 17,
+          "revenue": 122500,
+          "paid": 104500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 7,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 70000,
+          "paid": 70000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 43,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 221100,
+          "paid": 195700,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 19000,
+          "paid": 19000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 12,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 69900,
+          "paid": 69900,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 2,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 14000,
+          "paid": 14000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 16,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 121100,
+          "paid": 120900,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-03-29",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 13,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 79000,
+          "paid": 79000,
+          "due": 0,
+          "unique_referrers": 1
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 54,
+          "cases": 49,
+          "patients": 49,
+          "revenue": 260500,
+          "paid": 245000,
+          "due": 13000,
+          "unique_referrers": 13
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 155,
+          "cases": 139,
+          "patients": 139,
+          "revenue": 935150,
+          "paid": 917150,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 27,
+          "cases": 18,
+          "patients": 18,
+          "revenue": 220500,
+          "paid": 215000,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 179,
+          "cases": 138,
+          "patients": 138,
+          "revenue": 1111750,
+          "paid": 1083750,
+          "due": 0,
+          "unique_referrers": 31
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 137,
+          "investigations": 137,
+          "revenue": 917150
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 66,
+          "investigations": 66,
+          "revenue": 411550
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 19,
+          "investigations": 19,
+          "revenue": 72000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 9,
+          "investigations": 9,
+          "revenue": 78100
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 9,
+          "investigations": 9,
+          "revenue": 79500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA",
+          "cases": 8,
+          "investigations": 8,
+          "revenue": 62500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. AWOTUNDUN (GBAJA HOSP)",
+          "cases": 7,
+          "investigations": 7,
+          "revenue": 62000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. LIVING PETALS MEDICAL CENTER ILESA",
+          "cases": 6,
+          "investigations": 6,
+          "revenue": 32000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 34100
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 39000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 50500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 24000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MAYFIELD MEDICAL CLINIC",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 71700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GENERAL HOSPITAL ILESA",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 32350
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 53700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DIVINE INTERNATIONAL HEALTH",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 50400
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 38000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 11500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT HOSPITAL ILESA",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 32800
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT LIFE KOMOLAFE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 13000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 14300
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. STAFF RASHIDAT OLAYIWOLA (NURSE)",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 18000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. JOHN MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 30000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HABIBULAHI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15200
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. WOLE OGEDENGBE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "NURSE JOY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. NURSE OGABI IDI-ARA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLABISI HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 8500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OMOLADE HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ROYAL SPECIALIST",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MERCY HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OASIS MEDICAL CENTRE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADEOLA SPECIALIST",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BLESSING HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. FIRST CHOICE HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GRACE HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. ODALELE HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. SUNMOLA SPECIALIST",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. MUYIBI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OBAFEMI AWOLOWO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADEYEMI MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ST. JOHN HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORY HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLUWOLE FAMILY CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PATHWAY HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PEACE HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4200
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. WELLNESS CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADESANYA FAMILY CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "investigations": 415,
+          "cases": 344,
+          "patients": 344,
+          "revenue": 2527900,
+          "paid": 2460900
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 200000,
+          "weekly": 1400000,
+          "monthly": 5000000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 220000,
+          "weekly": 1540000,
+          "monthly": 5500000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 100000,
+          "weekly": 700000,
+          "monthly": 2500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 170000,
+          "weekly": 1190000,
+          "monthly": 4250000
+        }
+      }
+    },
+    "2026-03-30": {
+      "week_label": "Mon 30 \u2013 Sun 05 Apr 2026",
+      "year": 2026,
+      "month": 3,
+      "quarter": "Q1 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-03-30",
+        "2026-03-31",
+        "2026-04-01",
+        "2026-04-02",
+        "2026-04-03",
+        "2026-04-04",
+        "2026-04-05"
+      ],
+      "date_labels": [
+        "Mon 30 Mar",
+        "Tue 31 Mar",
+        "Wed 01 Apr",
+        "Thu 02 Apr",
+        "Fri 03 Apr",
+        "Sat 04 Apr",
+        "Sun 05 Apr"
+      ],
+      "summary": {
+        "total_investigations": 360,
+        "total_cases": 294,
+        "total_patients": 285,
+        "total_unique_referrers": 47,
+        "total_revenue": 2303450,
+        "total_paid": 2295150,
+        "total_due": 7500,
+        "total_discount": 0,
+        "cancelled": 0,
+        "collection_rate": 99.6
+      },
+      "daily": [
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 32,
+          "cases": 28,
+          "patients": 28,
+          "revenue": 202500,
+          "paid": 202500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 26,
+          "cases": 22,
+          "patients": 21,
+          "revenue": 205500,
+          "paid": 205500,
+          "due": 0,
+          "unique_referrers": 10
+        },
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 26,
+          "cases": 17,
+          "patients": 16,
+          "revenue": 193400,
+          "paid": 193000,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 4,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 14500,
+          "paid": 14500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 30,
+          "cases": 29,
+          "patients": 29,
+          "revenue": 184500,
+          "paid": 184500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 33,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 182100,
+          "paid": 181700,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 6,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 24000,
+          "paid": 24000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 3,
+          "patients": 2,
+          "revenue": 45000,
+          "paid": 45000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 14,
+          "cases": 13,
+          "patients": 13,
+          "revenue": 93300,
+          "paid": 93300,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 18,
+          "cases": 15,
+          "patients": 14,
+          "revenue": 105500,
+          "paid": 105500,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 28,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 167350,
+          "paid": 167350,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 24000,
+          "paid": 24000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 22,
+          "cases": 16,
+          "patients": 14,
+          "revenue": 178000,
+          "paid": 178000,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 9,
+          "cases": 7,
+          "patients": 6,
+          "revenue": 118500,
+          "paid": 118500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 6,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 23750,
+          "paid": 23750,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 24,
+          "cases": 21,
+          "patients": 21,
+          "revenue": 146850,
+          "paid": 145850,
+          "due": 1000,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 6,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 34700,
+          "paid": 34700,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 12,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 73500,
+          "paid": 73500,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 4,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 25000,
+          "paid": 18500,
+          "due": 6500,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 16,
+          "cases": 13,
+          "patients": 13,
+          "revenue": 94500,
+          "paid": 94500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 61000,
+          "paid": 61000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 5,
+          "cases": 5,
+          "patients": 3,
+          "revenue": 14500,
+          "paid": 14500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 9,
+          "cases": 9,
+          "patients": 9,
+          "revenue": 51000,
+          "paid": 51000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 3500,
+          "paid": 3500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-05",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 5,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 31500,
+          "paid": 31500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-05",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 5500,
+          "paid": 5500,
+          "due": 0,
+          "unique_referrers": 1
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 144,
+          "cases": 129,
+          "patients": 129,
+          "revenue": 878200,
+          "paid": 877200,
+          "due": 1000,
+          "unique_referrers": 1
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 95,
+          "cases": 71,
+          "patients": 67,
+          "revenue": 647500,
+          "paid": 647500,
+          "due": 0,
+          "unique_referrers": 23
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 87,
+          "cases": 69,
+          "patients": 68,
+          "revenue": 536250,
+          "paid": 535450,
+          "due": 0,
+          "unique_referrers": 19
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 34,
+          "cases": 25,
+          "patients": 21,
+          "revenue": 241500,
+          "paid": 235000,
+          "due": 6500,
+          "unique_referrers": 8
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 129,
+          "investigations": 144,
+          "revenue": 878200
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 36,
+          "investigations": 56,
+          "revenue": 307000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 26,
+          "investigations": 28,
+          "revenue": 205350
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 14,
+          "investigations": 17,
+          "revenue": 95500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA",
+          "cases": 11,
+          "investigations": 13,
+          "revenue": 49200
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. AWOTUNDUN (GBAJA HOSP)",
+          "cases": 6,
+          "investigations": 6,
+          "revenue": 62000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MAYFIELD MEDICAL CLINIC",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 32850
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 5,
+          "investigations": 7,
+          "revenue": 53000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE",
+          "cases": 4,
+          "investigations": 17,
+          "revenue": 96500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 4,
+          "investigations": 5,
+          "revenue": 55000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE GHM (MCC)",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 42000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 3,
+          "investigations": 4,
+          "revenue": 28950
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 20350
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Nurse OJ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 19000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OKOTORE,GENERAL HOSPITAL,",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT LIFE KOMOLAFE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 10500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELEYE MCC ITIRE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 6500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HABIBULAHI",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 13500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ugochukwu anthony smc",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 19000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "NURSE OLAYINKA ST KIZITO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 11000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ACCURATE DIAGNOSTICS",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. BAYODE GHM (DOCTOR)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BEJIDE,IYABO IYERE MATERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BAYODE GHM (DOCTOR)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "OIC OLADAPO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLUWATOFUNMI HOSPITAL,",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AJEABO  ANC",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 8500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "AYANBODE AJEABO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OASIS HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Astramad",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 11500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADEBAYO",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 8500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. QUDUS UNIQUE CARE HOSPITAL",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 22000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OLUWATAYO MATRON (CAC OKE IYE)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELAKUN",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. Nurse Ibitoye",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. OKAFOR  MGH",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 57000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7150
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ANTO HOSPITAL,",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTOLA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DIVINE CLINIC OKE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. THANNI  GHM",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BELLO OSAGIE ILASA PHC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. FEMI O.O",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "cases": 146,
+          "investigations": 181,
+          "patients": 138,
+          "revenue": 1216350,
+          "paid": 1209850
+        },
+        {
+          "Agent": "DR. OLANIYI",
+          "cases": 39,
+          "investigations": 41,
+          "patients": 39,
+          "revenue": 233950,
+          "paid": 233950
+        },
+        {
+          "Agent": "RAD OGUNDORO",
+          "cases": 31,
+          "investigations": 38,
+          "patients": 31,
+          "revenue": 239150,
+          "paid": 238150
+        },
+        {
+          "Agent": "MISS VIVIAN",
+          "cases": 20,
+          "investigations": 37,
+          "patients": 19,
+          "revenue": 221800,
+          "paid": 221000
+        },
+        {
+          "Agent": "RAD. WILSON",
+          "cases": 29,
+          "investigations": 34,
+          "patients": 29,
+          "revenue": 224500,
+          "paid": 224500
+        },
+        {
+          "Agent": "DR. ADEYERA",
+          "cases": 27,
+          "investigations": 27,
+          "patients": 27,
+          "revenue": 152700,
+          "paid": 152700
+        },
+        {
+          "Agent": "MRS ADERELE",
+          "cases": 2,
+          "investigations": 2,
+          "patients": 2,
+          "revenue": 15000,
+          "paid": 15000
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 200000,
+          "weekly": 1400000,
+          "monthly": 5000000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 220000,
+          "weekly": 1540000,
+          "monthly": 5500000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 100000,
+          "weekly": 700000,
+          "monthly": 2500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 170000,
+          "weekly": 1190000,
+          "monthly": 4250000
+        }
+      }
+    },
+    "2026-04-20": {
+      "week_label": "Mon 20 \u2013 Sun 26 Apr 2026",
+      "year": 2026,
+      "month": 4,
+      "quarter": "Q2 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-04-20",
+        "2026-04-21",
+        "2026-04-22",
+        "2026-04-23",
+        "2026-04-24",
+        "2026-04-25",
+        "2026-04-26"
+      ],
+      "date_labels": [
+        "Mon 20 Apr",
+        "Tue 21 Apr",
+        "Wed 22 Apr",
+        "Thu 23 Apr",
+        "Fri 24 Apr",
+        "Sat 25 Apr",
+        "Sun 26 Apr"
+      ],
+      "summary": {
+        "total_investigations": 475,
+        "total_cases": 358,
+        "total_patients": 351,
+        "total_unique_referrers": 49,
+        "total_revenue": 3030750,
+        "total_paid": 2849950,
+        "total_due": 104000,
+        "total_discount": 76800,
+        "cancelled": 2,
+        "collection_rate": 94.0
+      },
+      "daily": [
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 102000,
+          "paid": 95500,
+          "due": 6500,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 33,
+          "cases": 32,
+          "patients": 32,
+          "revenue": 212500,
+          "paid": 212500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 7,
+          "cases": 5,
+          "patients": 3,
+          "revenue": 43000,
+          "paid": 43000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 96,
+          "cases": 54,
+          "patients": 54,
+          "revenue": 546450,
+          "paid": 396650,
+          "due": 78000,
+          "unique_referrers": 13
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 19,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 129500,
+          "paid": 123000,
+          "due": 6500,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 22,
+          "cases": 22,
+          "patients": 22,
+          "revenue": 152350,
+          "paid": 152350,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 11,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 120500,
+          "paid": 120500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 13,
+          "cases": 13,
+          "patients": 13,
+          "revenue": 71900,
+          "paid": 71900,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 12,
+          "cases": 8,
+          "patients": 6,
+          "revenue": 72000,
+          "paid": 65500,
+          "due": 6500,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 32,
+          "cases": 29,
+          "patients": 29,
+          "revenue": 200400,
+          "paid": 200400,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 14,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 52500,
+          "paid": 52500,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 39,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 181600,
+          "paid": 180000,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 5,
+          "patients": 5,
+          "revenue": 66500,
+          "paid": 66500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 31,
+          "cases": 26,
+          "patients": 26,
+          "revenue": 234500,
+          "paid": 234500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 8,
+          "cases": 7,
+          "patients": 6,
+          "revenue": 37000,
+          "paid": 37000,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 16,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 106300,
+          "paid": 104100,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 15,
+          "cases": 12,
+          "patients": 10,
+          "revenue": 106500,
+          "paid": 100000,
+          "due": 6500,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 21,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 125850,
+          "paid": 125850,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 4,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 76000,
+          "paid": 76000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 21,
+          "cases": 17,
+          "patients": 17,
+          "revenue": 149000,
+          "paid": 147800,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-25",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 10,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 59000,
+          "paid": 59000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-25",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 5,
+          "cases": 5,
+          "patients": 5,
+          "revenue": 35900,
+          "paid": 35900,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-25",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 19000,
+          "paid": 19000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-26",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 18,
+          "cases": 14,
+          "patients": 14,
+          "revenue": 113000,
+          "paid": 113000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-26",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 17500,
+          "paid": 17500,
+          "due": 0,
+          "unique_referrers": 2
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 78,
+          "cases": 54,
+          "patients": 50,
+          "revenue": 535500,
+          "paid": 509500,
+          "due": 26000,
+          "unique_referrers": 17
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 162,
+          "cases": 148,
+          "patients": 148,
+          "revenue": 1074500,
+          "paid": 1074500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 44,
+          "cases": 29,
+          "patients": 26,
+          "revenue": 329000,
+          "paid": 329000,
+          "due": 0,
+          "unique_referrers": 10
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 191,
+          "cases": 127,
+          "patients": 127,
+          "revenue": 1091750,
+          "paid": 936950,
+          "due": 78000,
+          "unique_referrers": 25
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 24,
+          "investigations": 37,
+          "revenue": 203000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. kadri AJEABO",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 51000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 26000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " Nurse OJ",
+          "cases": 3,
+          "investigations": 6,
+          "revenue": 28000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " NURSE FATIMA",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 25000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 20000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BELLO OSAGIE ILASA PHC",
+          "cases": 2,
+          "investigations": 3,
+          "revenue": 32000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. IJEOMA PALM AVE PHC",
+          "cases": 2,
+          "investigations": 3,
+          "revenue": 31000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. NURSE OPEYEMI BLESSING",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " NURSE ROSEMARY",
+          "cases": 1,
+          "investigations": 6,
+          "revenue": 35500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTOLA ",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 22000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. MONELIN SMC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OBI MODUPE OLUWA CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 25000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. Segun Oyatoki",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. THANNI  GHM",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ugochukwu anthony smc",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 147,
+          "investigations": 161,
+          "revenue": 1069500
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 14,
+          "investigations": 23,
+          "revenue": 208500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. IJEOMA PALM AVE PHC",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 32500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 3,
+          "investigations": 6,
+          "revenue": 19000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 2,
+          "investigations": 3,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": " MGH ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AMAMASI SENTINEL HOSPITAL MUSHIN ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. IJEOMA SENTINEL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. OLIYIDE GH",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 17000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Mrs. TOPFAM 28 OFADA MUSHIN",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 60,
+          "investigations": 61,
+          "revenue": 357750
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 17,
+          "investigations": 46,
+          "revenue": 222400
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA ",
+          "cases": 13,
+          "investigations": 18,
+          "revenue": 95200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE ",
+          "cases": 7,
+          "investigations": 15,
+          "revenue": 82300
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT HOSPITAL ILESA",
+          "cases": 3,
+          "investigations": 9,
+          "revenue": 56700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU ",
+          "cases": 3,
+          "investigations": 4,
+          "revenue": 34000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr.  MATRON,OKOTORE GENERAL HOSPITAL,ILESA ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 11000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. AFOLABI GENERAL HOSPITAL,ILESA",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 2,
+          "investigations": 4,
+          "revenue": 18800
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OASIS HOSPITAL ",
+          "cases": 2,
+          "investigations": 5,
+          "revenue": 48700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PHARMA EMMANUEL A .O,HEALTH CARE PHARMACY ILESA",
+          "cases": 2,
+          "investigations": 4,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ABA ",
+          "cases": 1,
+          "investigations": 8,
+          "revenue": 55200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BEJIDE,IYABO IYERE MATERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DE-SHALOM  PHARMACY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GLORY MEDICAL CENRE ,ILESA ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ILERI-OLUWA MARTERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. KOMOLAFE  OLUROTIMI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MESSIAH CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLAOLUWANI MATERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLAYINKA O T",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. STANDARD HOSPITAL,",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "investigations": 201,
+          "cases": 120,
+          "patients": 113,
+          "revenue": 1310600,
+          "paid": 1138000
+        },
+        {
+          "Agent": "DR. OLORUNMO",
+          "investigations": 95,
+          "cases": 94,
+          "patients": 94,
+          "revenue": 556200,
+          "paid": 556200
+        },
+        {
+          "Agent": "MISS VIVIAN",
+          "investigations": 47,
+          "cases": 24,
+          "patients": 24,
+          "revenue": 259700,
+          "paid": 251500
+        },
+        {
+          "Agent": "DR.ODEWUMI",
+          "investigations": 38,
+          "cases": 38,
+          "patients": 38,
+          "revenue": 225650,
+          "paid": 225650
+        },
+        {
+          "Agent": "RAD. OGUNDORO",
+          "investigations": 38,
+          "cases": 32,
+          "patients": 32,
+          "revenue": 305500,
+          "paid": 305500
+        },
+        {
+          "Agent": "RAD. WILLSON",
+          "investigations": 31,
+          "cases": 27,
+          "patients": 27,
+          "revenue": 205100,
+          "paid": 205100
+        },
+        {
+          "Agent": "RAD. WILSON",
+          "investigations": 23,
+          "cases": 21,
+          "patients": 21,
+          "revenue": 153000,
+          "paid": 153000
+        },
+        {
+          "Agent": "MRS ADERELE",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 7500,
+          "paid": 7500
+        },
+        {
+          "Agent": "RANTI MARKETER",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 7500,
+          "paid": 7500
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 244000,
+          "weekly": 1708000,
+          "monthly": 6100000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 280000,
+          "weekly": 1960000,
+          "monthly": 7000000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 140000,
+          "weekly": 980000,
+          "monthly": 3500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 240000,
+          "weekly": 1680000,
+          "monthly": 6000000
+        }
+      }
+    },
+    "2026-04-13": {
+      "week_label": "Mon 13 \u2013 Sun 19 Apr 2026",
+      "year": 2026,
+      "month": 4,
+      "quarter": "Q2 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-04-13",
+        "2026-04-14",
+        "2026-04-15",
+        "2026-04-16",
+        "2026-04-17",
+        "2026-04-18",
+        "2026-04-19"
+      ],
+      "date_labels": [
+        "Mon 13 Apr",
+        "Tue 14 Apr",
+        "Wed 15 Apr",
+        "Thu 16 Apr",
+        "Fri 17 Apr",
+        "Sat 18 Apr",
+        "Sun 19 Apr"
+      ],
+      "summary": {
+        "total_investigations": 463,
+        "total_cases": 369,
+        "total_patients": 365,
+        "total_unique_referrers": 50,
+        "total_revenue": 2771950,
+        "total_paid": 2678850,
+        "total_due": 42500,
+        "total_discount": 50600,
+        "cancelled": 4,
+        "collection_rate": 96.6
+      },
+      "daily": [
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 21,
+          "cases": 12,
+          "patients": 11,
+          "revenue": 157500,
+          "paid": 151000,
+          "due": 6500,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 25,
+          "cases": 23,
+          "patients": 23,
+          "revenue": 162000,
+          "paid": 162000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 12,
+          "cases": 5,
+          "patients": 4,
+          "revenue": 73500,
+          "paid": 73500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 35,
+          "cases": 24,
+          "patients": 24,
+          "revenue": 241450,
+          "paid": 239850,
+          "due": 0,
+          "unique_referrers": 11
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 16,
+          "cases": 16,
+          "patients": 15,
+          "revenue": 112000,
+          "paid": 105500,
+          "due": 6500,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 27,
+          "cases": 24,
+          "patients": 24,
+          "revenue": 172500,
+          "paid": 172500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 19,
+          "cases": 9,
+          "patients": 8,
+          "revenue": 95000,
+          "paid": 95000,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 41,
+          "cases": 27,
+          "patients": 27,
+          "revenue": 227600,
+          "paid": 204800,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 10,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 60500,
+          "paid": 54000,
+          "due": 6500,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 28,
+          "cases": 22,
+          "patients": 22,
+          "revenue": 170000,
+          "paid": 170000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 2000,
+          "paid": 2000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 36,
+          "cases": 28,
+          "patients": 28,
+          "revenue": 246300,
+          "paid": 239100,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 8,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 47000,
+          "paid": 34000,
+          "due": 13000,
+          "unique_referrers": 4
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 21,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 132900,
+          "paid": 132900,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 2,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 18000,
+          "paid": 18000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 32,
+          "cases": 26,
+          "patients": 26,
+          "revenue": 128500,
+          "paid": 121000,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 8,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 30000,
+          "paid": 30000,
+          "due": 0,
+          "unique_referrers": 4
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 23,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 134500,
+          "paid": 134500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 5,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 31500,
+          "paid": 31500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 40,
+          "cases": 39,
+          "patients": 39,
+          "revenue": 189600,
+          "paid": 178100,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 10,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 80500,
+          "paid": 70500,
+          "due": 10000,
+          "unique_referrers": 4
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 14,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 91500,
+          "paid": 91500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 7,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 28000,
+          "paid": 28000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 11,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 73500,
+          "paid": 73500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-19",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 10,
+          "cases": 10,
+          "patients": 10,
+          "revenue": 59500,
+          "paid": 59500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-19",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 6600,
+          "paid": 6600,
+          "due": 0,
+          "unique_referrers": 1
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 73,
+          "cases": 59,
+          "patients": 57,
+          "revenue": 487500,
+          "paid": 445000,
+          "due": 42500,
+          "unique_referrers": 20
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 148,
+          "cases": 131,
+          "patients": 131,
+          "revenue": 922900,
+          "paid": 922900,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 46,
+          "cases": 23,
+          "patients": 21,
+          "revenue": 248000,
+          "paid": 248000,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 196,
+          "cases": 156,
+          "patients": 156,
+          "revenue": 1113550,
+          "paid": 1062950,
+          "due": 0,
+          "unique_referrers": 21
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 28,
+          "investigations": 34,
+          "revenue": 177500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 32500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. AWOTUNDUN (GBAJA HOSP) ",
+          "cases": 4,
+          "investigations": 10,
+          "revenue": 91500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " Nurse OJ",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 40000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BELLO OSAGIE ILASA PHC",
+          "cases": 3,
+          "investigations": 5,
+          "revenue": 44000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ugochukwu anthony smc",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " MRS OLADOJA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 2500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " NURSE OLAYINKA ST KIZITO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " mama COMFORT ADEYERI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELAKUN ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELEYE MCC ITIRE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTOLA ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE GHM (MCC)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. IJEOMA ILASA PHC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OLABISI MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OVANSA ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. THANNI  GHM",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. kadri AJEABO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 130,
+          "investigations": 147,
+          "revenue": 917400
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 11,
+          "investigations": 18,
+          "revenue": 105000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. IJEOMA PALM AVE PHC",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 35500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": " MGH ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. OGUNSUYI J",
+          "cases": 2,
+          "investigations": 7,
+          "revenue": 39000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr.  NURSE GOD'S FAVOUR",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. JOSEPH OGUNSUYI",
+          "cases": 1,
+          "investigations": 8,
+          "revenue": 33000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 10500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Rotimi ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 55,
+          "investigations": 62,
+          "revenue": 208400
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 51,
+          "investigations": 52,
+          "revenue": 350400
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 11,
+          "investigations": 12,
+          "revenue": 86100
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA ",
+          "cases": 9,
+          "investigations": 12,
+          "revenue": 60700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)",
+          "cases": 5,
+          "investigations": 9,
+          "revenue": 51200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 30600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. LIVING PETALS  MEDICAL CENTER ILESA",
+          "cases": 3,
+          "investigations": 5,
+          "revenue": 31000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ABA ",
+          "cases": 2,
+          "investigations": 9,
+          "revenue": 63700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DE-SHALOM  PHARMACY",
+          "cases": 2,
+          "investigations": 11,
+          "revenue": 58200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. IYERE,PHC ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 11000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MAYFIELD MEDICAL CLINIC ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 13750
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. AFOLABI GENERAL HOSPITAL,ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 12500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DIVINE INTERNATIONAL HEALTH",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 21000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GENERAL HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HABIBULAHI ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HALIF OGUNWALE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT LIFE KOMOLAFE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OKOTORE,GENERAL HOSPITAL,  ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE ",
+          "cases": 1,
+          "investigations": 6,
+          "revenue": 61700
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "investigations": 152,
+          "cases": 114,
+          "patients": 110,
+          "revenue": 932950,
+          "paid": 889950
+        },
+        {
+          "Agent": "MISS VIVIAN",
+          "investigations": 115,
+          "cases": 78,
+          "patients": 78,
+          "revenue": 622100,
+          "paid": 573000
+        },
+        {
+          "Agent": "DR. EZEOMA",
+          "investigations": 62,
+          "cases": 61,
+          "patients": 61,
+          "revenue": 358900,
+          "paid": 358900
+        },
+        {
+          "Agent": "DR. OLOWOMEYE",
+          "investigations": 48,
+          "cases": 47,
+          "patients": 47,
+          "revenue": 288500,
+          "paid": 288500
+        },
+        {
+          "Agent": "RAD. WILSON",
+          "investigations": 44,
+          "cases": 33,
+          "patients": 33,
+          "revenue": 297500,
+          "paid": 297500
+        },
+        {
+          "Agent": "RAD OGUNDORO",
+          "investigations": 37,
+          "cases": 31,
+          "patients": 31,
+          "revenue": 243500,
+          "paid": 243500
+        },
+        {
+          "Agent": "MRS ADERELE",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 22500,
+          "paid": 22500
+        },
+        {
+          "Agent": "MISS. EUNICE",
+          "investigations": 2,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 6000,
+          "paid": 5000
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 244000,
+          "weekly": 1708000,
+          "monthly": 6100000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 280000,
+          "weekly": 1960000,
+          "monthly": 7000000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 140000,
+          "weekly": 980000,
+          "monthly": 3500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 240000,
+          "weekly": 1680000,
+          "monthly": 6000000
+        }
+      }
+    }
+  }
+};
+const TARGETS_CFG={
+  "Ilasa Main Centre, Lagos": {
+    "short": "Ilasa",
+    "color": "2E86AB",
+    "monthly": [
+      5000000,
+      6100000,
+      7000000,
+      7950000
+    ],
+    "daily": [
+      200000,
+      244000,
+      280000,
+      318000
+    ]
+  },
+  "OAUTH Ilesa Centre": {
+    "short": "OAUTH",
+    "color": "8E44AD",
+    "monthly": [
+      5500000,
+      7000000,
+      7500000,
+      8000000
+    ],
+    "daily": [
+      220000,
+      280000,
+      300000,
+      320000
+    ]
+  },
+  "Palm Avenue, Lagos": {
+    "short": "Palm Ave",
+    "color": "16A085",
+    "monthly": [
+      2500000,
+      3500000,
+      4000000,
+      4410000
+    ],
+    "daily": [
+      100000,
+      140000,
+      160000,
+      176400
+    ]
+  },
+  "Sure Ilesha, Osun": {
+    "short": "Sure Ilesha",
+    "color": "E67E22",
+    "monthly": [
+      4250000,
+      6000000,
+      7500000,
+      8500000
+    ],
+    "daily": [
+      170000,
+      240000,
+      300000,
+      340000
+    ]
+  },
+  "Ikeja Lagos Centre": {
+    "short": "Ikeja",
+    "color": "2196F3",
+    "monthly": [
+      2000000,
+      3000000,
+      5250000,
+      7250000
+    ],
+    "daily": [
+      80000,
+      120000,
+      210000,
+      290000
+    ]
+  }
+};
+const COLOURS=['#2E86AB','#8E44AD','#16A085','#E67E22','#E74C3C','#F39C12'];
+const MONTH_NAMES=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const charts={};
+let state={year:null,month:0,week:null,mode:'summary',centre:'ALL'};
+
+// ── Formatting ──────────────────────────────────────────────────────────────
+const fmt=n=>n==null?'–':'₦'+Math.round(n).toLocaleString();
+const fmtN=n=>n==null?'–':Number(n).toLocaleString();
+function badge(val,hi=100,lo=80){
+  if(val==null||val==='–')return`<span class="badge badge-gray">–</span>`;
+  const n=parseFloat(val);
+  if(isNaN(n))return`<span class="badge badge-gray">${val}</span>`;
+  const cls=n>=hi?'badge-green':n>=lo?'badge-amber':'badge-red';
+  return`<span class="badge ${cls}">${val}</span>`;
+}
+function achvBadge(actual,target){
+  if(!target||!actual)return`<span class="badge badge-gray">${target?'–':'No target'}</span>`;
+  const p=actual/target*100;
+  const cls=p>=100?'badge-green':p>=80?'badge-amber':'badge-red';
+  return`<span class="badge ${cls}">${p.toFixed(1)}%</span>`;
+}
+function short(c){const t=TARGETS_CFG[c];return t?t.short:c.split(',')[0];}
+function cCol(c){const cs=allCentres();return COLOURS[Math.max(0,cs.indexOf(c))%COLOURS.length];}
+
+// ── Data helpers ─────────────────────────────────────────────────────────────
+function allCentres(){
+  const cs=new Set();
+  Object.values(HISTORY.weeks).forEach(w=>(w.centres||[]).forEach(c=>cs.add(c)));
+  return [...cs].sort();
+}
+function getYears(){
+  return[...new Set(Object.keys(HISTORY.weeks).map(k=>+k.slice(0,4)))].sort((a,b)=>b-a);
+}
+function getMonths(year){
+  const ms=[...new Set(Object.keys(HISTORY.weeks).filter(k=>+k.slice(0,4)===year).map(k=>+k.slice(5,7)))].sort((a,b)=>a-b);
+  return[0,...ms]; // 0 = All months
+}
+function getWeekKeys(year,month){
+  return Object.keys(HISTORY.weeks).filter(k=>{
+    const y=+k.slice(0,4),m=+k.slice(5,7);
+    return y===year&&(month===0||m===month);
+  }).sort();
+}
+
+// Period target: sum of daily_target × 7 for each week in the period, per centre
+function periodTarget(centre,weekKeys){
+  if(!TARGETS_CFG[centre])return null;
+  let total=0;
+  for(const key of weekKeys){
+    const m=+key.slice(5,7);
+    const qi=Math.floor((m-1)/3);
+    const d=(TARGETS_CFG[centre].daily||[])[qi]||0;
+    total+=d*7;
+  }
+  return total||null;
+}
+
+// ── Aggregation ──────────────────────────────────────────────────────────────
+function aggregate(weekKeys,filterCentre){
+  const sum={investigations:0,cases:0,patients:0,referrers:0,revenue:0,paid:0,due:0,cancelled:0};
+  const centreMap={};
+  const trend=[];
+  const refMap={};
+  const agentMap={};
+
+  for(const key of weekKeys){
+    const w=HISTORY.weeks[key];
+    if(!w)continue;
+    const centres=filterCentre==='ALL'?(w.centres||[]):(w.centres||[]).filter(c=>c===filterCentre);
+    const wlyCentres=(w.weekly||[]).filter(r=>filterCentre==='ALL'||r['Collection centre']===filterCentre);
+
+    let wRev=0,wPaid=0,wDue=0,wInv=0,wCases=0,wPat=0,wRefs=0;
+    for(const cr of wlyCentres){
+      const c=cr['Collection centre'];
+      if(!centreMap[c])centreMap[c]={centre:c,investigations:0,cases:0,revenue:0,paid:0,due:0,patients:0,referrers:0};
+      centreMap[c].investigations+=(cr.investigations||0);
+      centreMap[c].cases+=(cr.cases||0);
+      centreMap[c].revenue+=(cr.revenue||0);
+      centreMap[c].paid+=(cr.paid||0);
+      centreMap[c].due+=(cr.due||0);
+      centreMap[c].patients+=(cr.patients||0);
+      centreMap[c].referrers+=(cr.unique_referrers||0);
+      wRev+=(cr.revenue||0);wPaid+=(cr.paid||0);wDue+=(cr.due||0);
+      wInv+=(cr.investigations||0);wCases+=(cr.cases||0);
+      wPat+=(cr.patients||0);wRefs+=(cr.unique_referrers||0);
+    }
+    if(filterCentre==='ALL'){
+      sum.patients+=(w.summary.total_patients||0);
+      sum.referrers+=(w.summary.total_unique_referrers||0);
+      sum.cancelled+=(w.summary.cancelled||0);
+    } else {
+      sum.patients+=wPat; sum.referrers+=wRefs;
+    }
+    sum.revenue+=wRev;sum.paid+=wPaid;sum.due+=wDue;
+    sum.investigations+=wInv;sum.cases+=wCases;
+
+    trend.push({key,label:w.week_label||key,revenue:wRev,paid:wPaid,investigations:wInv,cases:wCases});
+
+    // Referrers
+    for(const r of(w.top_referrers||[])){
+      if(filterCentre!=='ALL'&&r['Collection centre']!==filterCentre)continue;
+      const k2=r['Referrer']||'Unknown';
+      if(!refMap[k2])refMap[k2]={ref:k2,centre:r['Collection centre'],cases:0,revenue:0};
+      refMap[k2].cases+=(r.cases||0);refMap[k2].revenue+=(r.revenue||0);
+    }
+    // Agents
+    for(const a of(w.agent_total||[])){
+      const ak=a['Agent']||'Unknown';
+      if(!agentMap[ak])agentMap[ak]={agent:ak,investigations:0,cases:0,revenue:0,paid:0};
+      agentMap[ak].investigations+=(a.investigations||0);
+      agentMap[ak].cases+=(a.cases||0);
+      agentMap[ak].revenue+=(a.revenue||0);
+      agentMap[ak].paid+=(a.paid||0);
+    }
+  }
+  sum.collection_rate=sum.revenue>0?(sum.paid/sum.revenue*100).toFixed(1):0;
+  return{
+    summary:sum,
+    centreBreakdown:Object.values(centreMap).sort((a,b)=>b.revenue-a.revenue),
+    trend:trend.sort((a,b)=>a.key.localeCompare(b.key)),
+    topReferrers:Object.values(refMap).sort((a,b)=>b.cases-a.cases).slice(0,40),
+    agents:Object.values(agentMap).sort((a,b)=>b.investigations-a.investigations),
+  };
+}
+
+// ── Chart helpers ────────────────────────────────────────────────────────────
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function mkChart(id,config){destroyChart(id);charts[id]=new Chart(document.getElementById(id).getContext('2d'),config);}
+
+// ── Filter controls ──────────────────────────────────────────────────────────
+function filterCentre(c,el){
+  state.centre=c;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderAll();
+}
+function setMode(m){
+  state.mode=m;
+  document.getElementById('btnSum').classList.toggle('active',m==='summary');
+  document.getElementById('btnDrill').classList.toggle('active',m==='drill');
+  document.getElementById('summaryView').classList.toggle('hidden',m==='drill');
+  document.getElementById('drillView').classList.toggle('hidden',m==='summary');
+  renderAll();
+}
+function onYearChange(y){
+  state.year=y;state.month=0;state.week=null;
+  populateMonths(y);populateWeeks(y,0);renderAll();
+}
+function onMonthChange(m){
+  state.month=m;state.week=null;
+  populateWeeks(state.year,m);renderAll();
+}
+function onWeekChange(v){state.week=v||null;renderAll();}
+
+function populateYears(years){
+  const s=document.getElementById('yrSel');s.innerHTML='';
+  years.forEach(y=>{const o=document.createElement('option');o.value=y;o.text=y;s.appendChild(o);});
+  s.value=state.year||years[0];
+}
+function populateMonths(year){
+  const s=document.getElementById('monSel');s.innerHTML='';
+  getMonths(year).forEach(m=>{
+    const o=document.createElement('option');o.value=m;
+    o.text=m===0?'All Months':MONTH_NAMES[m];s.appendChild(o);
+  });
+  s.value=state.month;
+}
+function populateWeeks(year,month){
+  const s=document.getElementById('wkSel');s.innerHTML='';
+  const allOpt=document.createElement('option');allOpt.value='';allOpt.text='All Weeks';s.appendChild(allOpt);
+  getWeekKeys(year,month).forEach(key=>{
+    const w=HISTORY.weeks[key];
+    const o=document.createElement('option');o.value=key;
+    o.text=w?w.week_label:key;s.appendChild(o);
+  });
+  s.value=state.week||'';
+}
+
+// ── Current week keys (what to show) ─────────────────────────────────────────
+function currentWeekKeys(){
+  if(state.week)return[state.week];
+  return getWeekKeys(state.year,state.month);
+}
+
+// ── Period label ─────────────────────────────────────────────────────────────
+function updatePeriodLabel(weekKeys){
+  const numW=weekKeys.length;
+  let label='';
+  if(state.week){
+    const w=HISTORY.weeks[state.week];
+    label=w?'Week: '+w.week_label:'Week: '+state.week;
+  } else if(state.month===0){
+    label='Full Year '+state.year+' — '+numW+' week'+(numW!==1?'s':'')+' of data';
+  } else {
+    label=MONTH_NAMES[state.month]+' '+state.year+' — '+numW+' week'+(numW!==1?'s':'')+' of data';
+  }
+  const q=state.month?'Q'+Math.ceil(state.month/3)+' ':'';
+  document.getElementById('periodLabel').textContent=`${label}   ·   ${q}${state.year} targets applied`;
+}
+
+// ── Top note ─────────────────────────────────────────────────────────────────
+function updateNote(weekKeys){
+  const s=Object.keys(HISTORY.weeks).length;
+  document.getElementById('topNote').innerHTML=
+    `⚠️ Tests = individual investigations (comma-separated). Cases = case rows. `+
+    `Revenue = Total Fee (billed). Unique Referrers = distinct doctors/sources. `+
+    `<strong>${weekKeys.length} week${weekKeys.length!==1?'s':''}</strong> selected from `+
+    `<strong>${s} total</strong> in history. Mode: <strong>${state.mode==='summary'?'Summary (aggregated)':'Weekly Drill-down'}</strong>`;
+}
+
+// ── KPI rendering ────────────────────────────────────────────────────────────
+function renderKPI(agg,prefix,weekKeys){
+  const s=agg.summary;
+  const cents=state.centre==='ALL'?allCentres():[state.centre];
+  const totalTgt=cents.reduce((acc,c)=>{const t=periodTarget(c,weekKeys);return acc+(t||0);},0);
+  function setEl(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+  setEl(`${prefix}kpi-inv`,fmtN(s.investigations));
+  setEl(`${prefix}kpi-cases`,fmtN(s.cases));
+  setEl(`${prefix}kpi-refs`,fmtN(s.referrers));
+  setEl(`${prefix}kpi-rev`,fmt(s.revenue));
+  setEl(`${prefix}kpi-paid`,fmt(s.paid));
+  setEl(`${prefix}kpi-due`,fmt(s.due));
+  setEl(`${prefix}kpi-rate`,s.revenue>0?(s.paid/s.revenue*100).toFixed(1)+'%':'–');
+  const sub=document.getElementById(`${prefix}kpi-rev-sub`);
+  if(sub)sub.textContent=totalTgt>0?`${(s.revenue/totalTgt*100).toFixed(1)}% of ${fmt(totalTgt)} target`:'Total fee billed';
+}
+
+// ── Summary charts ───────────────────────────────────────────────────────────
+function renderTrendChart(agg,weekKeys){
+  const labels=agg.trend.map(t=>{
+    // Shorten: "Mon 23 – Sun 29 Mar 2026" → "23-29 Mar"
+    const w=HISTORY.weeks[t.key];
+    if(!w)return t.key;
+    const d=t.key.slice(5,7)+'/'+t.key.slice(8,10);
+    return w.week_label?w.week_label.replace(/Mon\s/,'').replace(/–\sSun\s/,'-').replace(/\s\d{4}/,''):d;
+  });
+  const isMulti=labels.length>1;
+  document.getElementById('trendTitle').textContent='Revenue by Week (₦)';
+  document.getElementById('invTrendTitle').textContent='Investigations by Week';
+  mkChart('chartTrend',{type:'bar',data:{labels,datasets:[
+    {label:'Revenue',data:agg.trend.map(t=>t.revenue),backgroundColor:'#2E86ABBB',borderColor:'#2E86AB',borderWidth:1},
+    {label:'Collected',data:agg.trend.map(t=>t.paid),backgroundColor:'#27AE60BB',borderColor:'#27AE60',borderWidth:1},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+    scales:{y:{ticks:{callback:v=>'₦'+(v/1e6>=1?(v/1e6).toFixed(1)+'M':(v/1e3).toFixed(0)+'K'),font:{size:9}},grid:{color:'#EEE'}},
+      x:{ticks:{font:{size:9}}}}}});
+  mkChart('chartInvTrend',{type:'line',data:{labels,datasets:[
+    {label:'Investigations',data:agg.trend.map(t=>t.investigations),borderColor:'#2E86AB',backgroundColor:'#2E86AB22',tension:.3,fill:true,pointRadius:3},
+    {label:'Cases',data:agg.trend.map(t=>t.cases),borderColor:'#E67E22',backgroundColor:'transparent',tension:.3,borderDash:[5,3],pointRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+    scales:{y:{ticks:{font:{size:9}},grid:{color:'#EEE'}},x:{ticks:{font:{size:9}}}}}});
+}
+
+function renderCentreCharts(agg,weekKeys){
+  const cents=state.centre==='ALL'?allCentres():[state.centre];
+  const activeCents=cents.filter(c=>agg.centreBreakdown.find(r=>r.centre===c));
+  const labs=activeCents.map(c=>short(c));
+  const revs=activeCents.map(c=>{const r=agg.centreBreakdown.find(x=>x.centre===c);return r?r.revenue:0;});
+  const tgts=activeCents.map(c=>periodTarget(c,weekKeys)||0);
+  const paids=activeCents.map(c=>{const r=agg.centreBreakdown.find(x=>x.centre===c);return r?r.paid:0;});
+  const bgCols=activeCents.map(c=>cCol(c)+'BB');
+  mkChart('chartVsTarget',{type:'bar',data:{labels:labs,datasets:[
+    {label:'Actual Revenue',data:revs,backgroundColor:bgCols,borderColor:activeCents.map(c=>cCol(c)),borderWidth:1},
+    {label:'Period Target',data:tgts,type:'line',borderColor:'#E74C3C',backgroundColor:'transparent',borderWidth:2,borderDash:[6,3],pointRadius:4,pointBackgroundColor:'#E74C3C'},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+    scales:{y:{ticks:{callback:v=>'₦'+(v/1e6>=1?(v/1e6).toFixed(1)+'M':(v/1e3).toFixed(0)+'K'),font:{size:9}},grid:{color:'#EEE'}},
+      x:{ticks:{font:{size:9}}}}}});
+  mkChart('chartRevColl',{type:'bar',data:{labels:labs,datasets:[
+    {label:'Total Billed',data:revs,backgroundColor:'#2E86ABBB',borderColor:'#2E86AB',borderWidth:1},
+    {label:'Collected',data:paids,backgroundColor:'#27AE60BB',borderColor:'#27AE60',borderWidth:1},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+    scales:{y:{ticks:{callback:v=>'₦'+(v/1e6>=1?(v/1e6).toFixed(1)+'M':(v/1e3).toFixed(0)+'K'),font:{size:9}},grid:{color:'#EEE'}},
+      x:{ticks:{font:{size:9}}}}}});
+}
+
+// ── Summary tables ───────────────────────────────────────────────────────────
+function renderCentreTable(agg,weekKeys){
+  const rows=agg.centreBreakdown;
+  let totalRev=0,totalPaid=0,totalDue=0,totalInv=0,totalCases=0;
+  let html='';
+  for(const r of rows){
+    const tgt=periodTarget(r.centre,weekKeys);
+    const cr=r.revenue>0?(r.paid/r.revenue*100).toFixed(1)+'%':'–';
+    const avgFee=r.cases>0?Math.round(r.revenue/r.cases):0;
+    totalRev+=r.revenue;totalPaid+=r.paid;totalDue+=r.due;totalInv+=r.investigations;totalCases+=r.cases;
+    html+=`<tr><td><span class="dot" style="background:${cCol(r.centre)}"></span>${r.centre}</td>
+      <td>${fmtN(r.investigations)}</td><td>${fmtN(r.cases)}</td>
+      <td>${fmt(r.revenue)}</td><td>${fmt(r.paid)}</td><td>${fmt(r.due)}</td>
+      <td>${fmt(tgt)}</td><td>${achvBadge(r.revenue,tgt)}</td>
+      <td>${badge(cr,98,90)}</td><td>${fmt(avgFee)}</td></tr>`;
+  }
+  const totTgt=allCentres().filter(c=>state.centre==='ALL'||c===state.centre)
+    .reduce((s,c)=>{const t=periodTarget(c,weekKeys);return s+(t||0);},0);
+  const totCr=totalRev>0?(totalPaid/totalRev*100).toFixed(1)+'%':'–';
+  html+=`<tr class="total-row">
+    <td>TOTAL</td><td>${fmtN(totalInv)}</td><td>${fmtN(totalCases)}</td>
+    <td>${fmt(totalRev)}</td><td>${fmt(totalPaid)}</td><td>${fmt(totalDue)}</td>
+    <td>${fmt(totTgt||null)}</td><td>${achvBadge(totalRev,totTgt)}</td>
+    <td>${totCr}</td><td>–</td></tr>`;
+  document.getElementById('centreTbody').innerHTML=html;
+}
+function renderRefTable(refs,prefix){
+  const centreRevMap={};
+  if(!prefix){
+    // build centre total rev map for % calc
+    document.getElementById('refTbody'+(prefix||'')).innerHTML=
+      refs.map((r,i)=>`<tr><td>${i+1}</td><td><span class="dot" style="background:${cCol(r.centre)}"></span>${r.centre}</td>
+        <td>${r.ref}</td><td>${fmtN(r.cases)}</td><td>${fmt(r.revenue)}</td><td>–</td></tr>`).join('');
+  }
+}
+function renderRefTable2(refs,centreBreakdown){
+  const revMap={};
+  centreBreakdown.forEach(r=>{revMap[r.centre]=r.revenue;});
+  document.getElementById('refTbody').innerHTML=refs.map((r,i)=>{
+    const pct=revMap[r.centre]>0?(r.revenue/revMap[r.centre]*100).toFixed(1)+'%':'–';
+    return`<tr><td>${i+1}</td><td><span class="dot" style="background:${cCol(r.centre)}"></span>${r.centre}</td>
+      <td>${r.ref}</td><td>${fmtN(r.cases)}</td><td>${fmt(r.revenue)}</td><td>${pct}</td></tr>`;
+  }).join('');
+}
+function renderAgentTable(agents,tbodyId){
+  document.getElementById(tbodyId).innerHTML=agents.map((a,i)=>{
+    const cr=a.revenue>0?(a.paid/a.revenue*100).toFixed(1)+'%':'–';
+    return`<tr><td>${i+1}</td><td>${a.agent}</td><td>${fmtN(a.investigations)}</td>
+      <td>${fmtN(a.cases)}</td><td>${fmt(a.revenue)}</td><td>${fmt(a.paid)}</td>
+      <td>${badge(cr,98,90)}</td></tr>`;
+  }).join('');
+}
+
+// ── Drill-down rendering (single week) ───────────────────────────────────────
+function renderDrill(weekKey){
+  const w=HISTORY.weeks[weekKey];
+  if(!w){document.getElementById('drillNote').textContent='No data for selected week.';return;}
+  const fcentre=state.centre;
+
+  document.getElementById('drillNote').innerHTML=
+    `<strong>${w.week_label}</strong> — ${w.quarter||''} targets applied. `+
+    `Cancelled: ${w.summary.cancelled||0}. Tests = investigations; Cases = case rows.`;
+
+  // KPIs
+  const daily=fcentre==='ALL'?w.daily:w.daily.filter(r=>r['Collection centre']===fcentre);
+  const weekly=fcentre==='ALL'?w.weekly:w.weekly.filter(r=>r['Collection centre']===fcentre);
+  let dRev=0,dPaid=0,dDue=0,dInv=0,dCases=0,dPat=0,dRefCnt=0;
+  daily.forEach(r=>{dRev+=(r.revenue||0);dPaid+=(r.paid||0);dDue+=(r.due||0);dInv+=(r.investigations||0);dCases+=(r.cases||0);});
+  weekly.forEach(r=>{dPat+=(r.patients||0);dRefCnt+=(r.unique_referrers||0);});
+  ['inv','cases','refs','rev','paid','due','rate'].forEach(k=>{
+    const el=document.getElementById('dkpi-'+k);if(el)el.textContent='–';
+  });
+  document.getElementById('dkpi-inv').textContent=fmtN(dInv);
+  document.getElementById('dkpi-cases').textContent=fmtN(dCases);
+  document.getElementById('dkpi-refs').textContent=fmtN(dRefCnt);
+  document.getElementById('dkpi-rev').textContent=fmt(dRev);
+  document.getElementById('dkpi-paid').textContent=fmt(dPaid);
+  document.getElementById('dkpi-due').textContent=fmt(dDue);
+  document.getElementById('dkpi-rate').textContent=dRev>0?(dPaid/dRev*100).toFixed(1)+'%':'–';
+  const dTgts=(fcentre==='ALL'?allCentres():[fcentre]).reduce((s,c)=>{const t=periodTarget(c,[weekKey]);return s+(t||0);},0);
+  const drSub=document.getElementById('dkpi-rev-sub');
+  if(drSub)drSub.textContent=dTgts>0?`${(dRev/dTgts*100).toFixed(1)}% of ${fmt(dTgts)} weekly target`:'vs weekly target';
+
+  // Daily charts
+  const dates=w.dates||[...new Set(daily.map(r=>r['Date']))].sort();
+  const dateLabels=w.date_labels||(()=>{
+    const d=new Date(dates[0]);
+    return dates.map(ds=>{const dt=new Date(ds);return dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});});
+  })();
+  const cents=fcentre==='ALL'?(w.centres||[...new Set(daily.map(r=>r['Collection centre']))].sort()):[fcentre];
+
+  mkChart('dChartDailyInv',{type:'bar',data:{labels:dateLabels,datasets:cents.map((c,i)=>({
+    label:short(c),
+    data:dates.map(d=>{const r=daily.find(x=>x['Date']===d&&x['Collection centre']===c);return r?r.investigations:0;}),
+    backgroundColor:COLOURS[i%COLOURS.length]+'BB',borderColor:COLOURS[i%COLOURS.length],borderWidth:1,
+  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:9}}}},
+    scales:{x:{stacked:true,ticks:{font:{size:9}}},y:{stacked:true,ticks:{font:{size:9}},grid:{color:'#EEE'}}}}});
+
+  mkChart('dChartDailyRev',{type:'bar',data:{labels:dateLabels,datasets:cents.map((c,i)=>({
+    label:short(c),
+    data:dates.map(d=>{const r=daily.find(x=>x['Date']===d&&x['Collection centre']===c);return r?r.revenue:0;}),
+    backgroundColor:COLOURS[i%COLOURS.length]+'BB',borderColor:COLOURS[i%COLOURS.length],borderWidth:1,
+  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:9}}}},
+    scales:{x:{stacked:true,ticks:{font:{size:9}}},y:{stacked:true,ticks:{callback:v=>'₦'+(v/1e3).toFixed(0)+'K',font:{size:9}},grid:{color:'#EEE'}}}}});
+
+  // vs Target chart
+  const wRevByCentre=cents.map(c=>{const r=weekly.find(x=>x['Collection centre']===c);return r?r.revenue:0;});
+  const wTgtByCentre=cents.map(c=>periodTarget(c,[weekKey])||0);
+  mkChart('dChartVsTarget',{type:'bar',data:{labels:cents.map(c=>short(c)),datasets:[
+    {label:'Actual',data:wRevByCentre,backgroundColor:cents.map((c,i)=>COLOURS[i%COLOURS.length]+'BB'),borderColor:cents.map((c,i)=>COLOURS[i%COLOURS.length]),borderWidth:1},
+    {label:'Target',data:wTgtByCentre,type:'line',borderColor:'#E74C3C',backgroundColor:'transparent',borderWidth:2,borderDash:[6,3],pointRadius:4,pointBackgroundColor:'#E74C3C'},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:9}}}},
+    scales:{y:{ticks:{callback:v=>'₦'+(v/1e3).toFixed(0)+'K',font:{size:9}},grid:{color:'#EEE'}},x:{ticks:{font:{size:9}}}}}});
+
+  // Daily collection rate
+  mkChart('dChartCollRate',{type:'line',data:{labels:dateLabels,datasets:cents.map((c,i)=>({
+    label:short(c),
+    data:dates.map(d=>{const r=daily.find(x=>x['Date']===d&&x['Collection centre']===c);return(r&&r.revenue)?+(r.paid/r.revenue*100).toFixed(1):null;}),
+    borderColor:COLOURS[i%COLOURS.length],backgroundColor:'transparent',tension:.3,pointRadius:3,
+  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:9}}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:9}},grid:{color:'#EEE'}},x:{ticks:{font:{size:9}}}}}});
+
+  // Daily table
+  const sortedDaily=[...daily].sort((a,b)=>a['Date']===b['Date']?a['Collection centre'].localeCompare(b['Collection centre']):a['Date'].localeCompare(b['Date']));
+  document.getElementById('dailyTbody').innerHTML=sortedDaily.map(r=>{
+    const c=r['Collection centre'];
+    const dt=(w.centre_targets||{})[c]?.daily;
+    const rev=r.revenue||0;const cr=rev>0?(r.paid/rev*100).toFixed(1)+'%':'–';
+    return`<tr><td>${r['Date']}</td>
+      <td><span class="dot" style="background:${cCol(c)}"></span>${c}</td>
+      <td>${fmtN(r.investigations)}</td><td>${fmtN(r.cases)}</td><td>${fmtN(r.patients)}</td>
+      <td>${fmtN(r.unique_referrers)}</td><td>${fmt(rev)}</td><td>${fmt(r.paid)}</td><td>${fmt(r.due)}</td>
+      <td>${fmt(dt)}</td><td>${achvBadge(rev,dt)}</td><td>${badge(cr,98,90)}</td></tr>`;
+  }).join('');
+
+  // Weekly summary table
+  document.getElementById('weeklyTbody').innerHTML=weekly.map(r=>{
+    const c=r['Collection centre'];
+    const wt=periodTarget(c,[weekKey]);const rev=r.revenue||0;
+    const cr=rev>0?(r.paid/rev*100).toFixed(1)+'%':'–';
+    return`<tr><td><span class="dot" style="background:${cCol(c)}"></span>${c}</td>
+      <td>${fmtN(r.investigations)}</td><td>${fmtN(r.cases)}</td><td>${fmtN(r.patients)}</td>
+      <td>${fmtN(r.unique_referrers)}</td><td>${fmt(rev)}</td><td>${fmt(r.paid)}</td><td>${fmt(r.due)}</td>
+      <td>${fmt(wt)}</td><td>${achvBadge(rev,wt)}</td><td>${badge(cr,98,90)}</td></tr>`;
+  }).join('');
+
+  // Drill referrers + agents
+  const dRefs=(fcentre==='ALL'?w.top_referrers:(w.top_referrers||[]).filter(r=>r['Collection centre']===fcentre))||[];
+  document.getElementById('dRefTbody').innerHTML=dRefs.slice(0,30).map((r,i)=>
+    `<tr><td>${i+1}</td><td><span class="dot" style="background:${cCol(r['Collection centre'])}"></span>${r['Collection centre']}</td>
+    <td>${r['Referrer']}</td><td>${fmtN(r.cases)}</td><td>${fmt(r.revenue)}</td></tr>`).join('');
+  renderAgentTable(w.agent_total||[],'dAgentTbody');
+}
+
+// ── Master render ─────────────────────────────────────────────────────────────
+function renderAll(){
+  const weekKeys=currentWeekKeys();
+  updatePeriodLabel(weekKeys);
+  updateNote(weekKeys);
+  document.getElementById('weekCount').textContent=`${weekKeys.length} week${weekKeys.length!==1?'s':''} loaded`;
+
+  if(state.mode==='summary'){
+    const agg=aggregate(weekKeys,state.centre);
+    renderKPI(agg,'',weekKeys);
+    renderTrendChart(agg,weekKeys);
+    renderCentreCharts(agg,weekKeys);
+    renderCentreTable(agg,weekKeys);
+    renderRefTable2(agg.topReferrers,agg.centreBreakdown);
+    renderAgentTable(agg.agents,'agentTbody');
+  } else {
+    // Drill-down
+    const wk=state.week||(weekKeys.length>0?weekKeys[weekKeys.length-1]:null);
+    if(wk){
+      // Update week select to match
+      document.getElementById('wkSel').value=wk;
+      renderDrill(wk);
+    } else {
+      document.getElementById('drillNote').textContent='Please select a specific week to view the drill-down.';
+    }
+  }
+}
+
+// ── Initialization ────────────────────────────────────────────────────────────
+function init(){
+  const years=getYears();
+  state.year=years[0];
+  populateYears(years);
+  const months=getMonths(state.year);
+  state.month=months[months.length-1]||0; // default to most recent month
+  document.getElementById('monSel').value=state.month;
+  populateMonths(state.year);
+  document.getElementById('monSel').value=state.month;
+  const weekKeys=getWeekKeys(state.year,state.month);
+  state.week=weekKeys.length>0?weekKeys[weekKeys.length-1]:null; // default to most recent week
+  populateWeeks(state.year,state.month);
+  document.getElementById('wkSel').value=state.week||'';
+
+  // Centre tabs
+  const bar=document.getElementById('centreBar');
+  allCentres().forEach((c,i)=>{
+    const d=document.createElement('div');d.className='tab';
+    d.innerHTML=`<span class="dot" style="background:${COLOURS[i%COLOURS.length]}"></span>${short(c)}`;
+    d.onclick=()=>filterCentre(c,d);bar.appendChild(d);
+  });
+
+  document.getElementById('centreList').textContent=allCentres().join('  |  ');
+  renderAll();
+}
+document.addEventListener('DOMContentLoaded',()=>init());
+</script></body></html>

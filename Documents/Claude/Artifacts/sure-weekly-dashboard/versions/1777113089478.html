@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Sure Weekly Dashboard",
+  "schemaVersion": 1,
+  "description": "Sure Finance & Business weekly performance dashboard. Shows KPI cards, per-centre revenue vs target, bar and trend charts, and a summary table. Data is embedded as HISTORY JSON and updated by the sure-weekly-dashboard skill after each pipeline run."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sure Weekly Performance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;--navy:#1F3864;--teal:#2E86AB;--green:#27AE60;--amber:#E67E22;--red:#E74C3C;--bg:#F0F4F8;--card:#fff;--border:#DDE3EA;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:var(--bg);color:#2C3E50;font-size:13px;}
+.hdr{background:var(--navy);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;}
+.hdr h1{font-size:15px;font-weight:700;letter-spacing:.4px;}
+.hdr .meta{font-size:11px;opacity:.7;text-align:right;}
+.ctrl{background:#fff;border-bottom:2px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ctrl label{font-size:11px;font-weight:700;color:#666;}
+.ctrl select{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--navy);font-weight:600;cursor:pointer;}
+.ctrl select:focus{outline:none;border-color:var(--teal);}
+.wk-label{margin-left:auto;background:linear-gradient(135deg,var(--teal),var(--navy));color:#fff;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;}
+.main{padding:16px 20px;max-width:1400px;margin:0 auto;}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
+.kpi{background:var(--card);border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:4px solid var(--teal);text-align:center;}
+.kpi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;font-weight:700;}
+.kpi-val{font-size:20px;font-weight:800;color:var(--navy);margin:4px 0 2px;}
+.kpi-sub{font-size:10px;color:#aaa;}
+.centre-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.centre-card{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.cc-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cc-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.cc-name{font-size:12px;font-weight:700;color:var(--navy);}
+.cc-rev{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:2px;}
+.cc-tgt{font-size:10px;color:#888;margin-bottom:8px;}
+.prog-bg{background:#F0F4F8;border-radius:6px;height:8px;margin-bottom:6px;}
+.prog-fill{height:8px;border-radius:6px;transition:width .4s;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge-g{background:#D5F5E3;color:#1E8449;}
+.badge-a{background:#FCF3CF;color:#9A7D0A;}
+.badge-r{background:#FADBD8;color:#922B21;}
+.cc-stats{display:flex;gap:0;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;}
+.cc-stat{flex:1;text-align:center;}
+.cc-stat-v{font-size:14px;font-weight:700;color:var(--navy);}
+.cc-stat-l{font-size:9px;color:#aaa;text-transform:uppercase;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.chart-card{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.chart-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+.chart-wrap{position:relative;height:200px;}
+.tbl-card{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.tbl-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--navy);color:#fff;}
+thead th{padding:7px 9px;font-size:11px;font-weight:700;text-align:center;white-space:nowrap;}
+thead th:first-child{text-align:left;}
+tbody tr:nth-child(even){background:#F7FAFC;}
+tbody tr:hover{background:#EBF5FB;}
+tbody td{padding:6px 9px;border-bottom:1px solid var(--border);font-size:12px;text-align:center;white-space:nowrap;}
+tbody td:first-child{text-align:left;font-weight:600;}
+.total-row td{background:var(--teal)!important;color:#fff!important;font-weight:700;}
+.footer{text-align:center;padding:12px;font-size:10px;color:#aaa;background:#fff;border-top:1px solid var(--border);margin-top:16px;}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.centre-grid,.charts-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.kpi-row{grid-template-columns:repeat(2,1fr);}.centre-grid,.charts-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>&#128202; SURE FINANCE &amp; BUSINESS — WEEKLY PERFORMANCE DASHBOARD</h1>
+    <div style="font-size:11px;opacity:.65;margin-top:3px" id="subTitle"></div>
+  </div>
+  <div class="meta" id="metaBox"></div>
+</div>
+
+<div class="ctrl">
+  <label>Year</label>
+  <select id="yrSel" onchange="init()"></select>
+  <label style="margin-left:8px">Week</label>
+  <select id="wkSel" onchange="render()"></select>
+  <div class="wk-label" id="wkBadge">—</div>
+</div>
+
+<div class="main">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="centre-grid" id="centreGrid"></div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">&#128181; Revenue by Centre — Selected Week</div>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">&#128200; Revenue Trend — All Weeks (Selected Year)</div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-title">&#128203; Weekly Performance Summary</div>
+    <div style="overflow-x:auto"><table id="perfTable"></table></div>
+  </div>
+</div>
+<div class="footer" id="footerBox"></div>
+
+<script>
+const HISTORY = [{"week_key": "2026-03-23", "label": "Mon 23 – Sun 29 Mar 2026", "year": 2026, "month": 3, "quarter": "Q1 2026", "summary": {"total_investigations": 415, "total_cases": 344, "total_patients": 340, "total_unique_referrers": 50, "total_revenue": 2527900, "total_paid": 2460900, "total_due": 13000, "total_discount": 0, "cancelled": 6, "collection_rate": 97.3}, "centres": [{"name": "Ilasa Main Centre, Lagos", "short": "Ilasa", "color": "#2E86AB", "revenue": 260500, "weekly_target": 1400000, "attainment": 18.6, "cases": 49, "patients": 49, "investigations": 54, "referrers": 13}, {"name": "OAUTH Ilesa Centre", "short": "OAUTH", "color": "#8E44AD", "revenue": 935150, "weekly_target": 1540000, "attainment": 60.7, "cases": 139, "patients": 139, "investigations": 155, "referrers": 2}, {"name": "Palm Avenue, Lagos", "short": "Palm Ave", "color": "#16A085", "revenue": 220500, "weekly_target": 700000, "attainment": 31.5, "cases": 18, "patients": 18, "investigations": 27, "referrers": 7}, {"name": "Sure Ilesha, Osun", "short": "Sure Ilesha", "color": "#E67E22", "revenue": 1111750, "weekly_target": 1190000, "attainment": 93.4, "cases": 138, "patients": 138, "investigations": 179, "referrers": 31}]}, {"week_key": "2026-03-30", "label": "Mon 30 – Sun 05 Apr 2026", "year": 2026, "month": 3, "quarter": "Q1 2026", "summary": {"total_investigations": 360, "total_cases": 294, "total_patients": 285, "total_unique_referrers": 11, "total_revenue": 2303450, "total_paid": 2295150, "total_due": 7500, "total_discount": 0, "cancelled": 0, "collection_rate": 99.6}, "centres": [{"name": "Ilasa Main Centre, Lagos", "short": "Ilasa", "color": "#2E86AB", "revenue": 647500, "weekly_target": 1400000, "attainment": 46.2, "cases": 71, "patients": 67, "investigations": 95, "referrers": 4}, {"name": "OAUTH Ilesa Centre", "short": "OAUTH", "color": "#8E44AD", "revenue": 878200, "weekly_target": 1540000, "attainment": 57.0, "cases": 129, "patients": 129, "investigations": 144, "referrers": 1}, {"name": "Palm Avenue, Lagos", "short": "Palm Ave", "color": "#16A085", "revenue": 241500, "weekly_target": 700000, "attainment": 34.5, "cases": 25, "patients": 21, "investigations": 34, "referrers": 2}, {"name": "Sure Ilesha, Osun", "short": "Sure Ilesha", "color": "#E67E22", "revenue": 536250, "weekly_target": 1190000, "attainment": 45.1, "cases": 69, "patients": 68, "investigations": 87, "referrers": 6}]}, {"week_key": "2026-04-06", "label": "Mon 06 – Sun 12 Apr 2026", "year": 2026, "month": 4, "quarter": "Q2 2026", "summary": {"total_investigations": 372, "total_cases": 289, "total_patients": 287, "total_unique_referrers": 52, "total_revenue": 2474950, "total_paid": 2371050, "total_due": 34500, "total_discount": 69400, "cancelled": 3, "collection_rate": 95.8}, "centres": [{"name": "Ilasa Main Centre, Lagos", "short": "Ilasa", "color": "#2E86AB", "revenue": 526500, "weekly_target": 1596000, "attainment": 33.0, "cases": 62, "patients": 60, "investigations": 75, "referrers": 27}, {"name": "OAUTH Ilesa Centre", "short": "OAUTH", "color": "#8E44AD", "revenue": 684300, "weekly_target": 1960000, "attainment": 34.9, "cases": 103, "patients": 103, "investigations": 111, "referrers": 2}, {"name": "Palm Avenue, Lagos", "short": "Palm Ave", "color": "#16A085", "revenue": 374000, "weekly_target": 840000, "attainment": 44.5, "cases": 29, "patients": 29, "investigations": 53, "referrers": 7}, {"name": "Sure Ilesha, Osun", "short": "Sure Ilesha", "color": "#E67E22", "revenue": 890150, "weekly_target": 1470000, "attainment": 60.6, "cases": 95, "patients": 95, "investigations": 133, "referrers": 20}]}, {"week_key": "2026-04-13", "label": "Mon 13 – Sun 19 Apr 2026", "year": 2026, "month": 4, "quarter": "Q2 2026", "summary": {"total_investigations": 463, "total_cases": 369, "total_patients": 365, "total_unique_referrers": 50, "total_revenue": 2771950, "total_paid": 2678850, "total_due": 42500, "total_discount": 50600, "cancelled": 4, "collection_rate": 96.6}, "centres": [{"name": "Ilasa Main Centre, Lagos", "short": "Ilasa", "color": "#2E86AB", "revenue": 487500, "weekly_target": 1708000, "attainment": 28.5, "cases": 59, "patients": 57, "investigations": 73, "referrers": 20}, {"name": "OAUTH Ilesa Centre", "short": "OAUTH", "color": "#8E44AD", "revenue": 922900, "weekly_target": 1960000, "attainment": 47.1, "cases": 131, "patients": 131, "investigations": 148, "referrers": 2}, {"name": "Palm Avenue, Lagos", "short": "Palm Ave", "color": "#16A085", "revenue": 248000, "weekly_target": 980000, "attainment": 25.3, "cases": 23, "patients": 21, "investigations": 46, "referrers": 9}, {"name": "Sure Ilesha, Osun", "short": "Sure Ilesha", "color": "#E67E22", "revenue": 1113550, "weekly_target": 1680000, "attainment": 66.3, "cases": 156, "patients": 156, "investigations": 196, "referrers": 21}]}];
+
+const fmt = v => '₦' + (v >= 1e6 ? (v/1e6).toFixed(2) + 'M' : v >= 1e3 ? (v/1e3).toFixed(0) + 'K' : v.toLocaleString());
+const pct = v => v.toFixed(1) + '%';
+const badge = a => a >= 80 ? `<span class="badge badge-g">${pct(a)}</span>` : a >= 50 ? `<span class="badge badge-a">${pct(a)}</span>` : `<span class="badge badge-r">${pct(a)}</span>`;
+const progColor = a => a >= 80 ? '#27AE60' : a >= 50 ? '#E67E22' : '#E74C3C';
+
+let barC = null, lineC = null;
+
+function getYears() {
+  return [...new Set(HISTORY.map(w => w.year))].sort((a,b) => a-b);
+}
+
+function init() {
+  const yrSel = document.getElementById('yrSel');
+  const years = getYears();
+  if (yrSel.options.length === 0) {
+    years.forEach(y => { const o = document.createElement('option'); o.value = y; o.text = y; yrSel.appendChild(o); });
+    yrSel.value = years[years.length - 1];
+  }
+  const yr = +yrSel.value;
+  const wkSel = document.getElementById('wkSel');
+  const prev = wkSel.value;
+  wkSel.innerHTML = '';
+  const filtered = HISTORY.filter(w => w.year === yr);
+  filtered.forEach(w => { const o = document.createElement('option'); o.value = w.week_key; o.text = w.label; wkSel.appendChild(o); });
+  if (filtered.find(w => w.week_key === prev)) wkSel.value = prev;
+  else wkSel.value = filtered[filtered.length - 1]?.week_key || '';
+  render();
+}
+
+function render() {
+  const wkKey = document.getElementById('wkSel').value;
+  const yr = +document.getElementById('yrSel').value;
+  const wk = HISTORY.find(w => w.week_key === wkKey);
+  if (!wk) return;
+
+  document.getElementById('wkBadge').textContent = wk.quarter;
+  document.getElementById('subTitle').textContent = wk.label;
+  document.getElementById('metaBox').innerHTML = `<div>Week of ${wk.label}</div><div style="margin-top:3px">${HISTORY.length} week${HISTORY.length>1?'s':''} in history</div>`;
+
+  const s = wk.summary;
+  const totalTgt = wk.centres.reduce((a,c) => a + c.weekly_target, 0);
+  const overallAtt = totalTgt ? s.total_revenue / totalTgt * 100 : 0;
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="kpi-lbl">Total Revenue</div><div class="kpi-val">${fmt(s.total_revenue)}</div><div class="kpi-sub">vs ${fmt(totalTgt)} target</div></div>
+    <div class="kpi" style="border-top-color:#27AE60"><div class="kpi-lbl">Attainment</div><div class="kpi-val" style="color:${progColor(overallAtt)}">${pct(overallAtt)}</div><div class="kpi-sub">of weekly target</div></div>
+    <div class="kpi" style="border-top-color:#8E44AD"><div class="kpi-lbl">Cases</div><div class="kpi-val">${s.total_cases}</div><div class="kpi-sub">${s.total_patients} patients</div></div>
+    <div class="kpi" style="border-top-color:#16A085"><div class="kpi-lbl">Investigations</div><div class="kpi-val">${s.total_investigations}</div><div class="kpi-sub">tests performed</div></div>
+    <div class="kpi" style="border-top-color:#E67E22"><div class="kpi-lbl">Referrers</div><div class="kpi-val">${s.total_unique_referrers}</div><div class="kpi-sub">unique this week</div></div>
+    <div class="kpi" style="border-top-color:${s.collection_rate>=95?'#27AE60':'#E74C3C'}"><div class="kpi-lbl">Collection Rate</div><div class="kpi-val" style="color:${s.collection_rate>=95?'#27AE60':'#E74C3C'}">${pct(s.collection_rate)}</div><div class="kpi-sub">₦${(s.total_due/1000).toFixed(0)}K outstanding</div></div>
+  `;
+
+  document.getElementById('centreGrid').innerHTML = wk.centres.map(c => `
+    <div class="centre-card">
+      <div class="cc-head"><div class="cc-dot" style="background:${c.color}"></div><div class="cc-name">${c.name}</div></div>
+      <div class="cc-rev">${fmt(c.revenue)}</div>
+      <div class="cc-tgt">Target: ${fmt(c.weekly_target)} &nbsp;&bull;&nbsp; ${badge(c.attainment)}</div>
+      <div class="prog-bg"><div class="prog-fill" style="width:${Math.min(c.attainment,100)}%;background:${progColor(c.attainment)}"></div></div>
+      <div class="cc-stats">
+        <div class="cc-stat"><div class="cc-stat-v">${c.cases}</div><div class="cc-stat-l">Cases</div></div>
+        <div class="cc-stat"><div class="cc-stat-v">${c.patients}</div><div class="cc-stat-l">Patients</div></div>
+        <div class="cc-stat"><div class="cc-stat-v">${c.investigations}</div><div class="cc-stat-l">Tests</div></div>
+        <div class="cc-stat"><div class="cc-stat-v">${c.referrers}</div><div class="cc-stat-l">Referrers</div></div>
+      </div>
+    </div>
+  `).join('');
+
+  if (barC) { barC.destroy(); barC = null; }
+  barC = new Chart(document.getElementById('barChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: wk.centres.map(c => c.short),
+      datasets: [
+        { label: 'Revenue', data: wk.centres.map(c => c.revenue), backgroundColor: wk.centres.map(c => c.color + 'CC'), borderColor: wk.centres.map(c => c.color), borderWidth: 1.5, borderRadius: 5 },
+        { label: 'Target', data: wk.centres.map(c => c.weekly_target), backgroundColor: 'transparent', borderColor: '#aaa', borderWidth: 1.5, borderRadius: 5 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { size: 10 } } } }, scales: { y: { ticks: { callback: v => fmt(v), font: { size: 10 } }, grid: { color: '#eee' } }, x: { ticks: { font: { size: 10 } } } } }
+  });
+
+  if (lineC) { lineC.destroy(); lineC = null; }
+  const yearWks = HISTORY.filter(w => w.year === yr);
+  const allCentres = [...new Set(yearWks.flatMap(w => w.centres.map(c => c.short)))];
+  const colourMap = {};
+  yearWks.forEach(w => w.centres.forEach(c => { colourMap[c.short] = c.color; }));
+  lineC = new Chart(document.getElementById('lineChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: yearWks.map(w => w.label.split('–')[0].trim()),
+      datasets: allCentres.map(cs => ({
+        label: cs,
+        data: yearWks.map(w => (w.centres.find(c => c.short === cs) || {}).revenue || 0),
+        borderColor: colourMap[cs], backgroundColor: colourMap[cs] + '22',
+        borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false
+      }))
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { size: 10 } } } }, scales: { y: { ticks: { callback: v => fmt(v), font: { size: 10 } }, grid: { color: '#eee' } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } } }
+  });
+
+  const cols = ['Centre','Revenue','Target','Attainment','Cases','Patients','Tests','Referrers'];
+  let rows = wk.centres.map(c => [
+    `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c.color};margin-right:5px"></span>${c.name}`,
+    fmt(c.revenue), fmt(c.weekly_target), badge(c.attainment),
+    c.cases, c.patients, c.investigations, c.referrers
+  ]);
+  const totRev = wk.centres.reduce((a,c) => a + c.revenue, 0);
+  const totTgt = wk.centres.reduce((a,c) => a + c.weekly_target, 0);
+  rows.push(['<strong>TOTAL</strong>', fmt(totRev), fmt(totTgt), badge(totTgt?totRev/totTgt*100:0), s.total_cases, s.total_patients, s.total_investigations, s.total_unique_referrers]);
+  document.getElementById('perfTable').innerHTML = `
+    <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr class="${i===rows.length-1?'total-row':''}">${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>
+  `;
+
+  const now = new Date();
+  document.getElementById('footerBox').textContent = `Sure Finance & Business Dashboard • ${HISTORY.length} week${HISTORY.length>1?'s':''} in history • Last updated: ${now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+}
+
+window.onload = init;
+</script>
+</body>
+</html>

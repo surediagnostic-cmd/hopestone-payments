@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sure Finance — Multi-Period Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f2f5;--card:#fff;--text:#222;--text2:#555;--text3:#888;
+  --border:#eee;--kpi-bg:#f8f9fa;--tbar-bg:#e9ecef;
+  --ctrl-bg:#fff;--ctrl-border:#ccc;--input-bg:#fff;
+  --th-bg:#1F3864;--hover:#f0f4ff;--no-data:#aaa;
+  --shadow:rgba(0,0,0,.07);--shadow2:rgba(0,0,0,.05);
+}
+[data-theme="dark"]{
+  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--text2:#adbac7;--text3:#768390;
+  --border:#30363d;--kpi-bg:#21262d;--tbar-bg:#30363d;
+  --ctrl-bg:#161b22;--ctrl-border:#30363d;--input-bg:#21262d;
+  --th-bg:#1c2e4a;--hover:#1c2e4a;--no-data:#484f58;
+  --shadow:rgba(0,0,0,.3);--shadow2:rgba(0,0,0,.2);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--text2:#adbac7;--text3:#768390;
+  --border:#30363d;--kpi-bg:#21262d;--tbar-bg:#30363d;
+  --ctrl-bg:#161b22;--ctrl-border:#30363d;--input-bg:#21262d;
+  --th-bg:#1c2e4a;--hover:#1c2e4a;--no-data:#484f58;
+  --shadow:rgba(0,0,0,.3);--shadow2:rgba(0,0,0,.2);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;transition:background .2s,color .2s}
+.header{background:#1F3864;color:#fff;padding:18px 26px;border-radius:8px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.header-text h1{font-size:19px}.header-text p{font-size:11px;opacity:.8;margin-top:3px}
+.theme-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;
+  padding:6px 12px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+.theme-btn:hover{background:rgba(255,255,255,.25)}
+.controls{background:var(--ctrl-bg);padding:14px 18px;border-radius:8px;margin-bottom:18px;
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;box-shadow:0 2px 5px var(--shadow)}
+.controls label{font-size:12px;font-weight:700;color:#1F3864}
+.controls select{padding:6px 10px;border:1px solid var(--ctrl-border);border-radius:5px;
+  font-size:12px;background:var(--input-bg);color:var(--text)}
+.view-tabs{display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid #1F3864}
+.view-tab{padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;
+  background:var(--input-bg);color:#1F3864;border:none;transition:.2s}
+.view-tab.active{background:#1F3864;color:#fff}
+.cards{margin-bottom:18px}
+.card{background:var(--card);border-radius:8px;padding:14px;box-shadow:0 2px 5px var(--shadow)}
+.card h3{font-size:13px;color:#1F3864;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.kpi{background:var(--kpi-bg);border-radius:4px;padding:8px 10px}
+.kpi-lbl{display:block;font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px}
+.kpi-val{display:block;font-size:15px;font-weight:700;color:#1F3864}
+.tbar-wrap{background:var(--tbar-bg);border-radius:3px;height:6px;margin:10px 0 5px}
+.tbar{height:6px;border-radius:3px}
+.tlbl{font-size:10px;font-weight:600}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+.section{background:var(--card);border-radius:8px;padding:16px;margin-bottom:16px;box-shadow:0 2px 5px var(--shadow2)}
+.section h2{font-size:13px;color:#1F3864;margin-bottom:12px;font-weight:700}
+.chart-wrap{position:relative;height:250px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:var(--th-bg);color:#fff;padding:8px 10px;text-align:left;font-weight:600}
+td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:var(--hover)}
+.no-data{text-align:center;color:var(--no-data);padding:24px;font-size:13px}
+.recon-note{font-size:10px;color:var(--text3);padding:6px 10px;border-left:3px solid #ffc107;background:var(--kpi-bg);border-radius:0 4px 4px 0;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-text">
+    <h1>Sure Finance &amp; Business — Multi-Period Performance Dashboard</h1>
+    <p>Monthly &amp; Yearly Analysis</p>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+</div>
+
+<div class="controls">
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabMonthly" onclick="setView('monthly')">Monthly</button>
+    <button class="view-tab"        id="tabYearly"  onclick="setView('yearly')">Yearly</button>
+  </div>
+  <label id="monthLabel">Month</label>
+  <select id="monthSel" onchange="render()"><option value="0">All Months</option><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select>
+  <label>Year</label>
+  <select id="yearSel" onchange="render()"><option value="2026">2026</option></select>
+  <label>Branch</label>
+  <select id="branchSel" onchange="render()"><option value="">All Branches</option><option value="Ijofi">Ijofi</option><option value="Ikeja Lagos Centre">Ikeja Lagos Centre</option><option value="Ilasa Main Centre, Lagos">Ilasa Main Centre, Lagos</option><option value="OAUTH Ilesa Centre">OAUTH Ilesa Centre</option><option value="Palm Avenue, Lagos">Palm Avenue, Lagos</option></select>
+</div>
+
+<div id="cards" class="cards"><div class="card" id="kpiCard"></div></div>
+
+<div class="charts-grid">
+  <div class="section"><h2 id="h1">Revenue by Location</h2>
+    <div class="chart-wrap"><canvas id="cRev"></canvas></div></div>
+  <div class="section"><h2 id="h2">Tests Completed by Location</h2>
+    <div class="chart-wrap"><canvas id="cInv"></canvas></div></div>
+  <div class="section"><h2 id="h3">No. of Patients by Location</h2>
+    <div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
+  <div class="section"><h2 id="h4">Active Referrers by Location</h2>
+    <div class="chart-wrap"><canvas id="cRef"></canvas></div></div>
+</div>
+
+<div class="section"><h2>Revenue by Case Type</h2>
+  <div class="chart-wrap"><canvas id="cCT"></canvas></div></div>
+
+<div class="section"><h2>Top Agents</h2>
+  <div class="chart-wrap" style="height:300px"><canvas id="cAgt"></canvas></div></div>
+
+<div class="section" id="pnlSection" style="display:none">
+  <h2>P&amp;L — Net Profit by Branch</h2>
+  <div class="chart-wrap" style="height:280px"><canvas id="cPnL"></canvas></div>
+  <div class="recon-note" id="reconNote1">⚠ Revenue shown here is from LabSmartLIS (total fees at case creation). Management P&amp;L reports may differ due to adjustments, rebates, or write-offs. Cost figures (direct costs &amp; overhead) are from management P&amp;L reports.</div>
+</div>
+<div class="section" id="pnlCostSection" style="display:none">
+  <h2>P&amp;L — Cost Breakdown by Branch</h2>
+  <div class="chart-wrap" style="height:280px"><canvas id="cPnLCost"></canvas></div>
+  <div class="recon-note" id="reconNote2">⚠ Net Profit figures use LabSmartLIS revenue as the baseline. Actual net profit may be lower if P&amp;L revenue differs from LabSmartLIS totals (typically ~5–10% variance).</div>
+</div>
+<div class="section" id="pnlStackSection" style="display:none">
+  <h2 id="pnlStackTitle">P&amp;L — Cost Breakdown (Branches Stacked)</h2>
+  <div class="chart-wrap" style="height:300px"><canvas id="cPnLStack"></canvas></div>
+</div>
+
+<div class="section"><h2>Top Referrers</h2><div id="refTable"></div></div>
+
+<script>
+const HISTORY      = {"2026-01":{"month":1,"year":2026,"centres":{"Ilasa Main Centre, Lagos":{"investigations":469,"cases":434,"patients":430,"revenue":3893400.0,"paid":2261000.0,"due":1628900.0,"unique_referrers":60,"weekly":{"1":{"investigations":86,"cases":76,"patients":75,"revenue":569200.0,"paid":495000.0},"2":{"investigations":118,"cases":113,"patients":112,"revenue":876700.0,"paid":526700.0},"3":{"investigations":142,"cases":134,"patients":134,"revenue":1070000.0,"paid":622300.0},"4":{"investigations":123,"cases":111,"patients":109,"revenue":1377500.0,"paid":617000.0}}},"OAUTH Ilesa Centre":{"investigations":131,"cases":131,"patients":131,"revenue":759650.0,"paid":758650.0,"due":0.0,"unique_referrers":1,"weekly":{"1":{"investigations":21,"cases":21,"patients":21,"revenue":118000.0,"paid":118000.0},"2":{"investigations":32,"cases":32,"patients":32,"revenue":191000.0,"paid":190000.0},"3":{"investigations":33,"cases":33,"patients":33,"revenue":193650.0,"paid":193650.0},"4":{"investigations":45,"cases":45,"patients":45,"revenue":257000.0,"paid":257000.0}}},"Palm Avenue, Lagos":{"investigations":126,"cases":116,"patients":115,"revenue":1054000.0,"paid":1009500.0,"due":44500.0,"unique_referrers":26,"weekly":{"1":{"investigations":17,"cases":15,"patients":15,"revenue":123000.0,"paid":106500.0},"2":{"investigations":38,"cases":35,"patients":34,"revenue":361000.0,"paid":354500.0},"3":{"investigations":33,"cases":31,"patients":31,"revenue":269500.0,"paid":263000.0},"4":{"investigations":38,"cases":35,"patients":35,"revenue":300500.0,"paid":285500.0}}},"Ijofi":{"investigations":626,"cases":626,"patients":590,"revenue":6186300.0,"paid":6039000.0,"due":40000.0,"unique_referrers":34,"weekly":{"1":{"investigations":110,"cases":110,"patients":105,"revenue":1080800.0,"paid":1071600.0},"2":{"investigations":130,"cases":130,"patients":122,"revenue":1277600.0,"paid":1261600.0},"3":{"investigations":150,"cases":150,"patients":140,"revenue":1732750.0,"paid":1671150.0},"4":{"investigations":236,"cases":236,"patients":223,"revenue":2095150.0,"paid":2034650.0}}},"Ikeja Lagos Centre":{"investigations":47,"cases":47,"patients":46,"revenue":822830.0,"paid":0.0,"due":822830.0,"unique_referrers":11,"weekly":{"1":{"investigations":8,"cases":8,"patients":8,"revenue":175050.0,"paid":0.0},"2":{"investigations":11,"cases":11,"patients":11,"revenue":213080.0,"paid":0.0},"3":{"investigations":11,"cases":11,"patients":11,"revenue":211500.0,"paid":0.0},"4":{"investigations":17,"cases":17,"patients":16,"revenue":223200.0,"paid":0.0}}}},"daily":[{"date":"2026-01-02","centre":"Ilasa Main Centre, Lagos","day":2,"week":1,"investigations":20,"cases":20,"patients":20,"revenue":106000,"paid":78500,"due":27500},{"date":"2026-01-02","centre":"OAUTH Ilesa Centre","day":2,"week":1,"investigations":2,"cases":2,"patients":2,"revenue":14000,"paid":14000,"due":0},{"date":"2026-01-02","centre":"Palm Avenue, Lagos","day":2,"week":1,"investigations":1,"cases":1,"patients":1,"revenue":16500,"paid":0,"due":16500},{"date":"2026-01-02","centre":"Ijofi","day":2,"week":1,"investigations":6,"cases":6,"patients":5,"revenue":34900,"paid":34500,"due":0},{"date":"2026-01-03","centre":"Ilasa Main Centre, Lagos","day":3,"week":1,"investigations":11,"cases":9,"patients":9,"revenue":60000,"paid":60000,"due":0},{"date":"2026-01-03","centre":"Palm Avenue, Lagos","day":3,"week":1,"investigations":2,"cases":2,"patients":2,"revenue":9500,"paid":9500,"due":0},{"date":"2026-01-03","centre":"Ijofi","day":3,"week":1,"investigations":5,"cases":5,"patients":5,"revenue":25000,"paid":25000,"due":0},{"date":"2026-01-05","centre":"Ikeja Lagos Centre","day":5,"week":1,"investigations":8,"cases":8,"patients":8,"revenue":175050,"paid":0,"due":175050},{"date":"2026-01-05","centre":"Ilasa Main Centre, Lagos","day":5,"week":1,"investigations":27,"cases":22,"patients":22,"revenue":172700,"paid":168500,"due":4200},{"date":"2026-01-05","centre":"OAUTH Ilesa Centre","day":5,"week":1,"investigations":6,"cases":6,"patients":6,"revenue":31000,"paid":31000,"due":0},{"date":"2026-01-05","centre":"Palm Avenue, Lagos","day":5,"week":1,"investigations":4,"cases":4,"patients":4,"revenue":46500,"paid":46500,"due":0},{"date":"2026-01-05","centre":"Ijofi","day":5,"week":1,"investigations":34,"cases":34,"patients":31,"revenue":428300,"paid":426300,"due":0},{"date":"2026-01-06","centre":"Ilasa Main Centre, Lagos","day":6,"week":1,"investigations":18,"cases":17,"patients":16,"revenue":143000,"paid":100500,"due":42500},{"date":"2026-01-06","centre":"OAUTH Ilesa Centre","day":6,"week":1,"investigations":7,"cases":7,"patients":7,"revenue":39500,"paid":39500,"due":0},{"date":"2026-01-06","centre":"Palm Avenue, Lagos","day":6,"week":1,"investigations":8,"cases":6,"patients":6,"revenue":39000,"paid":39000,"due":0},{"date":"2026-01-06","centre":"Ijofi","day":6,"week":1,"investigations":20,"cases":20,"patients":20,"revenue":167800,"paid":165800,"due":0},{"date":"2026-01-07","centre":"Ilasa Main Centre, Lagos","day":7,"week":1,"investigations":10,"cases":8,"patients":8,"revenue":87500,"paid":87500,"due":0},{"date":"2026-01-07","centre":"OAUTH Ilesa Centre","day":7,"week":1,"investigations":6,"cases":6,"patients":6,"revenue":33500,"paid":33500,"due":0},{"date":"2026-01-07","centre":"Palm Avenue, Lagos","day":7,"week":1,"investigations":2,"cases":2,"patients":2,"revenue":11500,"paid":11500,"due":0},{"date":"2026-01-07","centre":"Ijofi","day":7,"week":1,"investigations":45,"cases":45,"patients":44,"revenue":424800,"paid":420000,"due":0},{"date":"2026-01-08","centre":"Ikeja Lagos Centre","day":8,"week":2,"investigations":3,"cases":3,"patients":3,"revenue":77980,"paid":0,"due":77980},{"date":"2026-01-08","centre":"Ilasa Main Centre, Lagos","day":8,"week":2,"investigations":12,"cases":12,"patients":12,"revenue":74500,"paid":74500,"due":0},{"date":"2026-01-08","centre":"OAUTH Ilesa Centre","day":8,"week":2,"investigations":9,"cases":9,"patients":9,"revenue":56000,"paid":56000,"due":0},{"date":"2026-01-08","centre":"Palm Avenue, Lagos","day":8,"week":2,"investigations":8,"cases":8,"patients":8,"revenue":127000,"paid":127000,"due":0},{"date":"2026-01-08","centre":"Ijofi","day":8,"week":2,"investigations":18,"cases":18,"patients":17,"revenue":191600,"paid":188600,"due":0},{"date":"2026-01-09","centre":"Ikeja Lagos Centre","day":9,"week":2,"investigations":3,"cases":3,"patients":3,"revenue":76050,"paid":0,"due":76050},{"date":"2026-01-09","centre":"Ilasa Main Centre, Lagos","day":9,"week":2,"investigations":10,"cases":10,"patients":10,"revenue":54000,"paid":32500,"due":21500},{"date":"2026-01-09","centre":"OAUTH Ilesa Centre","day":9,"week":2,"investigations":8,"cases":8,"patients":8,"revenue":46500,"paid":46500,"due":0},{"date":"2026-01-09","centre":"Palm Avenue, Lagos","day":9,"week":2,"investigations":1,"cases":1,"patients":1,"revenue":4000,"paid":4000,"due":0},{"date":"2026-01-09","centre":"Ijofi","day":9,"week":2,"investigations":29,"cases":29,"patients":28,"revenue":260400,"paid":257500,"due":0},{"date":"2026-01-10","centre":"Ilasa Main Centre, Lagos","day":10,"week":2,"investigations":34,"cases":34,"patients":34,"revenue":229500,"paid":80000,"due":149500},{"date":"2026-01-10","centre":"Palm Avenue, Lagos","day":10,"week":2,"investigations":4,"cases":4,"patients":4,"revenue":33000,"paid":26500,"due":6500},{"date":"2026-01-10","centre":"Ijofi","day":10,"week":2,"investigations":8,"cases":8,"patients":8,"revenue":70100,"paid":69500,"due":0},{"date":"2026-01-12","centre":"Ilasa Main Centre, Lagos","day":12,"week":2,"investigations":21,"cases":20,"patients":20,"revenue":139500,"paid":82500,"due":57000},{"date":"2026-01-12","centre":"OAUTH Ilesa Centre","day":12,"week":2,"investigations":6,"cases":6,"patients":6,"revenue":34000,"paid":34000,"due":0},{"date":"2026-01-12","centre":"Palm Avenue, Lagos","day":12,"week":2,"investigations":10,"cases":8,"patients":7,"revenue":82500,"paid":82500,"due":0},{"date":"2026-01-12","centre":"Ijofi","day":12,"week":2,"investigations":22,"cases":22,"patients":19,"revenue":259700,"paid":258900,"due":0},{"date":"2026-01-13","centre":"Ilasa Main Centre, Lagos","day":13,"week":2,"investigations":23,"cases":20,"patients":20,"revenue":246200,"paid":154700,"due":90700},{"date":"2026-01-13","centre":"OAUTH Ilesa Centre","day":13,"week":2,"investigations":2,"cases":2,"patients":2,"revenue":12500,"paid":12500,"due":0},{"date":"2026-01-13","centre":"Palm Avenue, Lagos","day":13,"week":2,"investigations":10,"cases":9,"patients":9,"revenue":83500,"paid":83500,"due":0},{"date":"2026-01-13","centre":"Ijofi","day":13,"week":2,"investigations":26,"cases":26,"patients":26,"revenue":273900,"paid":268200,"due":0},{"date":"2026-01-14","centre":"Ikeja Lagos Centre","day":14,"week":2,"investigations":5,"cases":5,"patients":5,"revenue":59050,"paid":0,"due":59050},{"date":"2026-01-14","centre":"Ilasa Main Centre, Lagos","day":14,"week":2,"investigations":18,"cases":17,"patients":16,"revenue":133000,"paid":102500,"due":30500},{"date":"2026-01-14","centre":"OAUTH Ilesa Centre","day":14,"week":2,"investigations":7,"cases":7,"patients":7,"revenue":42000,"paid":41000,"due":0},{"date":"2026-01-14","centre":"Palm Avenue, Lagos","day":14,"week":2,"investigations":5,"cases":5,"patients":5,"revenue":31000,"paid":31000,"due":0},{"date":"2026-01-14","centre":"Ijofi","day":14,"week":2,"investigations":27,"cases":27,"patients":24,"revenue":221900,"paid":218900,"due":0},{"date":"2026-01-15","centre":"Ikeja Lagos Centre","day":15,"week":3,"investigations":3,"cases":3,"patients":3,"revenue":28000,"paid":0,"due":28000},{"date":"2026-01-15","centre":"Ilasa Main Centre, Lagos","day":15,"week":3,"investigations":9,"cases":7,"patients":7,"revenue":99000,"paid":68500,"due":30500},{"date":"2026-01-15","centre":"OAUTH Ilesa Centre","day":15,"week":3,"investigations":5,"cases":5,"patients":5,"revenue":28350,"paid":28350,"due":0},{"date":"2026-01-15","centre":"Palm Avenue, Lagos","day":15,"week":3,"investigations":7,"cases":7,"patients":7,"revenue":68000,"paid":68000,"due":0},{"date":"2026-01-15","centre":"Ijofi","day":15,"week":3,"investigations":40,"cases":40,"patients":38,"revenue":419200,"paid":417600,"due":0},{"date":"2026-01-16","centre":"Ilasa Main Centre, Lagos","day":16,"week":3,"investigations":18,"cases":15,"patients":15,"revenue":181500,"paid":159500,"due":22000},{"date":"2026-01-16","centre":"OAUTH Ilesa Centre","day":16,"week":3,"investigations":9,"cases":9,"patients":9,"revenue":52900,"paid":52900,"due":0},{"date":"2026-01-16","centre":"Palm Avenue, Lagos","day":16,"week":3,"investigations":6,"cases":6,"patients":6,"revenue":62500,"paid":62500,"due":0},{"date":"2026-01-16","centre":"Ijofi","day":16,"week":3,"investigations":21,"cases":21,"patients":19,"revenue":210250,"paid":209250,"due":0},{"date":"2026-01-17","centre":"Ilasa Main Centre, Lagos","day":17,"week":3,"investigations":11,"cases":10,"patients":10,"revenue":92500,"paid":92500,"due":0},{"date":"2026-01-17","centre":"OAUTH Ilesa Centre","day":17,"week":3,"investigations":2,"cases":2,"patients":2,"revenue":12000,"paid":12000,"due":0},{"date":"2026-01-17","centre":"Ijofi","day":17,"week":3,"investigations":11,"cases":11,"patients":10,"revenue":153000,"paid":147600,"due":0},{"date":"2026-01-19","centre":"Ikeja Lagos Centre","day":19,"week":3,"investigations":4,"cases":4,"patients":4,"revenue":80000,"paid":0,"due":80000},{"date":"2026-01-19","centre":"Ilasa Main Centre, Lagos","day":19,"week":3,"investigations":20,"cases":19,"patients":19,"revenue":153500,"paid":108000,"due":45500},{"date":"2026-01-19","centre":"OAUTH Ilesa Centre","day":19,"week":3,"investigations":7,"cases":7,"patients":7,"revenue":40500,"paid":40500,"due":0},{"date":"2026-01-19","centre":"Palm Avenue, Lagos","day":19,"week":3,"investigations":7,"cases":6,"patients":6,"revenue":62000,"paid":55500,"due":6500},{"date":"2026-01-19","centre":"Ijofi","day":19,"week":3,"investigations":35,"cases":35,"patients":33,"revenue":359050,"paid":356450,"due":0},{"date":"2026-01-20","centre":"Ikeja Lagos Centre","day":20,"week":3,"investigations":4,"cases":4,"patients":4,"revenue":103500,"paid":0,"due":103500},{"date":"2026-01-20","centre":"Ilasa Main Centre, Lagos","day":20,"week":3,"investigations":42,"cases":42,"patients":42,"revenue":272000,"paid":94000,"due":178000},{"date":"2026-01-20","centre":"OAUTH Ilesa Centre","day":20,"week":3,"investigations":6,"cases":6,"patients":6,"revenue":35900,"paid":35900,"due":0},{"date":"2026-01-20","centre":"Palm Avenue, Lagos","day":20,"week":3,"investigations":1,"cases":1,"patients":1,"revenue":11500,"paid":11500,"due":0},{"date":"2026-01-20","centre":"Ijofi","day":20,"week":3,"investigations":22,"cases":22,"patients":20,"revenue":255150,"paid":245150,"due":0},{"date":"2026-01-21","centre":"Ilasa Main Centre, Lagos","day":21,"week":3,"investigations":42,"cases":41,"patients":41,"revenue":271500,"paid":99800,"due":169000},{"date":"2026-01-21","centre":"OAUTH Ilesa Centre","day":21,"week":3,"investigations":4,"cases":4,"patients":4,"revenue":24000,"paid":24000,"due":0},{"date":"2026-01-21","centre":"Palm Avenue, Lagos","day":21,"week":3,"investigations":12,"cases":11,"patients":11,"revenue":65500,"paid":65500,"due":0},{"date":"2026-01-21","centre":"Ijofi","day":21,"week":3,"investigations":21,"cases":21,"patients":20,"revenue":336100,"paid":295100,"due":40000},{"date":"2026-01-22","centre":"Ilasa Main Centre, Lagos","day":22,"week":4,"investigations":29,"cases":26,"patients":26,"revenue":233500,"paid":82500,"due":151000},{"date":"2026-01-22","centre":"OAUTH Ilesa Centre","day":22,"week":4,"investigations":6,"cases":6,"patients":6,"revenue":34000,"paid":34000,"due":0},{"date":"2026-01-22","centre":"Palm Avenue, Lagos","day":22,"week":4,"investigations":4,"cases":3,"patients":3,"revenue":22500,"paid":22500,"due":0},{"date":"2026-01-22","centre":"Ijofi","day":22,"week":4,"investigations":22,"cases":22,"patients":20,"revenue":238850,"paid":235850,"due":0},{"date":"2026-01-23","centre":"Ikeja Lagos Centre","day":23,"week":4,"investigations":1,"cases":1,"patients":1,"revenue":16500,"paid":0,"due":16500},{"date":"2026-01-23","centre":"Ilasa Main Centre, Lagos","day":23,"week":4,"investigations":12,"cases":12,"patients":12,"revenue":187000,"paid":62000,"due":125000},{"date":"2026-01-23","centre":"OAUTH Ilesa Centre","day":23,"week":4,"investigations":6,"cases":6,"patients":6,"revenue":38000,"paid":38000,"due":0},{"date":"2026-01-23","centre":"Palm Avenue, Lagos","day":23,"week":4,"investigations":1,"cases":1,"patients":1,"revenue":15000,"paid":15000,"due":0},{"date":"2026-01-23","centre":"Ijofi","day":23,"week":4,"investigations":15,"cases":15,"patients":15,"revenue":101850,"paid":101450,"due":0},{"date":"2026-01-24","centre":"Ilasa Main Centre, Lagos","day":24,"week":4,"investigations":7,"cases":7,"patients":7,"revenue":79000,"paid":66500,"due":12500},{"date":"2026-01-24","centre":"OAUTH Ilesa Centre","day":24,"week":4,"investigations":2,"cases":2,"patients":2,"revenue":12500,"paid":12500,"due":0},{"date":"2026-01-24","centre":"Palm Avenue, Lagos","day":24,"week":4,"investigations":2,"cases":2,"patients":2,"revenue":8000,"paid":8000,"due":0},{"date":"2026-01-24","centre":"Ijofi","day":24,"week":4,"investigations":8,"cases":8,"patients":8,"revenue":60900,"paid":60500,"due":0},{"date":"2026-01-26","centre":"Ikeja Lagos Centre","day":26,"week":4,"investigations":7,"cases":7,"patients":7,"revenue":143800,"paid":0,"due":143800},{"date":"2026-01-26","centre":"Ilasa Main Centre, Lagos","day":26,"week":4,"investigations":18,"cases":14,"patients":13,"revenue":209500,"paid":175000,"due":34500},{"date":"2026-01-26","centre":"OAUTH Ilesa Centre","day":26,"week":4,"investigations":8,"cases":8,"patients":8,"revenue":43500,"paid":43500,"due":0},{"date":"2026-01-26","centre":"Palm Avenue, Lagos","day":26,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":37000,"paid":37000,"due":0},{"date":"2026-01-26","centre":"Ijofi","day":26,"week":4,"investigations":51,"cases":51,"patients":48,"revenue":353050,"paid":339150,"due":0},{"date":"2026-01-27","centre":"Ilasa Main Centre, Lagos","day":27,"week":4,"investigations":6,"cases":6,"patients":6,"revenue":36000,"paid":29500,"due":6500},{"date":"2026-01-27","centre":"OAUTH Ilesa Centre","day":27,"week":4,"investigations":6,"cases":6,"patients":6,"revenue":30500,"paid":30500,"due":0},{"date":"2026-01-27","centre":"Palm Avenue, Lagos","day":27,"week":4,"investigations":9,"cases":9,"patients":9,"revenue":49500,"paid":49500,"due":0},{"date":"2026-01-27","centre":"Ijofi","day":27,"week":4,"investigations":32,"cases":32,"patients":30,"revenue":390450,"paid":388450,"due":0},{"date":"2026-01-28","centre":"Ilasa Main Centre, Lagos","day":28,"week":4,"investigations":10,"cases":9,"patients":9,"revenue":71000,"paid":58000,"due":13000},{"date":"2026-01-28","centre":"OAUTH Ilesa Centre","day":28,"week":4,"investigations":5,"cases":5,"patients":5,"revenue":31000,"paid":31000,"due":0},{"date":"2026-01-28","centre":"Palm Avenue, Lagos","day":28,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":57500,"paid":57500,"due":0},{"date":"2026-01-28","centre":"Ijofi","day":28,"week":4,"investigations":49,"cases":49,"patients":45,"revenue":348100,"paid":331600,"due":0},{"date":"2026-01-29","centre":"Ikeja Lagos Centre","day":29,"week":4,"investigations":5,"cases":5,"patients":4,"revenue":36900,"paid":0,"due":36900},{"date":"2026-01-29","centre":"Ilasa Main Centre, Lagos","day":29,"week":4,"investigations":13,"cases":12,"patients":11,"revenue":106500,"paid":100000,"due":6500},{"date":"2026-01-29","centre":"OAUTH Ilesa Centre","day":29,"week":4,"investigations":8,"cases":8,"patients":8,"revenue":45500,"paid":45500,"due":0},{"date":"2026-01-29","centre":"Palm Avenue, Lagos","day":29,"week":4,"investigations":5,"cases":5,"patients":5,"revenue":19500,"paid":19500,"due":0},{"date":"2026-01-29","centre":"Ijofi","day":29,"week":4,"investigations":27,"cases":27,"patients":26,"revenue":238900,"paid":237500,"due":0},{"date":"2026-01-30","centre":"Ikeja Lagos Centre","day":30,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":26000,"paid":0,"due":26000},{"date":"2026-01-30","centre":"Ilasa Main Centre, Lagos","day":30,"week":4,"investigations":22,"cases":20,"patients":20,"revenue":399500,"paid":19000,"due":380500},{"date":"2026-01-30","centre":"OAUTH Ilesa Centre","day":30,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":22000,"paid":22000,"due":0},{"date":"2026-01-30","centre":"Palm Avenue, Lagos","day":30,"week":4,"investigations":9,"cases":7,"patients":7,"revenue":91500,"paid":76500,"due":15000},{"date":"2026-01-30","centre":"Ijofi","day":30,"week":4,"investigations":24,"cases":24,"patients":23,"revenue":268150,"paid":245650,"due":0},{"date":"2026-01-31","centre":"Ilasa Main Centre, Lagos","day":31,"week":4,"investigations":6,"cases":5,"patients":5,"revenue":55500,"paid":24500,"due":31000},{"date":"2026-01-31","centre":"Ijofi","day":31,"week":4,"investigations":8,"cases":8,"patients":8,"revenue":94900,"paid":94500,"due":0}],"referrers":[{"centre":"Ijofi","referrer":"Dr. OAUTHC DOCTORS","cases":227,"investigations":227,"revenue":2220150},{"centre":"Ijofi","referrer":"Dr. PRIVATE ILESHA","cases":183,"investigations":183,"revenue":1918600},{"centre":"OAUTH Ilesa Centre","referrer":"Dr. OAUTHC DOCTORS","cases":131,"investigations":131,"revenue":759650},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. FOOD CONCEPT CORPORATE","cases":123,"investigations":123,"revenue":799500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. PVT","cases":110,"investigations":116,"revenue":805500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. PVT","cases":53,"investigations":54,"revenue":383000},{"centre":"Ijofi","referrer":"Dr. (Prof.) ADEGOKE SAMUEL","cases":50,"investigations":50,"revenue":150000},{"centre":"Ilasa Main Centre, Lagos","referrer":"MGH","cases":45,"investigations":51,"revenue":734400},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. AWOTUNDUN (GBAJA HOSP)","cases":25,"investigations":28,"revenue":325000},{"centre":"Ijofi","referrer":"Dr. DANIEL GENERAL, HOSPITAL","cases":20,"investigations":20,"revenue":154150},{"centre":"Ikeja Lagos Centre","referrer":"HOPE  STONE","cases":18,"investigations":18,"revenue":436000},{"centre":"Ijofi","referrer":"Dr. OASIS HOSPITAL","cases":18,"investigations":18,"revenue":240100},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL","cases":17,"investigations":19,"revenue":241000},{"centre":"Ijofi","referrer":"Dr. MORE ABUNDANT LIFE KOMOLAFE","cases":17,"investigations":17,"revenue":287950},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. GOZIE MGH","cases":12,"investigations":17,"revenue":97000},{"centre":"Ijofi","referrer":"Dr. BAKARE STATE HOSPITAL","cases":12,"investigations":12,"revenue":93250},{"centre":"Ijofi","referrer":"Dr. BAKARE GENERAL, HOSPITAL","cases":12,"investigations":12,"revenue":89100},{"centre":"Ijofi","referrer":"Dr. HABIBULAHI","cases":11,"investigations":11,"revenue":134400},{"centre":"Ijofi","referrer":"Dr. ADENLE MEMORIAL HOSPITAL","cases":10,"investigations":10,"revenue":68100},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ugochukwu anthony smc","cases":9,"investigations":9,"revenue":46000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. ARINZE (MODUPEOLUWA HOSPITAL)","cases":9,"investigations":9,"revenue":31500},{"centre":"Ijofi","referrer":"Dr. DE-SHALOM  PHARMACY","cases":8,"investigations":8,"revenue":174250},{"centre":"Ijofi","referrer":"Dr. MAYFIELD MEDICAL CLINIC","cases":8,"investigations":8,"revenue":103350},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLABISI MGH","cases":8,"investigations":10,"revenue":173500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. SULAIMON AJEABO","cases":7,"investigations":7,"revenue":64500},{"centre":"Ijofi","referrer":"Dr. MORE ABUNDANT HOSPITAL ILESA","cases":7,"investigations":7,"revenue":91450},{"centre":"Ijofi","referrer":"Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)","cases":7,"investigations":7,"revenue":87800},{"centre":"Ikeja Lagos Centre","referrer":"Dr. BASTION HMO","cases":6,"investigations":6,"revenue":73000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. JAMES JAMES","cases":6,"investigations":6,"revenue":40500},{"centre":"Ijofi","referrer":"Dr. VICTORIA MEDICAL CENTRE","cases":6,"investigations":6,"revenue":64000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. THANNI  GHM","cases":6,"investigations":6,"revenue":35000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. LEADWAY HMO","cases":5,"investigations":5,"revenue":50050},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLAJIDE AJEABO","cases":5,"investigations":6,"revenue":96000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. BAYODE GHM (DOCTOR)","cases":5,"investigations":5,"revenue":34000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLUWATAYO MATRON (CAC OKE IYE)","cases":5,"investigations":5,"revenue":20000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. CORNFIELD CORPORATE","cases":5,"investigations":5,"revenue":42500},{"centre":"Ijofi","referrer":"Dr. LIVING PETALS  MEDICAL CENTER ILESA","cases":5,"investigations":5,"revenue":99500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JAMES JAMES","cases":5,"investigations":5,"revenue":39500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. MINDBUILDER CORPORATE","cases":4,"investigations":4,"revenue":81500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE TEBUN ONAYEMI (AJEABO)","cases":4,"investigations":5,"revenue":42000},{"centre":"Ijofi","referrer":"Dr. GENERAL HOSPITAL ILESA","cases":4,"investigations":4,"revenue":26400},{"centre":"Palm Avenue, Lagos","referrer":"Dr. PHARM CHIOMA (Pharmacist)","cases":4,"investigations":4,"revenue":31500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OLAYINKA ST KIZITO","cases":3,"investigations":3,"revenue":18000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE ROSEMARY","cases":3,"investigations":4,"revenue":40000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. GOZIE MGH","cases":3,"investigations":6,"revenue":25500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. AXA MANZARD HMO","cases":3,"investigations":3,"revenue":49500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JOSEPH OGUNSUYI","cases":3,"investigations":4,"revenue":48000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. MODUPEOLUWA HOSPITAL","cases":3,"investigations":3,"revenue":16500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. EBUKA SMC","cases":2,"investigations":2,"revenue":13000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Nurse Ibitoye","cases":2,"investigations":2,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. DR AJIDAHUN","cases":2,"investigations":2,"revenue":16000},{"centre":"Ilasa Main Centre, Lagos","referrer":"A4H","cases":2,"investigations":3,"revenue":25500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. NURSE REKIYA MADAM GANA-IDI ARABA","cases":2,"investigations":2,"revenue":8000},{"centre":"Ijofi","referrer":"Dr. SALIU POINTCARE HOSPITAL, ILESA","cases":2,"investigations":2,"revenue":43600},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MATRON DOSUNMU","cases":2,"investigations":3,"revenue":25500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OKEKE ILASA PHC","cases":2,"investigations":2,"revenue":8000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. FOOD CONCEPT CORPORATE","cases":2,"investigations":2,"revenue":13000},{"centre":"Ijofi","referrer":"Dr. OLAOLUWANI MATERNITY","cases":2,"investigations":2,"revenue":14300},{"centre":"Ijofi","referrer":"Dr. OMOLEYE POINTCARE HOSPITAL, ILESA","cases":2,"investigations":2,"revenue":13750},{"centre":"Ilasa Main Centre, Lagos","referrer":"OIC OLADAPO","cases":2,"investigations":2,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE Rebecca","cases":2,"investigations":2,"revenue":18500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AINA MGH","cases":2,"investigations":2,"revenue":17000},{"centre":"Ijofi","referrer":"Dr. General Hospital","cases":2,"investigations":2,"revenue":15400},{"centre":"Ikeja Lagos Centre","referrer":"Dr. RELIANCE HMO","cases":2,"investigations":2,"revenue":35500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OGABI M.A (AJEABO PHC)","cases":2,"investigations":2,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINTOLA","cases":2,"investigations":3,"revenue":22000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. BAKARE R.D (AJEABO PHC)","cases":2,"investigations":2,"revenue":32000},{"centre":"Palm Avenue, Lagos","referrer":"MGH","cases":1,"investigations":1,"revenue":16500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. DEBORAH MAY CLINIC","cases":1,"investigations":1,"revenue":2500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Anc Nurse","cases":1,"investigations":2,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MONELIN SMC","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OBI MODUPE OLUWA CLINIC","cases":1,"investigations":2,"revenue":9000},{"centre":"Ilasa Main Centre, Lagos","referrer":"PHARM EBUKA VATICAN BELL","cases":1,"investigations":2,"revenue":14000},{"centre":"Palm Avenue, Lagos","referrer":"nwanchukwu joy (Dr Express CLINIC)","cases":1,"investigations":1,"revenue":34000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. MATRIX PHARMACY","cases":1,"investigations":1,"revenue":25500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MUSTAPHA","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AJAKAYE GHM","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. JOSEPH OGUNSUYI","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Nike Olaoye","cases":1,"investigations":2,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL","cases":1,"investigations":1,"revenue":8500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE ALLI","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE  VICTORIA","cases":1,"investigations":1,"revenue":11500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE AWOYEMI","cases":1,"investigations":1,"revenue":4000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. SURE ILASA","cases":1,"investigations":1,"revenue":18480},{"centre":"Ijofi","referrer":"Dr. ADENLE","cases":1,"investigations":1,"revenue":5500},{"centre":"Ijofi","referrer":"Dr. AKINBOWALE STATE HOSPITAL","cases":1,"investigations":1,"revenue":5500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE YETUNDE (8 KEKEROWO)","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. surakatu","cases":1,"investigations":1,"revenue":20500},{"centre":"Palm Avenue, Lagos","referrer":"Mrs. NURSE IYANUOLUWA (NURSE)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MRS ADEKOYA AJEABO PHC","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLIYIDE GH","cases":1,"investigations":1,"revenue":8500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. LAWAL GHM","cases":1,"investigations":1,"revenue":18000},{"centre":"Ijofi","referrer":"Dr. SALIU","cases":1,"investigations":1,"revenue":2000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Segun Oyatoki","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AJAKAYE GHM","cases":1,"investigations":2,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AIYELOJA OLOLADE (MERIT HOSPITAL)","cases":1,"investigations":1,"revenue":9000},{"centre":"Ijofi","referrer":"Dr. DANIEL  ADEWALE","cases":1,"investigations":1,"revenue":7150},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OGUNJIMI ADDEY JIMMY CLINIC","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AGBE","cases":1,"investigations":1,"revenue":8500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OLANREWAJU (AJEABO)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Adeleye GHM (DOCTOR)","cases":1,"investigations":1,"revenue":8500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. UCHE GH MUSHIN","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OKUSI  (DOCTOR)","cases":1,"investigations":1,"revenue":11000},{"centre":"Ilasa Main Centre, Lagos","referrer":"ST TOBY","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"Mrs. SULAIMON AJEABO","cases":1,"investigations":1,"revenue":20500},{"centre":"Ilasa Main Centre, Lagos","referrer":"AYANBODE AJEABO","cases":1,"investigations":1,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. GBEMISOLA IDI ARABA PHC","cases":1,"investigations":1,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. IJEOMA ILASA PHC","cases":1,"investigations":2,"revenue":11000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Yinka Adeniran (Doctor)","cases":1,"investigations":1,"revenue":18000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AJAYI O RISAAJ HOSIPTAL","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. OLAOLUWA MATENITY","cases":1,"investigations":1,"revenue":17200},{"centre":"Ijofi","referrer":"Dr. ISE -OLUWA MATERNITY,HOME","cases":1,"investigations":1,"revenue":7150},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ADELAKUN","cases":1,"investigations":1,"revenue":25000},{"centre":"Ijofi","referrer":"Dr. DIVINE INTERNATIONAL HEALTH","cases":1,"investigations":1,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AGBE","cases":1,"investigations":1,"revenue":8500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. CONFIDENCE PHARM (PHARM)","cases":1,"investigations":1,"revenue":21500},{"centre":"Ijofi","referrer":"Dr. DR ADETOYE","cases":1,"investigations":1,"revenue":15200},{"centre":"Palm Avenue, Lagos","referrer":"NURSE KUDIRAT (OLAIYA CLINIC)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. THT","cases":1,"investigations":1,"revenue":6800},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. sure pvt","cases":1,"investigations":4,"revenue":34500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. MATRON MODUPEOLUWA HOSPITAL","cases":1,"investigations":1,"revenue":8500},{"centre":"Ijofi","referrer":"Dr. EYITAYO CLINIC ALONG EXPRESS WAY OLORUNDA ANIFOWOSE","cases":1,"investigations":1,"revenue":3000},{"centre":"Ijofi","referrer":"Dr. MIRACLE  CLINIC","cases":1,"investigations":1,"revenue":5500},{"centre":"Ijofi","referrer":"Dr. STATE HOSIPAL DR DANIEL","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Nurse kafayat","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"NURSE JOY","cases":1,"investigations":1,"revenue":18000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. HYGEIA HMO","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. NUS DAMILOLA","cases":1,"investigations":1,"revenue":3000},{"centre":"Ijofi","referrer":"Dr. CORRECTIONAL CENTRE ILESA","cases":1,"investigations":1,"revenue":7500},{"centre":"Palm Avenue, Lagos","referrer":"NIGERIAN MACHINE TOOLS","cases":1,"investigations":1,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OKAFOR  MGH","cases":1,"investigations":2,"revenue":24000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Ajakaye mushin (G.H)","cases":1,"investigations":2,"revenue":27000}],"agents":[{"agent":"MISS VIVIAN","cases":425,"investigations":425,"patients":396,"revenue":4504100,"paid":4401400},{"agent":"DR. OWOJUYIGBE","cases":38,"investigations":38,"patients":37,"revenue":293350,"paid":253350},{"agent":"MRS ELUU","cases":19,"investigations":19,"patients":19,"revenue":263800,"paid":262000},{"agent":"DR. ADEYERA","cases":37,"investigations":37,"patients":37,"revenue":223450,"paid":222450},{"agent":"DR.  ASASILE","cases":37,"investigations":37,"patients":37,"revenue":219750,"paid":219750},{"agent":"DR   ABA","cases":30,"investigations":30,"patients":30,"revenue":180100,"paid":180100},{"agent":"DR.ODEWUMI","cases":24,"investigations":24,"patients":24,"revenue":150900,"paid":150900},{"agent":"DR ODEWUMI","cases":25,"investigations":25,"patients":25,"revenue":149600,"paid":149600},{"agent":"DR EZEOMA","cases":24,"investigations":24,"patients":24,"revenue":145650,"paid":145650},{"agent":"DR. OLOWOMEYE","cases":19,"investigations":19,"patients":19,"revenue":114950,"paid":114950},{"agent":"DR. OLORUNMO","cases":18,"investigations":18,"patients":18,"revenue":106800,"paid":106800},{"agent":"MRS ADERELE","cases":13,"investigations":13,"patients":13,"revenue":97500,"paid":97500},{"agent":"DR . OWOJUYIGBE","cases":4,"investigations":4,"patients":4,"revenue":79200,"paid":79200},{"agent":"mrs kelechi","cases":2,"investigations":2,"patients":2,"revenue":55200,"paid":55000},{"agent":"Dayo Adedayo","cases":2,"investigations":3,"patients":1,"revenue":25500,"paid":25500},{"agent":"DR. ADESUNKANMI","cases":3,"investigations":3,"patients":3,"revenue":19000,"paid":19000}],"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":459,"investigations":459,"revenue":4987200},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":304,"investigations":304,"revenue":2825000},{"centre":"Ijofi","case_type":"USG","cases":145,"investigations":145,"revenue":1026600},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":135,"investigations":135,"revenue":715000},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":131,"investigations":131,"revenue":759650},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":85,"investigations":85,"revenue":853000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":47,"investigations":47,"revenue":822830},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":39,"investigations":39,"revenue":182000},{"centre":"Ijofi","case_type":"ECG","cases":22,"investigations":22,"revenue":172500},{"centre":"Ilasa Main Centre, Lagos","case_type":"Digital X-ray","cases":21,"investigations":21,"revenue":272400},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":9,"investigations":9,"revenue":81000},{"centre":"Palm Avenue, Lagos","case_type":"Digital X-ray","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":1,"investigations":1,"revenue":9000}]},"2026-02":{"month":2,"year":2026,"centres":{"Ilasa Main Centre, Lagos":{"investigations":400,"cases":366,"patients":363,"revenue":4272400.0,"paid":2622000.0,"due":1650400.0,"unique_referrers":72,"weekly":{"1":{"investigations":105,"cases":99,"patients":98,"revenue":1264500.0,"paid":622500.0},"2":{"investigations":101,"cases":86,"patients":86,"revenue":1098500.0,"paid":602000.0},"3":{"investigations":99,"cases":94,"patients":92,"revenue":1071500.0,"paid":629000.0},"4":{"investigations":95,"cases":87,"patients":87,"revenue":837900.0,"paid":768500.0}}},"OAUTH Ilesa Centre":{"investigations":400,"cases":400,"patients":391,"revenue":2753350.0,"paid":2753350.0,"due":0.0,"unique_referrers":2,"weekly":{"1":{"investigations":21,"cases":21,"patients":21,"revenue":122000.0,"paid":122000.0},"2":{"investigations":99,"cases":99,"patients":97,"revenue":654800.0,"paid":654800.0},"3":{"investigations":140,"cases":140,"patients":137,"revenue":1008250.0,"paid":1008250.0},"4":{"investigations":140,"cases":140,"patients":136,"revenue":968300.0,"paid":968300.0}}},"Palm Avenue, Lagos":{"investigations":161,"cases":144,"patients":142,"revenue":1659500.0,"paid":1523600.0,"due":133500.0,"unique_referrers":36,"weekly":{"1":{"investigations":61,"cases":56,"patients":55,"revenue":764000.0,"paid":697000.0},"2":{"investigations":31,"cases":30,"patients":30,"revenue":298500.0,"paid":268600.0},"3":{"investigations":31,"cases":27,"patients":27,"revenue":263000.0,"paid":263000.0},"4":{"investigations":38,"cases":31,"patients":30,"revenue":334000.0,"paid":295000.0}}},"Ijofi":{"investigations":520,"cases":517,"patients":485,"revenue":4615700.0,"paid":4490600.0,"due":14000.0,"unique_referrers":49,"weekly":{"1":{"investigations":132,"cases":131,"patients":125,"revenue":1215400.0,"paid":1209700.0},"2":{"investigations":138,"cases":137,"patients":126,"revenue":1415100.0,"paid":1379800.0},"3":{"investigations":102,"cases":101,"patients":93,"revenue":881100.0,"paid":867700.0},"4":{"investigations":148,"cases":148,"patients":141,"revenue":1104100.0,"paid":1033400.0}}},"Ikeja Lagos Centre":{"investigations":16,"cases":16,"patients":15,"revenue":187250.0,"paid":43490.0,"due":140750.0,"unique_referrers":9,"weekly":{"1":{"investigations":8,"cases":8,"patients":7,"revenue":111750.0,"paid":39990.0},"3":{"investigations":8,"cases":8,"patients":8,"revenue":75500.0,"paid":3500.0}}}},"daily":[{"date":"2026-02-02","centre":"Ilasa Main Centre, Lagos","day":2,"week":1,"investigations":18,"cases":17,"patients":17,"revenue":141000,"paid":139000,"due":2000},{"date":"2026-02-02","centre":"OAUTH Ilesa Centre","day":2,"week":1,"investigations":6,"cases":6,"patients":6,"revenue":36000,"paid":36000,"due":0},{"date":"2026-02-02","centre":"Palm Avenue, Lagos","day":2,"week":1,"investigations":15,"cases":13,"patients":13,"revenue":190000,"paid":154000,"due":36000},{"date":"2026-02-02","centre":"Ijofi","day":2,"week":1,"investigations":24,"cases":24,"patients":22,"revenue":258900,"paid":258000,"due":0},{"date":"2026-02-03","centre":"Ikeja Lagos Centre","day":3,"week":1,"investigations":6,"cases":6,"patients":5,"revenue":84250,"paid":39990,"due":41250},{"date":"2026-02-03","centre":"Ilasa Main Centre, Lagos","day":3,"week":1,"investigations":13,"cases":13,"patients":13,"revenue":104000,"paid":97500,"due":6500},{"date":"2026-02-03","centre":"OAUTH Ilesa Centre","day":3,"week":1,"investigations":1,"cases":1,"patients":1,"revenue":6000,"paid":6000,"due":0},{"date":"2026-02-03","centre":"Palm Avenue, Lagos","day":3,"week":1,"investigations":10,"cases":9,"patients":9,"revenue":139000,"paid":124000,"due":15000},{"date":"2026-02-03","centre":"Ijofi","day":3,"week":1,"investigations":18,"cases":17,"patients":16,"revenue":205100,"paid":203500,"due":0},{"date":"2026-02-04","centre":"Ilasa Main Centre, Lagos","day":4,"week":1,"investigations":15,"cases":12,"patients":12,"revenue":141500,"paid":139500,"due":2000},{"date":"2026-02-04","centre":"OAUTH Ilesa Centre","day":4,"week":1,"investigations":4,"cases":4,"patients":4,"revenue":23500,"paid":23500,"due":0},{"date":"2026-02-04","centre":"Palm Avenue, Lagos","day":4,"week":1,"investigations":11,"cases":10,"patients":9,"revenue":131500,"paid":128500,"due":3000},{"date":"2026-02-04","centre":"Ijofi","day":4,"week":1,"investigations":32,"cases":32,"patients":31,"revenue":315850,"paid":314250,"due":0},{"date":"2026-02-05","centre":"Ilasa Main Centre, Lagos","day":5,"week":1,"investigations":10,"cases":10,"patients":10,"revenue":57500,"paid":51000,"due":6500},{"date":"2026-02-05","centre":"OAUTH Ilesa Centre","day":5,"week":1,"investigations":5,"cases":5,"patients":5,"revenue":27500,"paid":27500,"due":0},{"date":"2026-02-05","centre":"Palm Avenue, Lagos","day":5,"week":1,"investigations":7,"cases":7,"patients":7,"revenue":94500,"paid":81500,"due":13000},{"date":"2026-02-05","centre":"Ijofi","day":5,"week":1,"investigations":23,"cases":23,"patients":22,"revenue":166100,"paid":165100,"due":0},{"date":"2026-02-06","centre":"Ikeja Lagos Centre","day":6,"week":1,"investigations":2,"cases":2,"patients":2,"revenue":27500,"paid":0,"due":27500},{"date":"2026-02-06","centre":"Ilasa Main Centre, Lagos","day":6,"week":1,"investigations":11,"cases":10,"patients":9,"revenue":104000,"paid":104000,"due":0},{"date":"2026-02-06","centre":"OAUTH Ilesa Centre","day":6,"week":1,"investigations":4,"cases":4,"patients":4,"revenue":23000,"paid":23000,"due":0},{"date":"2026-02-06","centre":"Palm Avenue, Lagos","day":6,"week":1,"investigations":12,"cases":12,"patients":12,"revenue":150000,"paid":150000,"due":0},{"date":"2026-02-06","centre":"Ijofi","day":6,"week":1,"investigations":26,"cases":26,"patients":25,"revenue":153850,"paid":153850,"due":0},{"date":"2026-02-07","centre":"Ilasa Main Centre, Lagos","day":7,"week":1,"investigations":38,"cases":37,"patients":37,"revenue":716500,"paid":91500,"due":625000},{"date":"2026-02-07","centre":"OAUTH Ilesa Centre","day":7,"week":1,"investigations":1,"cases":1,"patients":1,"revenue":6000,"paid":6000,"due":0},{"date":"2026-02-07","centre":"Palm Avenue, Lagos","day":7,"week":1,"investigations":6,"cases":5,"patients":5,"revenue":59000,"paid":59000,"due":0},{"date":"2026-02-07","centre":"Ijofi","day":7,"week":1,"investigations":9,"cases":9,"patients":9,"revenue":115600,"paid":115000,"due":0},{"date":"2026-02-09","centre":"Ilasa Main Centre, Lagos","day":9,"week":2,"investigations":17,"cases":15,"patients":15,"revenue":165000,"paid":155000,"due":10000},{"date":"2026-02-09","centre":"OAUTH Ilesa Centre","day":9,"week":2,"investigations":19,"cases":19,"patients":19,"revenue":111000,"paid":111000,"due":0},{"date":"2026-02-09","centre":"Ijofi","day":9,"week":2,"investigations":39,"cases":39,"patients":36,"revenue":410450,"paid":404450,"due":0},{"date":"2026-02-10","centre":"Ilasa Main Centre, Lagos","day":10,"week":2,"investigations":18,"cases":15,"patients":15,"revenue":251000,"paid":102500,"due":148500},{"date":"2026-02-10","centre":"OAUTH Ilesa Centre","day":10,"week":2,"investigations":15,"cases":15,"patients":14,"revenue":101800,"paid":101800,"due":0},{"date":"2026-02-10","centre":"Palm Avenue, Lagos","day":10,"week":2,"investigations":12,"cases":12,"patients":12,"revenue":103000,"paid":100600,"due":0},{"date":"2026-02-10","centre":"Ijofi","day":10,"week":2,"investigations":29,"cases":28,"patients":25,"revenue":332600,"paid":309200,"due":8000},{"date":"2026-02-11","centre":"Ilasa Main Centre, Lagos","day":11,"week":2,"investigations":14,"cases":11,"patients":11,"revenue":117000,"paid":85000,"due":32000},{"date":"2026-02-11","centre":"OAUTH Ilesa Centre","day":11,"week":2,"investigations":20,"cases":20,"patients":19,"revenue":143000,"paid":143000,"due":0},{"date":"2026-02-11","centre":"Ijofi","day":11,"week":2,"investigations":23,"cases":23,"patients":22,"revenue":282800,"paid":282600,"due":0},{"date":"2026-02-12","centre":"Ilasa Main Centre, Lagos","day":12,"week":2,"investigations":15,"cases":10,"patients":10,"revenue":120500,"paid":114000,"due":6500},{"date":"2026-02-12","centre":"OAUTH Ilesa Centre","day":12,"week":2,"investigations":19,"cases":19,"patients":19,"revenue":140000,"paid":140000,"due":0},{"date":"2026-02-12","centre":"Palm Avenue, Lagos","day":12,"week":2,"investigations":15,"cases":14,"patients":14,"revenue":151500,"paid":151500,"due":0},{"date":"2026-02-12","centre":"Ijofi","day":12,"week":2,"investigations":24,"cases":24,"patients":22,"revenue":178950,"paid":178550,"due":0},{"date":"2026-02-13","centre":"Ilasa Main Centre, Lagos","day":13,"week":2,"investigations":14,"cases":14,"patients":14,"revenue":109000,"paid":81500,"due":27500},{"date":"2026-02-13","centre":"OAUTH Ilesa Centre","day":13,"week":2,"investigations":22,"cases":22,"patients":22,"revenue":134500,"paid":134500,"due":0},{"date":"2026-02-13","centre":"Palm Avenue, Lagos","day":13,"week":2,"investigations":3,"cases":3,"patients":3,"revenue":16500,"paid":16500,"due":0},{"date":"2026-02-13","centre":"Ijofi","day":13,"week":2,"investigations":21,"cases":21,"patients":19,"revenue":183100,"paid":178100,"due":0},{"date":"2026-02-14","centre":"Ilasa Main Centre, Lagos","day":14,"week":2,"investigations":23,"cases":21,"patients":21,"revenue":336000,"paid":64000,"due":272000},{"date":"2026-02-14","centre":"OAUTH Ilesa Centre","day":14,"week":2,"investigations":4,"cases":4,"patients":4,"revenue":24500,"paid":24500,"due":0},{"date":"2026-02-14","centre":"Palm Avenue, Lagos","day":14,"week":2,"investigations":1,"cases":1,"patients":1,"revenue":27500,"paid":0,"due":27500},{"date":"2026-02-14","centre":"Ijofi","day":14,"week":2,"investigations":2,"cases":2,"patients":2,"revenue":27200,"paid":26900,"due":0},{"date":"2026-02-15","centre":"OAUTH Ilesa Centre","day":15,"week":3,"investigations":4,"cases":4,"patients":4,"revenue":31000,"paid":31000,"due":0},{"date":"2026-02-15","centre":"Ijofi","day":15,"week":3,"investigations":2,"cases":2,"patients":2,"revenue":14100,"paid":14100,"due":0},{"date":"2026-02-16","centre":"Ikeja Lagos Centre","day":16,"week":3,"investigations":6,"cases":6,"patients":6,"revenue":39000,"paid":3500,"due":35500},{"date":"2026-02-16","centre":"Ilasa Main Centre, Lagos","day":16,"week":3,"investigations":3,"cases":2,"patients":2,"revenue":16000,"paid":0,"due":16000},{"date":"2026-02-16","centre":"OAUTH Ilesa Centre","day":16,"week":3,"investigations":30,"cases":30,"patients":29,"revenue":205000,"paid":205000,"due":0},{"date":"2026-02-16","centre":"Ijofi","day":16,"week":3,"investigations":17,"cases":17,"patients":17,"revenue":100200,"paid":100000,"due":0},{"date":"2026-02-17","centre":"Ilasa Main Centre, Lagos","day":17,"week":3,"investigations":16,"cases":16,"patients":16,"revenue":143500,"paid":110000,"due":33500},{"date":"2026-02-17","centre":"OAUTH Ilesa Centre","day":17,"week":3,"investigations":25,"cases":25,"patients":25,"revenue":229000,"paid":229000,"due":0},{"date":"2026-02-17","centre":"Palm Avenue, Lagos","day":17,"week":3,"investigations":15,"cases":14,"patients":14,"revenue":129500,"paid":129500,"due":0},{"date":"2026-02-17","centre":"Ijofi","day":17,"week":3,"investigations":21,"cases":20,"patients":17,"revenue":205200,"paid":205100,"due":0},{"date":"2026-02-18","centre":"Ilasa Main Centre, Lagos","day":18,"week":3,"investigations":13,"cases":12,"patients":12,"revenue":68000,"paid":59500,"due":8500},{"date":"2026-02-18","centre":"OAUTH Ilesa Centre","day":18,"week":3,"investigations":25,"cases":25,"patients":24,"revenue":182850,"paid":182850,"due":0},{"date":"2026-02-18","centre":"Palm Avenue, Lagos","day":18,"week":3,"investigations":5,"cases":4,"patients":4,"revenue":45500,"paid":45500,"due":0},{"date":"2026-02-18","centre":"Ijofi","day":18,"week":3,"investigations":9,"cases":9,"patients":9,"revenue":77200,"paid":76500,"due":0},{"date":"2026-02-19","centre":"Ikeja Lagos Centre","day":19,"week":3,"investigations":2,"cases":2,"patients":2,"revenue":36500,"paid":0,"due":36500},{"date":"2026-02-19","centre":"Ilasa Main Centre, Lagos","day":19,"week":3,"investigations":23,"cases":20,"patients":19,"revenue":196000,"paid":196000,"due":0},{"date":"2026-02-19","centre":"OAUTH Ilesa Centre","day":19,"week":3,"investigations":25,"cases":25,"patients":25,"revenue":180000,"paid":180000,"due":0},{"date":"2026-02-19","centre":"Palm Avenue, Lagos","day":19,"week":3,"investigations":8,"cases":6,"patients":6,"revenue":43500,"paid":43500,"due":0},{"date":"2026-02-19","centre":"Ijofi","day":19,"week":3,"investigations":22,"cases":22,"patients":19,"revenue":149800,"paid":146200,"due":0},{"date":"2026-02-20","centre":"Ilasa Main Centre, Lagos","day":20,"week":3,"investigations":25,"cases":25,"patients":24,"revenue":483500,"paid":105500,"due":378000},{"date":"2026-02-20","centre":"OAUTH Ilesa Centre","day":20,"week":3,"investigations":22,"cases":22,"patients":21,"revenue":127400,"paid":127400,"due":0},{"date":"2026-02-20","centre":"Palm Avenue, Lagos","day":20,"week":3,"investigations":3,"cases":3,"patients":3,"revenue":44500,"paid":44500,"due":0},{"date":"2026-02-20","centre":"Ijofi","day":20,"week":3,"investigations":26,"cases":26,"patients":25,"revenue":221600,"paid":215200,"due":6000},{"date":"2026-02-21","centre":"Ilasa Main Centre, Lagos","day":21,"week":3,"investigations":19,"cases":19,"patients":19,"revenue":164500,"paid":158000,"due":6500},{"date":"2026-02-21","centre":"OAUTH Ilesa Centre","day":21,"week":3,"investigations":9,"cases":9,"patients":9,"revenue":53000,"paid":53000,"due":0},{"date":"2026-02-21","centre":"Ijofi","day":21,"week":3,"investigations":5,"cases":5,"patients":4,"revenue":113000,"paid":110600,"due":0},{"date":"2026-02-22","centre":"OAUTH Ilesa Centre","day":22,"week":4,"investigations":8,"cases":8,"patients":8,"revenue":66500,"paid":66500,"due":0},{"date":"2026-02-23","centre":"Ilasa Main Centre, Lagos","day":23,"week":4,"investigations":29,"cases":26,"patients":26,"revenue":260500,"paid":248500,"due":12000},{"date":"2026-02-23","centre":"OAUTH Ilesa Centre","day":23,"week":4,"investigations":25,"cases":25,"patients":24,"revenue":145500,"paid":145500,"due":0},{"date":"2026-02-23","centre":"Ijofi","day":23,"week":4,"investigations":41,"cases":41,"patients":40,"revenue":188050,"paid":176850,"due":0},{"date":"2026-02-24","centre":"Ilasa Main Centre, Lagos","day":24,"week":4,"investigations":11,"cases":9,"patients":9,"revenue":111500,"paid":111500,"due":0},{"date":"2026-02-24","centre":"OAUTH Ilesa Centre","day":24,"week":4,"investigations":22,"cases":22,"patients":21,"revenue":143500,"paid":143500,"due":0},{"date":"2026-02-24","centre":"Palm Avenue, Lagos","day":24,"week":4,"investigations":15,"cases":13,"patients":12,"revenue":77500,"paid":77500,"due":0},{"date":"2026-02-24","centre":"Ijofi","day":24,"week":4,"investigations":41,"cases":41,"patients":41,"revenue":194000,"paid":180500,"due":0},{"date":"2026-02-25","centre":"Ilasa Main Centre, Lagos","day":25,"week":4,"investigations":11,"cases":11,"patients":11,"revenue":75000,"paid":75000,"due":0},{"date":"2026-02-25","centre":"OAUTH Ilesa Centre","day":25,"week":4,"investigations":27,"cases":27,"patients":25,"revenue":176400,"paid":176400,"due":0},{"date":"2026-02-25","centre":"Palm Avenue, Lagos","day":25,"week":4,"investigations":6,"cases":5,"patients":5,"revenue":77000,"paid":77000,"due":0},{"date":"2026-02-25","centre":"Ijofi","day":25,"week":4,"investigations":10,"cases":10,"patients":9,"revenue":103400,"paid":103200,"due":0},{"date":"2026-02-26","centre":"Ilasa Main Centre, Lagos","day":26,"week":4,"investigations":8,"cases":8,"patients":8,"revenue":115500,"paid":88500,"due":27000},{"date":"2026-02-26","centre":"OAUTH Ilesa Centre","day":26,"week":4,"investigations":23,"cases":23,"patients":23,"revenue":185900,"paid":185900,"due":0},{"date":"2026-02-26","centre":"Palm Avenue, Lagos","day":26,"week":4,"investigations":6,"cases":5,"patients":5,"revenue":54000,"paid":54000,"due":0},{"date":"2026-02-26","centre":"Ijofi","day":26,"week":4,"investigations":20,"cases":20,"patients":19,"revenue":136950,"paid":136550,"due":0},{"date":"2026-02-27","centre":"Ilasa Main Centre, Lagos","day":27,"week":4,"investigations":20,"cases":17,"patients":17,"revenue":174900,"paid":144500,"due":30400},{"date":"2026-02-27","centre":"OAUTH Ilesa Centre","day":27,"week":4,"investigations":24,"cases":24,"patients":24,"revenue":171500,"paid":171500,"due":0},{"date":"2026-02-27","centre":"Palm Avenue, Lagos","day":27,"week":4,"investigations":4,"cases":2,"patients":2,"revenue":57500,"paid":57500,"due":0},{"date":"2026-02-27","centre":"Ijofi","day":27,"week":4,"investigations":29,"cases":29,"patients":27,"revenue":414300,"paid":369300,"due":0},{"date":"2026-02-28","centre":"Ilasa Main Centre, Lagos","day":28,"week":4,"investigations":16,"cases":16,"patients":16,"revenue":100500,"paid":100500,"due":0},{"date":"2026-02-28","centre":"OAUTH Ilesa Centre","day":28,"week":4,"investigations":11,"cases":11,"patients":11,"revenue":79000,"paid":79000,"due":0},{"date":"2026-02-28","centre":"Palm Avenue, Lagos","day":28,"week":4,"investigations":7,"cases":6,"patients":6,"revenue":68000,"paid":29000,"due":39000},{"date":"2026-02-28","centre":"Ijofi","day":28,"week":4,"investigations":7,"cases":7,"patients":5,"revenue":67400,"paid":67000,"due":0}],"referrers":[{"centre":"OAUTH Ilesa Centre","referrer":"Dr. OAUTHC DOCTORS","cases":399,"investigations":399,"revenue":2746750},{"centre":"Ijofi","referrer":"Dr. OAUTHC DOCTORS","cases":235,"investigations":237,"revenue":1861200},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. PVT","cases":89,"investigations":94,"revenue":618000},{"centre":"Ilasa Main Centre, Lagos","referrer":"MGH","cases":63,"investigations":65,"revenue":1545900},{"centre":"Ijofi","referrer":"Dr. PRIVATE ILESHA","cases":58,"investigations":58,"revenue":573800},{"centre":"Ijofi","referrer":"Dr. (Prof.) ADEGOKE SAMUEL","cases":57,"investigations":57,"revenue":399600},{"centre":"Palm Avenue, Lagos","referrer":"Dr. PVT","cases":41,"investigations":44,"revenue":324000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. AWOTUNDUN (GBAJA HOSP)","cases":21,"investigations":25,"revenue":228000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL","cases":17,"investigations":19,"revenue":200000},{"centre":"Ijofi","referrer":"Dr. VICTORIA MEDICAL CENTRE","cases":15,"investigations":15,"revenue":196700},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OBI MODUPE OLUWA CLINIC","cases":15,"investigations":19,"revenue":127000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. THANNI  GHM","cases":15,"investigations":15,"revenue":195500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. BAYODE GHM (DOCTOR)","cases":14,"investigations":19,"revenue":115500},{"centre":"Ijofi","referrer":"Dr. OASIS HOSPITAL","cases":13,"investigations":13,"revenue":126000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. FOOD CONCEPT CORPORATE","cases":12,"investigations":12,"revenue":78000},{"centre":"Ijofi","referrer":"Dr. BAKARE STATE HOSPITAL","cases":11,"investigations":11,"revenue":112800},{"centre":"Ijofi","referrer":"Dr. SALIU","cases":11,"investigations":11,"revenue":154500},{"centre":"Ijofi","referrer":"Dr. LIVING PETALS  MEDICAL CENTER ILESA","cases":11,"investigations":11,"revenue":127500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JOHN MGH","cases":11,"investigations":13,"revenue":143500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AKINYEMI  ITIRE MCC","cases":11,"investigations":11,"revenue":85500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AINA MGH","cases":11,"investigations":11,"revenue":87500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLABISI MGH","cases":10,"investigations":13,"revenue":126500},{"centre":"Ijofi","referrer":"Dr. DANIEL GENERAL, HOSPITAL","cases":9,"investigations":9,"revenue":97650},{"centre":"Ijofi","referrer":"Dr. MAYFIELD MEDICAL CLINIC","cases":9,"investigations":10,"revenue":149200},{"centre":"Ijofi","referrer":"Dr. HABIBULAHI","cases":8,"investigations":8,"revenue":60000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINYEMI  ITIRE MCC","cases":8,"investigations":9,"revenue":83500},{"centre":"Ijofi","referrer":"Dr. OLAOLUWA MATENITY","cases":7,"investigations":7,"revenue":108300},{"centre":"Ijofi","referrer":"Dr. BAKARE GENERAL, HOSPITAL","cases":7,"investigations":7,"revenue":41900},{"centre":"Ijofi","referrer":"Dr. DE-SHALOM  PHARMACY","cases":7,"investigations":7,"revenue":81500},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE TEBUN ONAYEMI (AJEABO)","cases":7,"investigations":8,"revenue":60500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Babafashola","cases":6,"investigations":7,"revenue":45500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. IJEOMA ILASA PHC","cases":6,"investigations":7,"revenue":89000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. JAMES JAMES","cases":6,"investigations":6,"revenue":51000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JAMES JAMES","cases":5,"investigations":5,"revenue":61500},{"centre":"Ikeja Lagos Centre","referrer":"HOPE  STONE","cases":5,"investigations":5,"revenue":82000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINTOLA","cases":5,"investigations":5,"revenue":56500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL","cases":5,"investigations":5,"revenue":68500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. GOZIE MGH","cases":4,"investigations":4,"revenue":52500},{"centre":"Ijofi","referrer":"Dr. GENERAL HOSPITAL ILESA","cases":4,"investigations":4,"revenue":26900},{"centre":"Ijofi","referrer":"Dr. DE-SHALOM PHARMACY","cases":4,"investigations":4,"revenue":54700},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. GOZIE MGH","cases":4,"investigations":5,"revenue":38500},{"centre":"Ijofi","referrer":"Dr. DR AROWOLO OAUTH","cases":4,"investigations":4,"revenue":12000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JOSEPH OGUNSUYI","cases":4,"investigations":6,"revenue":83000},{"centre":"Palm Avenue, Lagos","referrer":"MGH","cases":3,"investigations":3,"revenue":75000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MICHAEL AYOOLA","cases":3,"investigations":3,"revenue":26000},{"centre":"Ijofi","referrer":"Dr. AKINBOWALE STATE HOSPITAL","cases":3,"investigations":3,"revenue":25750},{"centre":"Ijofi","referrer":"Dr. OKOTORE GENERAL HOSPITAL,ILESA","cases":3,"investigations":3,"revenue":32500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. JOHN MGH","cases":3,"investigations":4,"revenue":50000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Nurse OJ","cases":3,"investigations":5,"revenue":32000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. SULAIMON AJEABO","cases":3,"investigations":3,"revenue":31500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. ADELEYE MCC ITIRE","cases":3,"investigations":3,"revenue":29000},{"centre":"Ijofi","referrer":"Dr. OLAOLUWANI MATERNITY","cases":3,"investigations":3,"revenue":19300},{"centre":"Ilasa Main Centre, Lagos","referrer":"A4H","cases":3,"investigations":3,"revenue":30000},{"centre":"Ijofi","referrer":"Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)","cases":3,"investigations":3,"revenue":56800},{"centre":"Palm Avenue, Lagos","referrer":"Dr. THANNI  GHM","cases":3,"investigations":3,"revenue":37000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE ROSEMARY","cases":3,"investigations":3,"revenue":21500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. EBUKA SMC","cases":3,"investigations":3,"revenue":31000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Segun Oyatoki","cases":3,"investigations":4,"revenue":17000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. sure pvt","cases":3,"investigations":3,"revenue":17000},{"centre":"Ijofi","referrer":"Dr. FEDEDAL TEACHING HOSPITAL,","cases":3,"investigations":3,"revenue":24500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. PRIVATE P","cases":2,"investigations":2,"revenue":46500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. CORNFIELD CORPORATE","cases":2,"investigations":2,"revenue":15000},{"centre":"Ijofi","referrer":"Dr. DR ADETOYE","cases":2,"investigations":2,"revenue":24800},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OKAFOR  MGH","cases":2,"investigations":2,"revenue":32000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. FOOD CONCEPT CORPORATE","cases":2,"investigations":2,"revenue":6000},{"centre":"Ijofi","referrer":"Dr. SALIU POINTCARE HOSPITAL, ILESA","cases":2,"investigations":2,"revenue":12000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. BASTION HMO","cases":2,"investigations":2,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE TOLANI","cases":2,"investigations":2,"revenue":13000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Miss. NURSE akinlawon","cases":2,"investigations":2,"revenue":21500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ADELEYE MCC ITIRE","cases":2,"investigations":3,"revenue":24500},{"centre":"Ijofi","referrer":"Dr. ADENLE MEMORIAL HOSPITAL","cases":2,"investigations":2,"revenue":12100},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ADELAKUN","cases":2,"investigations":2,"revenue":18000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. NURSE REKIYA MADAM GANA-IDI ARABA","cases":2,"investigations":2,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ugochukwu anthony smc","cases":2,"investigations":2,"revenue":18000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. SALAMAH","cases":2,"investigations":2,"revenue":12000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE ADEOYO","cases":2,"investigations":2,"revenue":13000},{"centre":"Ijofi","referrer":"Dr. MORE ABUNDANT LIFE KOMOLAFE","cases":2,"investigations":2,"revenue":38200},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OBI MODUPE OLUWA CLINIC","cases":2,"investigations":2,"revenue":24000},{"centre":"Ijofi","referrer":"Dr. General Hospital","cases":2,"investigations":2,"revenue":14850},{"centre":"Ilasa Main Centre, Lagos","referrer":"Miss. DEBORAH DAN-EGERTON HOSPITAL","cases":2,"investigations":2,"revenue":42000},{"centre":"Ijofi","referrer":"Dr. AANUOLUWA CLINIC","cases":1,"investigations":1,"revenue":5000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OLAJIDE AJEABO","cases":1,"investigations":1,"revenue":20000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OKUSI  (DOCTOR)","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Nurse OJ","cases":1,"investigations":2,"revenue":19000},{"centre":"Palm Avenue, Lagos","referrer":"NIGERIAN MACHINE TOOLS","cases":1,"investigations":1,"revenue":15000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. MODUPEOLUWA HOSPITAL","cases":1,"investigations":1,"revenue":18000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. LEADWAY HMO","cases":1,"investigations":1,"revenue":8250},{"centre":"Ikeja Lagos Centre","referrer":"Dr. HYGEIA HMO","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"TAZ  CLINIC","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. HALLELUYAH  LIVING HOSPITAL,","cases":1,"investigations":1,"revenue":7700},{"centre":"Ijofi","referrer":"Dr. LIFE SUPPORT  ILESA","cases":1,"investigations":1,"revenue":5500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OGUNSUYI J","cases":1,"investigations":1,"revenue":9000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Nurse kafayat","cases":1,"investigations":1,"revenue":14000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Segun Oyatoki","cases":1,"investigations":1,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AJAKAYE GHM","cases":1,"investigations":1,"revenue":15500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLAJIDE AJEABO","cases":1,"investigations":2,"revenue":19000},{"centre":"Ijofi","referrer":"Dr. OMOLEYE POINTCARE HOSPITAL, ILESA","cases":1,"investigations":1,"revenue":7000},{"centre":"Palm Avenue, Lagos","referrer":"Mrs. AWOTUNDUN (GBAJA HOSP)","cases":1,"investigations":2,"revenue":53000},{"centre":"Ijofi","referrer":"Dr. ORISADARE DO","cases":1,"investigations":1,"revenue":5500},{"centre":"Palm Avenue, Lagos","referrer":"A4H","cases":1,"investigations":1,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AJEABO  ANC","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"OYARALIYA ANTODAS PHARM","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. surakatu","cases":1,"investigations":1,"revenue":30500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE ALLI","cases":1,"investigations":1,"revenue":6500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MRS ADEKOYA AJEABO PHC","cases":1,"investigations":1,"revenue":5500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OVANSA","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. ADELAKUN","cases":1,"investigations":1,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE BANKOLE GHM","cases":1,"investigations":1,"revenue":3500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. FALODUN MGH (DOCTOR)","cases":1,"investigations":2,"revenue":28000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OLAYINKA ST KIZITO","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. JOTAD HOSPITAL","cases":1,"investigations":1,"revenue":5000},{"centre":"OAUTH Ilesa Centre","referrer":"Dr. PRIVATE ILESHA","cases":1,"investigations":1,"revenue":6600},{"centre":"Ijofi","referrer":"Dr. FEMI O.O","cases":1,"investigations":1,"revenue":5500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Adeleye GHM (DOCTOR)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ASIEGBU MAY CLINIC","cases":1,"investigations":2,"revenue":14000},{"centre":"Ijofi","referrer":"Dr. SMARTWAY HOSPITAL DR.ADEBAYO","cases":1,"investigations":1,"revenue":5500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OLIYIDE GH","cases":1,"investigations":1,"revenue":37500},{"centre":"Ijofi","referrer":"Dr. KENLAD PHARMACY","cases":1,"investigations":1,"revenue":10000},{"centre":"Ijofi","referrer":"Dr. EKUNRIN,IYA AYO","cases":1,"investigations":1,"revenue":12200},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OKAFOR  MGH","cases":1,"investigations":2,"revenue":22500},{"centre":"Ijofi","referrer":"Dr. DR EMMANUEL STATE HOSPITAL","cases":1,"investigations":1,"revenue":7150},{"centre":"Palm Avenue, Lagos","referrer":"Mrs. TOPFAM 28 OFADA MUSHIN","cases":1,"investigations":1,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OKUSI  (DOCTOR)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ILASA PHC","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. DR. DANIEL ADEWOLE","cases":1,"investigations":1,"revenue":6600},{"centre":"Ikeja Lagos Centre","referrer":"Dr. MULTISHIELDS HMO","cases":1,"investigations":1,"revenue":3500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. MINDBUILDER CORPORATE","cases":1,"investigations":1,"revenue":12000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. NEM HMO","cases":1,"investigations":1,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"ST TOBY","cases":1,"investigations":1,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Nurse kafayat","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Astramad","cases":1,"investigations":1,"revenue":6000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. TOPE BALIKIS (NURSE)","cases":1,"investigations":1,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Nurse Ibitoye","cases":1,"investigations":1,"revenue":2000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. NURSE JULIET AGUSI","cases":1,"investigations":1,"revenue":23000},{"centre":"Ijofi","referrer":"Dr. NURSE OLAWUMI OSUNTOYE MOUNTAIN OF CONVENANT","cases":1,"investigations":1,"revenue":14200},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. JOSEPH OGUNSUYI","cases":1,"investigations":1,"revenue":15000},{"centre":"Ijofi","referrer":"Dr. SMARTWAYS HOSPITAL,IJEBU-JESA","cases":1,"investigations":1,"revenue":12000},{"centre":"Ijofi","referrer":"Dr. ASIFA,ALADE MEDICAL CENTRE","cases":1,"investigations":1,"revenue":6000},{"centre":"Ijofi","referrer":"Dr. UNI  OSUN TEACHING HOSPITAL","cases":1,"investigations":1,"revenue":6600},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AJAKAYE GHM","cases":1,"investigations":1,"revenue":30500},{"centre":"Ijofi","referrer":"Dr. MORE ABUNDANT HOSPITAL ILESA","cases":1,"investigations":1,"revenue":6600},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. STAFF SOFIAT","cases":1,"investigations":1,"revenue":23000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. OJO","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"AYANBODE AJEABO","cases":1,"investigations":1,"revenue":7000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Stella Yakubu","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JOSEPH ROYALAND HEALTH CARE","cases":1,"investigations":2,"revenue":15000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AJ OKOYE (GHM)","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Mrs. NURSE IYANUOLUWA (NURSE)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE Rebecca","cases":1,"investigations":1,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE YETUNDE (8 KEKEROWO)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MATRON DOSUNMU","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OLUGBENGA MGH","cases":1,"investigations":1,"revenue":9000},{"centre":"Ijofi","referrer":"Dr. VINAMED HOSPITAL ILE-IFE","cases":1,"investigations":1,"revenue":6600},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. SANNI SNM (NURSE)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Afunlehim O. H (DOCTOR)","cases":1,"investigations":1,"revenue":9000},{"centre":"Ijofi","referrer":"Dr. HERITAGE, MEDICAL DR. FREEMAN","cases":1,"investigations":1,"revenue":7500},{"centre":"Ijofi","referrer":"Dr. OGUNWALE MODUPEOLA;CLINIC","cases":1,"investigations":1,"revenue":18000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. NKECHI ONYEGWU (DOCTOR)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. OKOTORE,GENERAL HOSPITAL,","cases":1,"investigations":1,"revenue":5500},{"centre":"Ijofi","referrer":"Dr. AKINBOWALE","cases":1,"investigations":1,"revenue":5000},{"centre":"Ilasa Main Centre, Lagos","referrer":"PHARM ZITA VATICAN","cases":1,"investigations":2,"revenue":38000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. ADEYEMI GOD'S FAVOUR","cases":1,"investigations":1,"revenue":15000},{"centre":"Palm Avenue, Lagos","referrer":"SWIFT  GLOBAL","cases":1,"investigations":2,"revenue":39000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ANIMASHAUN","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AISHAT HOSIPTAL","cases":1,"investigations":1,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ACCURATE DIAGNOSTICS","cases":1,"investigations":1,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MARY ANNE HOSPITAL","cases":1,"investigations":1,"revenue":11000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AJALA  (08037245881)","cases":1,"investigations":1,"revenue":4000}],"agents":[{"agent":"MISS VIVIAN","cases":202,"investigations":205,"patients":195,"revenue":2364100,"paid":2261000},{"agent":"RAD OGUNDORO","cases":149,"investigations":149,"patients":146,"revenue":1164450,"paid":1164450},{"agent":"DR ODEWUMI","cases":128,"investigations":128,"patients":126,"revenue":775250,"paid":775250},{"agent":"RAD. WILSON","cases":69,"investigations":69,"patients":67,"revenue":514100,"paid":514100},{"agent":"MRS ELUU","cases":42,"investigations":42,"patients":42,"revenue":372300,"paid":363000},{"agent":"DR EZEOMA","cases":56,"investigations":56,"patients":56,"revenue":329200,"paid":329200},{"agent":"DR. ADEYERA","cases":39,"investigations":39,"patients":39,"revenue":242400,"paid":242400},{"agent":"DR   ABA","cases":30,"investigations":30,"patients":29,"revenue":204400,"paid":204400},{"agent":"DR.ODEWUMI","cases":29,"investigations":29,"patients":29,"revenue":194050,"paid":194050},{"agent":"DR. ADESUNKANMI","cases":25,"investigations":25,"patients":25,"revenue":158100,"paid":158100},{"agent":"DR. OLORUNMO","cases":25,"investigations":25,"patients":25,"revenue":148000,"paid":148000},{"agent":"DR. EZEOMA","cases":23,"investigations":23,"patients":23,"revenue":130100,"paid":130100},{"agent":"MRS ADERELE","cases":15,"investigations":15,"patients":15,"revenue":120000,"paid":120000},{"agent":"DR. OLOWOMEYE","cases":10,"investigations":10,"patients":10,"revenue":58000,"paid":58000},{"agent":"DR.   ADESUNKANMI","cases":3,"investigations":3,"patients":3,"revenue":18600,"paid":18600}],"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":261,"investigations":261,"revenue":2896100},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":245,"investigations":245,"revenue":3178400},{"centre":"OAUTH Ilesa Centre","case_type":"Digital X-ray","cases":229,"investigations":229,"revenue":1752000},{"centre":"Ijofi","case_type":"USG","cases":223,"investigations":223,"revenue":1443950},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":171,"investigations":171,"revenue":1001350},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":136,"investigations":136,"revenue":839000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":103,"investigations":103,"revenue":1269500},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":50,"investigations":50,"revenue":297000},{"centre":"Ijofi","case_type":"ECG","cases":19,"investigations":19,"revenue":150000},{"centre":"Ijofi","case_type":"Digital X-ray","cases":17,"investigations":17,"revenue":125650},{"centre":"Ilasa Main Centre, Lagos","case_type":"Digital X-ray","cases":16,"investigations":16,"revenue":228000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":16,"investigations":16,"revenue":187250},{"centre":"Palm Avenue, Lagos","case_type":"Digital X-ray","cases":8,"investigations":8,"revenue":93000},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":3,"investigations":3,"revenue":27000}]},"2026-03":{"month":3,"year":2026,"centres":{"OAUTH Ilesa Centre":{"investigations":549,"cases":549,"patients":532,"revenue":3821850.0,"paid":3821850.0,"due":0.0,"unique_referrers":1,"weekly":{"1":{"investigations":99,"cases":99,"patients":96,"revenue":747500.0,"paid":747500.0},"2":{"investigations":136,"cases":136,"patients":132,"revenue":971800.0,"paid":971800.0},"3":{"investigations":116,"cases":116,"patients":111,"revenue":774400.0,"paid":774400.0},"4":{"investigations":198,"cases":198,"patients":193,"revenue":1328150.0,"paid":1328150.0}}},"Ilasa Main Centre, Lagos":{"investigations":303,"cases":281,"patients":279,"revenue":2364000.0,"paid":2072700.0,"due":289000.0,"unique_referrers":76,"weekly":{"1":{"investigations":86,"cases":76,"patients":75,"revenue":680500.0,"paid":584500.0},"2":{"investigations":70,"cases":66,"patients":66,"revenue":648000.0,"paid":481700.0},"3":{"investigations":72,"cases":66,"patients":66,"revenue":548000.0,"paid":532000.0},"4":{"investigations":75,"cases":73,"patients":72,"revenue":487500.0,"paid":474500.0}}},"Palm Avenue, Lagos":{"investigations":151,"cases":134,"patients":134,"revenue":1366500.0,"paid":1091500.0,"due":275000.0,"unique_referrers":25,"weekly":{"1":{"investigations":79,"cases":69,"patients":69,"revenue":681000.0,"paid":406000.0},"2":{"investigations":28,"cases":26,"patients":26,"revenue":286500.0,"paid":286500.0},"3":{"investigations":19,"cases":16,"patients":16,"revenue":124500.0,"paid":124500.0},"4":{"investigations":25,"cases":23,"patients":23,"revenue":274500.0,"paid":274500.0}}},"Ijofi":{"investigations":468,"cases":466,"patients":450,"revenue":5315250.0,"paid":4449550.0,"due":481500.0,"unique_referrers":41,"weekly":{"1":{"investigations":70,"cases":70,"patients":70,"revenue":1428950.0,"paid":888550.0},"2":{"investigations":116,"cases":116,"patients":108,"revenue":1284900.0,"paid":1187800.0},"3":{"investigations":102,"cases":101,"patients":100,"revenue":1114150.0,"paid":914750.0},"4":{"investigations":180,"cases":179,"patients":172,"revenue":1487250.0,"paid":1458450.0}}},"Ikeja Lagos Centre":{"investigations":32,"cases":32,"patients":27,"revenue":446000.0,"paid":45000.0,"due":401000.0,"unique_referrers":9,"weekly":{"1":{"investigations":14,"cases":14,"patients":14,"revenue":167500.0,"paid":30000.0},"2":{"investigations":18,"cases":18,"patients":13,"revenue":278500.0,"paid":15000.0}}}},"daily":[{"date":"2026-03-01","centre":"OAUTH Ilesa Centre","day":1,"week":1,"investigations":7,"cases":7,"patients":6,"revenue":53000,"paid":53000,"due":0},{"date":"2026-03-02","centre":"Ilasa Main Centre, Lagos","day":2,"week":1,"investigations":21,"cases":17,"patients":17,"revenue":190000,"paid":171000,"due":19000},{"date":"2026-03-02","centre":"OAUTH Ilesa Centre","day":2,"week":1,"investigations":19,"cases":19,"patients":19,"revenue":145500,"paid":145500,"due":0},{"date":"2026-03-02","centre":"Palm Avenue, Lagos","day":2,"week":1,"investigations":8,"cases":6,"patients":6,"revenue":133000,"paid":133000,"due":0},{"date":"2026-03-02","centre":"Ijofi","day":2,"week":1,"investigations":4,"cases":4,"patients":4,"revenue":49500,"paid":49500,"due":0},{"date":"2026-03-03","centre":"Ikeja Lagos Centre","day":3,"week":1,"investigations":13,"cases":13,"patients":13,"revenue":159500,"paid":30000,"due":129500},{"date":"2026-03-03","centre":"Ilasa Main Centre, Lagos","day":3,"week":1,"investigations":9,"cases":8,"patients":8,"revenue":67500,"paid":57500,"due":10000},{"date":"2026-03-03","centre":"OAUTH Ilesa Centre","day":3,"week":1,"investigations":12,"cases":12,"patients":12,"revenue":104000,"paid":104000,"due":0},{"date":"2026-03-03","centre":"Palm Avenue, Lagos","day":3,"week":1,"investigations":21,"cases":19,"patients":19,"revenue":169000,"paid":104000,"due":65000},{"date":"2026-03-03","centre":"Ijofi","day":3,"week":1,"investigations":6,"cases":6,"patients":6,"revenue":62000,"paid":62000,"due":0},{"date":"2026-03-04","centre":"Ikeja Lagos Centre","day":4,"week":1,"investigations":1,"cases":1,"patients":1,"revenue":8000,"paid":0,"due":8000},{"date":"2026-03-04","centre":"Ilasa Main Centre, Lagos","day":4,"week":1,"investigations":12,"cases":12,"patients":12,"revenue":101500,"paid":88500,"due":13000},{"date":"2026-03-04","centre":"OAUTH Ilesa Centre","day":4,"week":1,"investigations":11,"cases":11,"patients":11,"revenue":93500,"paid":93500,"due":0},{"date":"2026-03-04","centre":"Palm Avenue, Lagos","day":4,"week":1,"investigations":6,"cases":4,"patients":4,"revenue":60500,"paid":60500,"due":0},{"date":"2026-03-04","centre":"Ijofi","day":4,"week":1,"investigations":9,"cases":9,"patients":9,"revenue":75500,"paid":75100,"due":0},{"date":"2026-03-05","centre":"Ilasa Main Centre, Lagos","day":5,"week":1,"investigations":15,"cases":14,"patients":14,"revenue":86500,"paid":71500,"due":15000},{"date":"2026-03-05","centre":"OAUTH Ilesa Centre","day":5,"week":1,"investigations":15,"cases":15,"patients":15,"revenue":102500,"paid":102500,"due":0},{"date":"2026-03-05","centre":"Palm Avenue, Lagos","day":5,"week":1,"investigations":9,"cases":6,"patients":6,"revenue":101500,"paid":95000,"due":6500},{"date":"2026-03-05","centre":"Ijofi","day":5,"week":1,"investigations":24,"cases":24,"patients":24,"revenue":665550,"paid":569950,"due":0},{"date":"2026-03-06","centre":"Ilasa Main Centre, Lagos","day":6,"week":1,"investigations":16,"cases":15,"patients":14,"revenue":117000,"paid":91000,"due":26000},{"date":"2026-03-06","centre":"OAUTH Ilesa Centre","day":6,"week":1,"investigations":12,"cases":12,"patients":12,"revenue":92500,"paid":92500,"due":0},{"date":"2026-03-06","centre":"Palm Avenue, Lagos","day":6,"week":1,"investigations":11,"cases":10,"patients":10,"revenue":61000,"paid":13500,"due":47500},{"date":"2026-03-06","centre":"Ijofi","day":6,"week":1,"investigations":21,"cases":21,"patients":21,"revenue":494700,"paid":54500,"due":364000},{"date":"2026-03-07","centre":"Ilasa Main Centre, Lagos","day":7,"week":1,"investigations":13,"cases":10,"patients":10,"revenue":118000,"paid":105000,"due":13000},{"date":"2026-03-07","centre":"OAUTH Ilesa Centre","day":7,"week":1,"investigations":23,"cases":23,"patients":21,"revenue":156500,"paid":156500,"due":0},{"date":"2026-03-07","centre":"Palm Avenue, Lagos","day":7,"week":1,"investigations":24,"cases":24,"patients":24,"revenue":156000,"paid":0,"due":156000},{"date":"2026-03-07","centre":"Ijofi","day":7,"week":1,"investigations":6,"cases":6,"patients":6,"revenue":81700,"paid":77500,"due":0},{"date":"2026-03-08","centre":"OAUTH Ilesa Centre","day":8,"week":2,"investigations":4,"cases":4,"patients":4,"revenue":20500,"paid":20500,"due":0},{"date":"2026-03-08","centre":"Ijofi","day":8,"week":2,"investigations":1,"cases":1,"patients":1,"revenue":7700,"paid":7700,"due":0},{"date":"2026-03-09","centre":"Ilasa Main Centre, Lagos","day":9,"week":2,"investigations":11,"cases":11,"patients":11,"revenue":79500,"paid":79500,"due":0},{"date":"2026-03-09","centre":"OAUTH Ilesa Centre","day":9,"week":2,"investigations":21,"cases":21,"patients":21,"revenue":168500,"paid":168500,"due":0},{"date":"2026-03-09","centre":"Palm Avenue, Lagos","day":9,"week":2,"investigations":8,"cases":6,"patients":6,"revenue":77500,"paid":77500,"due":0},{"date":"2026-03-09","centre":"Ijofi","day":9,"week":2,"investigations":44,"cases":44,"patients":40,"revenue":621250,"paid":558650,"due":0},{"date":"2026-03-10","centre":"Ilasa Main Centre, Lagos","day":10,"week":2,"investigations":10,"cases":9,"patients":9,"revenue":98000,"paid":80700,"due":15000},{"date":"2026-03-10","centre":"OAUTH Ilesa Centre","day":10,"week":2,"investigations":26,"cases":26,"patients":26,"revenue":181500,"paid":181500,"due":0},{"date":"2026-03-10","centre":"Palm Avenue, Lagos","day":10,"week":2,"investigations":1,"cases":1,"patients":1,"revenue":10000,"paid":10000,"due":0},{"date":"2026-03-10","centre":"Ijofi","day":10,"week":2,"investigations":24,"cases":24,"patients":21,"revenue":176050,"paid":175650,"due":0},{"date":"2026-03-11","centre":"Ilasa Main Centre, Lagos","day":11,"week":2,"investigations":12,"cases":12,"patients":12,"revenue":77500,"paid":64500,"due":13000},{"date":"2026-03-11","centre":"OAUTH Ilesa Centre","day":11,"week":2,"investigations":34,"cases":34,"patients":32,"revenue":255400,"paid":255400,"due":0},{"date":"2026-03-11","centre":"Palm Avenue, Lagos","day":11,"week":2,"investigations":6,"cases":6,"patients":6,"revenue":56500,"paid":56500,"due":0},{"date":"2026-03-11","centre":"Ijofi","day":11,"week":2,"investigations":12,"cases":12,"patients":12,"revenue":139200,"paid":131500,"due":0},{"date":"2026-03-12","centre":"Ilasa Main Centre, Lagos","day":12,"week":2,"investigations":11,"cases":10,"patients":10,"revenue":105000,"paid":98500,"due":6500},{"date":"2026-03-12","centre":"OAUTH Ilesa Centre","day":12,"week":2,"investigations":17,"cases":17,"patients":17,"revenue":96500,"paid":96500,"due":0},{"date":"2026-03-12","centre":"Palm Avenue, Lagos","day":12,"week":2,"investigations":7,"cases":7,"patients":7,"revenue":107000,"paid":107000,"due":0},{"date":"2026-03-12","centre":"Ijofi","day":12,"week":2,"investigations":16,"cases":16,"patients":15,"revenue":219600,"paid":193800,"due":0},{"date":"2026-03-13","centre":"Ikeja Lagos Centre","day":13,"week":2,"investigations":18,"cases":18,"patients":13,"revenue":278500,"paid":15000,"due":263500},{"date":"2026-03-13","centre":"Ilasa Main Centre, Lagos","day":13,"week":2,"investigations":14,"cases":13,"patients":13,"revenue":229500,"paid":100000,"due":129500},{"date":"2026-03-13","centre":"OAUTH Ilesa Centre","day":13,"week":2,"investigations":24,"cases":24,"patients":22,"revenue":159000,"paid":159000,"due":0},{"date":"2026-03-13","centre":"Palm Avenue, Lagos","day":13,"week":2,"investigations":5,"cases":5,"patients":5,"revenue":29500,"paid":29500,"due":0},{"date":"2026-03-13","centre":"Ijofi","day":13,"week":2,"investigations":15,"cases":15,"patients":15,"revenue":86900,"paid":86500,"due":0},{"date":"2026-03-14","centre":"Ilasa Main Centre, Lagos","day":14,"week":2,"investigations":12,"cases":11,"patients":11,"revenue":58500,"paid":58500,"due":0},{"date":"2026-03-14","centre":"OAUTH Ilesa Centre","day":14,"week":2,"investigations":10,"cases":10,"patients":10,"revenue":90400,"paid":90400,"due":0},{"date":"2026-03-14","centre":"Palm Avenue, Lagos","day":14,"week":2,"investigations":1,"cases":1,"patients":1,"revenue":6000,"paid":6000,"due":0},{"date":"2026-03-14","centre":"Ijofi","day":14,"week":2,"investigations":4,"cases":4,"patients":4,"revenue":34200,"paid":34000,"due":0},{"date":"2026-03-15","centre":"OAUTH Ilesa Centre","day":15,"week":3,"investigations":7,"cases":7,"patients":6,"revenue":45000,"paid":45000,"due":0},{"date":"2026-03-16","centre":"Ilasa Main Centre, Lagos","day":16,"week":3,"investigations":23,"cases":21,"patients":21,"revenue":201000,"paid":191500,"due":9500},{"date":"2026-03-16","centre":"OAUTH Ilesa Centre","day":16,"week":3,"investigations":28,"cases":28,"patients":26,"revenue":195000,"paid":195000,"due":0},{"date":"2026-03-16","centre":"Palm Avenue, Lagos","day":16,"week":3,"investigations":5,"cases":4,"patients":4,"revenue":35500,"paid":35500,"due":0},{"date":"2026-03-16","centre":"Ijofi","day":16,"week":3,"investigations":13,"cases":12,"patients":12,"revenue":125300,"paid":125300,"due":0},{"date":"2026-03-17","centre":"Ilasa Main Centre, Lagos","day":17,"week":3,"investigations":10,"cases":10,"patients":10,"revenue":85500,"paid":79000,"due":6500},{"date":"2026-03-17","centre":"OAUTH Ilesa Centre","day":17,"week":3,"investigations":28,"cases":28,"patients":28,"revenue":197500,"paid":197500,"due":0},{"date":"2026-03-17","centre":"Palm Avenue, Lagos","day":17,"week":3,"investigations":1,"cases":1,"patients":1,"revenue":8500,"paid":8500,"due":0},{"date":"2026-03-17","centre":"Ijofi","day":17,"week":3,"investigations":46,"cases":46,"patients":45,"revenue":488400,"paid":362000,"due":75000},{"date":"2026-03-18","centre":"Ilasa Main Centre, Lagos","day":18,"week":3,"investigations":14,"cases":12,"patients":12,"revenue":105500,"paid":105500,"due":0},{"date":"2026-03-18","centre":"OAUTH Ilesa Centre","day":18,"week":3,"investigations":24,"cases":24,"patients":23,"revenue":154900,"paid":154900,"due":0},{"date":"2026-03-18","centre":"Palm Avenue, Lagos","day":18,"week":3,"investigations":1,"cases":1,"patients":1,"revenue":4000,"paid":4000,"due":0},{"date":"2026-03-18","centre":"Ijofi","day":18,"week":3,"investigations":34,"cases":34,"patients":34,"revenue":295250,"paid":223450,"due":42500},{"date":"2026-03-19","centre":"Ilasa Main Centre, Lagos","day":19,"week":3,"investigations":7,"cases":6,"patients":6,"revenue":35500,"paid":35500,"due":0},{"date":"2026-03-19","centre":"OAUTH Ilesa Centre","day":19,"week":3,"investigations":14,"cases":14,"patients":14,"revenue":82000,"paid":82000,"due":0},{"date":"2026-03-19","centre":"Palm Avenue, Lagos","day":19,"week":3,"investigations":4,"cases":3,"patients":3,"revenue":21500,"paid":21500,"due":0},{"date":"2026-03-19","centre":"Ijofi","day":19,"week":3,"investigations":4,"cases":4,"patients":4,"revenue":137700,"paid":136500,"due":0},{"date":"2026-03-20","centre":"Ilasa Main Centre, Lagos","day":20,"week":3,"investigations":7,"cases":6,"patients":6,"revenue":62500,"paid":62500,"due":0},{"date":"2026-03-20","centre":"OAUTH Ilesa Centre","day":20,"week":3,"investigations":5,"cases":5,"patients":5,"revenue":29500,"paid":29500,"due":0},{"date":"2026-03-20","centre":"Palm Avenue, Lagos","day":20,"week":3,"investigations":2,"cases":2,"patients":2,"revenue":8000,"paid":8000,"due":0},{"date":"2026-03-20","centre":"Ijofi","day":20,"week":3,"investigations":3,"cases":3,"patients":3,"revenue":16500,"paid":16500,"due":0},{"date":"2026-03-21","centre":"Ilasa Main Centre, Lagos","day":21,"week":3,"investigations":11,"cases":11,"patients":11,"revenue":58000,"paid":58000,"due":0},{"date":"2026-03-21","centre":"OAUTH Ilesa Centre","day":21,"week":3,"investigations":10,"cases":10,"patients":9,"revenue":70500,"paid":70500,"due":0},{"date":"2026-03-21","centre":"Palm Avenue, Lagos","day":21,"week":3,"investigations":6,"cases":5,"patients":5,"revenue":47000,"paid":47000,"due":0},{"date":"2026-03-21","centre":"Ijofi","day":21,"week":3,"investigations":2,"cases":2,"patients":2,"revenue":51000,"paid":51000,"due":0},{"date":"2026-03-22","centre":"OAUTH Ilesa Centre","day":22,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":24000,"paid":24000,"due":0},{"date":"2026-03-23","centre":"Ilasa Main Centre, Lagos","day":23,"week":4,"investigations":11,"cases":11,"patients":11,"revenue":53500,"paid":53500,"due":0},{"date":"2026-03-23","centre":"OAUTH Ilesa Centre","day":23,"week":4,"investigations":27,"cases":27,"patients":27,"revenue":179250,"paid":179250,"due":0},{"date":"2026-03-23","centre":"Palm Avenue, Lagos","day":23,"week":4,"investigations":4,"cases":3,"patients":3,"revenue":40000,"paid":40000,"due":0},{"date":"2026-03-23","centre":"Ijofi","day":23,"week":4,"investigations":40,"cases":40,"patients":40,"revenue":317850,"paid":316050,"due":0},{"date":"2026-03-24","centre":"Ilasa Main Centre, Lagos","day":24,"week":4,"investigations":13,"cases":12,"patients":12,"revenue":72500,"paid":66000,"due":6500},{"date":"2026-03-24","centre":"OAUTH Ilesa Centre","day":24,"week":4,"investigations":30,"cases":30,"patients":29,"revenue":205500,"paid":205500,"due":0},{"date":"2026-03-24","centre":"Palm Avenue, Lagos","day":24,"week":4,"investigations":2,"cases":2,"patients":2,"revenue":11000,"paid":11000,"due":0},{"date":"2026-03-24","centre":"Ijofi","day":24,"week":4,"investigations":20,"cases":20,"patients":18,"revenue":128950,"paid":128750,"due":0},{"date":"2026-03-25","centre":"Ilasa Main Centre, Lagos","day":25,"week":4,"investigations":5,"cases":5,"patients":5,"revenue":18000,"paid":18000,"due":0},{"date":"2026-03-25","centre":"OAUTH Ilesa Centre","day":25,"week":4,"investigations":22,"cases":22,"patients":20,"revenue":148500,"paid":148500,"due":0},{"date":"2026-03-25","centre":"Palm Avenue, Lagos","day":25,"week":4,"investigations":3,"cases":3,"patients":3,"revenue":43500,"paid":43500,"due":0},{"date":"2026-03-25","centre":"Ijofi","day":25,"week":4,"investigations":23,"cases":23,"patients":22,"revenue":179700,"paid":179500,"due":0},{"date":"2026-03-26","centre":"Ilasa Main Centre, Lagos","day":26,"week":4,"investigations":11,"cases":11,"patients":11,"revenue":58500,"paid":58500,"due":0},{"date":"2026-03-26","centre":"OAUTH Ilesa Centre","day":26,"week":4,"investigations":19,"cases":19,"patients":19,"revenue":130500,"paid":130500,"due":0},{"date":"2026-03-26","centre":"Palm Avenue, Lagos","day":26,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":36500,"paid":36500,"due":0},{"date":"2026-03-26","centre":"Ijofi","day":26,"week":4,"investigations":18,"cases":18,"patients":17,"revenue":143050,"paid":142850,"due":0},{"date":"2026-03-27","centre":"Ilasa Main Centre, Lagos","day":27,"week":4,"investigations":6,"cases":6,"patients":6,"revenue":36500,"paid":30000,"due":6500},{"date":"2026-03-27","centre":"OAUTH Ilesa Centre","day":27,"week":4,"investigations":15,"cases":15,"patients":15,"revenue":104500,"paid":104500,"due":0},{"date":"2026-03-27","centre":"Palm Avenue, Lagos","day":27,"week":4,"investigations":3,"cases":3,"patients":3,"revenue":70000,"paid":70000,"due":0},{"date":"2026-03-27","centre":"Ijofi","day":27,"week":4,"investigations":25,"cases":25,"patients":24,"revenue":221100,"paid":195700,"due":0},{"date":"2026-03-28","centre":"Ilasa Main Centre, Lagos","day":28,"week":4,"investigations":3,"cases":3,"patients":3,"revenue":19000,"paid":19000,"due":0},{"date":"2026-03-28","centre":"OAUTH Ilesa Centre","day":28,"week":4,"investigations":12,"cases":12,"patients":11,"revenue":69900,"paid":69900,"due":0},{"date":"2026-03-28","centre":"Palm Avenue, Lagos","day":28,"week":4,"investigations":2,"cases":2,"patients":2,"revenue":14000,"paid":14000,"due":0},{"date":"2026-03-28","centre":"Ijofi","day":28,"week":4,"investigations":12,"cases":12,"patients":12,"revenue":121100,"paid":120900,"due":0},{"date":"2026-03-29","centre":"OAUTH Ilesa Centre","day":29,"week":4,"investigations":12,"cases":12,"patients":11,"revenue":79000,"paid":79000,"due":0},{"date":"2026-03-30","centre":"Ilasa Main Centre, Lagos","day":30,"week":4,"investigations":22,"cases":21,"patients":20,"revenue":205500,"paid":205500,"due":0},{"date":"2026-03-30","centre":"OAUTH Ilesa Centre","day":30,"week":4,"investigations":28,"cases":28,"patients":28,"revenue":202500,"paid":202500,"due":0},{"date":"2026-03-30","centre":"Palm Avenue, Lagos","day":30,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":14500,"paid":14500,"due":0},{"date":"2026-03-30","centre":"Ijofi","day":30,"week":4,"investigations":17,"cases":16,"patients":15,"revenue":193400,"paid":193000,"due":0},{"date":"2026-03-31","centre":"Ilasa Main Centre, Lagos","day":31,"week":4,"investigations":4,"cases":4,"patients":4,"revenue":24000,"paid":24000,"due":0},{"date":"2026-03-31","centre":"OAUTH Ilesa Centre","day":31,"week":4,"investigations":29,"cases":29,"patients":29,"revenue":184500,"paid":184500,"due":0},{"date":"2026-03-31","centre":"Palm Avenue, Lagos","day":31,"week":4,"investigations":3,"cases":2,"patients":2,"revenue":45000,"paid":45000,"due":0},{"date":"2026-03-31","centre":"Ijofi","day":31,"week":4,"investigations":25,"cases":25,"patients":24,"revenue":182100,"paid":181700,"due":0}],"referrers":[{"centre":"OAUTH Ilesa Centre","referrer":"Dr. OAUTHC DOCTORS","cases":549,"investigations":549,"revenue":3821850},{"centre":"Ijofi","referrer":"Dr. OAUTHC DOCTORS","cases":170,"investigations":171,"revenue":1160950},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. PVT","cases":111,"investigations":118,"revenue":916500},{"centre":"Ijofi","referrer":"Dr. (Prof.) ADEGOKE SAMUEL","cases":102,"investigations":102,"revenue":1913700},{"centre":"Palm Avenue, Lagos","referrer":"Dr. PVT","cases":48,"investigations":57,"revenue":498000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. FOOD CONCEPT CORPORATE","cases":40,"investigations":40,"revenue":260000},{"centre":"Ijofi","referrer":"Dr. PRIVATE ILESHA","cases":39,"investigations":39,"revenue":526400},{"centre":"Ikeja Lagos Centre","referrer":"HOPE  STONE","cases":21,"investigations":21,"revenue":377000},{"centre":"Ijofi","referrer":"Dr. VICTORIA MEDICAL CENTRE","cases":19,"investigations":20,"revenue":331750},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. FOOD CONCEPT CORPORATE","cases":18,"investigations":18,"revenue":113500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. AWOTUNDUN (GBAJA HOSP)","cases":18,"investigations":19,"revenue":215500},{"centre":"Ijofi","referrer":"Dr. LIVING PETALS  MEDICAL CENTER ILESA","cases":13,"investigations":13,"revenue":67500},{"centre":"Ijofi","referrer":"Dr. BAKARE GENERAL, HOSPITAL","cases":13,"investigations":13,"revenue":93750},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL","cases":13,"investigations":14,"revenue":149000},{"centre":"Ijofi","referrer":"Dr. MAYFIELD MEDICAL CLINIC","cases":12,"investigations":12,"revenue":118800},{"centre":"Ijofi","referrer":"Dr. OASIS HOSPITAL","cases":11,"investigations":11,"revenue":132300},{"centre":"Ijofi","referrer":"Dr. DANIEL GENERAL, HOSPITAL","cases":10,"investigations":10,"revenue":63200},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. EBUKA SMC","cases":10,"investigations":10,"revenue":72000},{"centre":"Ijofi","referrer":"Dr. BAKARE STATE HOSPITAL","cases":8,"investigations":8,"revenue":51900},{"centre":"Ijofi","referrer":"Dr. DE-SHALOM  PHARMACY","cases":7,"investigations":7,"revenue":222300},{"centre":"Ijofi","referrer":"Dr. MORE ABUNDANT LIFE KOMOLAFE","cases":7,"investigations":7,"revenue":94500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. BAYODE GHM (DOCTOR)","cases":6,"investigations":7,"revenue":27500},{"centre":"Ijofi","referrer":"Dr. ADENLE MEMORIAL HOSPITAL","cases":6,"investigations":6,"revenue":38550},{"centre":"Ijofi","referrer":"Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)","cases":6,"investigations":6,"revenue":67700},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ACCURATE DIAGNOSTICS","cases":5,"investigations":5,"revenue":36000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. SULAIMON AJEABO","cases":5,"investigations":5,"revenue":50500},{"centre":"Ijofi","referrer":"Dr. SALIU","cases":4,"investigations":4,"revenue":23600},{"centre":"Ilasa Main Centre, Lagos","referrer":"MGH","cases":4,"investigations":4,"revenue":28500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINTOLA","cases":4,"investigations":5,"revenue":74500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. THANNI  GHM","cases":4,"investigations":4,"revenue":39000},{"centre":"Ilasa Main Centre, Lagos","referrer":"mama COMFORT ADEYERI","cases":4,"investigations":4,"revenue":21000},{"centre":"Ijofi","referrer":"Dr. GENERAL HOSPITAL ILESA","cases":4,"investigations":4,"revenue":32350},{"centre":"Ilasa Main Centre, Lagos","referrer":"Nurse OJ","cases":3,"investigations":4,"revenue":38000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Miss. NURSE akinlawon","cases":3,"investigations":5,"revenue":71500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLABISI MGH","cases":3,"investigations":3,"revenue":18000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. BASTION HMO","cases":3,"investigations":3,"revenue":21500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. ADEBAYO","cases":3,"investigations":3,"revenue":16500},{"centre":"Ijofi","referrer":"Dr. MORE ABUNDANT HOSPITAL ILESA","cases":3,"investigations":3,"revenue":52800},{"centre":"Ilasa Main Centre, Lagos","referrer":"A4H","cases":3,"investigations":3,"revenue":26000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. ADEYEYE (MODUPEOLUWA HOSP)","cases":3,"investigations":4,"revenue":40500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. IJEOMA ILASA PHC","cases":3,"investigations":3,"revenue":17000},{"centre":"Ijofi","referrer":"Dr. OKOTORE,GENERAL HOSPITAL,","cases":3,"investigations":3,"revenue":22150},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. STAFF RASHIDAT OLAYIWOLA (NURSE)","cases":3,"investigations":3,"revenue":12000},{"centre":"Ijofi","referrer":"Dr. DIVINE INTERNATIONAL HEALTH","cases":3,"investigations":3,"revenue":50400},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. GOZIE MGH","cases":2,"investigations":3,"revenue":13500},{"centre":"Ilasa Main Centre, Lagos","referrer":"OIC OLADAPO","cases":2,"investigations":2,"revenue":8000},{"centre":"Palm Avenue, Lagos","referrer":"PHARM DEBORAH MED AXIS","cases":2,"investigations":2,"revenue":61500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. NEM HMO","cases":2,"investigations":2,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ugochukwu anthony smc","cases":2,"investigations":2,"revenue":13000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Babafashola","cases":2,"investigations":4,"revenue":22000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE TEBUN ONAYEMI (AJEABO)","cases":2,"investigations":2,"revenue":13000},{"centre":"Ijofi","referrer":"Dr. HABIBULAHI","cases":2,"investigations":2,"revenue":32400},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Nurse Ibitoye","cases":2,"investigations":2,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE ROSEMARY","cases":2,"investigations":2,"revenue":20000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OLAYINKA ST KIZITO","cases":2,"investigations":2,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. STAFF SOFIAT","cases":2,"investigations":2,"revenue":20000},{"centre":"Ijofi","referrer":"Dr. BETHEL CITY CARE","cases":2,"investigations":2,"revenue":12650},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OBI MODUPE OLUWA CLINIC","cases":2,"investigations":3,"revenue":56000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. MODUPEOLUWA HOSPITAL","cases":2,"investigations":2,"revenue":8000},{"centre":"Ijofi","referrer":"Dr. FEMI O.O","cases":2,"investigations":2,"revenue":11500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OGUNSUYI J","cases":2,"investigations":2,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AANUOLUWA CLINIC","cases":2,"investigations":2,"revenue":2000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ADEYEYE (MODUPEOLUWA HOSP)","cases":2,"investigations":2,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. NURSE OGABI IDI-ARABA PHC","cases":2,"investigations":2,"revenue":8000},{"centre":"Ijofi","referrer":"Dr. OKOTORE GENERAL HOSPITAL,ILESA","cases":2,"investigations":2,"revenue":12150},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL","cases":2,"investigations":4,"revenue":31000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE YETUNDE (8 KEKEROWO)","cases":2,"investigations":2,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. GOZIE GHM (MCC)","cases":2,"investigations":3,"revenue":16500},{"centre":"Palm Avenue, Lagos","referrer":"MEVAN PHARM EMEKA","cases":2,"investigations":3,"revenue":51500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Nurse kafayat","cases":2,"investigations":2,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE OLUSI TOYIN","cases":2,"investigations":2,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MARIAM  ALI","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. General hospital  Mushin","cases":1,"investigations":1,"revenue":7000},{"centre":"Ijofi","referrer":"Dr. SALIU POINTCARE HOSPITAL, ILESA","cases":1,"investigations":1,"revenue":6500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MERCY  ORABEL PHARM","cases":1,"investigations":1,"revenue":21500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JOSEPH OGUNSUYI","cases":1,"investigations":1,"revenue":49000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. HEALTH PLUS  ADDAS MALL","cases":1,"investigations":1,"revenue":3500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. PRIVATE P","cases":1,"investigations":1,"revenue":16000},{"centre":"Ikeja Lagos Centre","referrer":"Dr. REDEEMED","cases":1,"investigations":1,"revenue":2500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Nurse Oku","cases":1,"investigations":2,"revenue":6500},{"centre":"Ilasa Main Centre, Lagos","referrer":"CAC OKE IYE","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ILASA PHC","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. sure pvt","cases":1,"investigations":1,"revenue":7000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. CONFIDENCE PHARM (PHARM)","cases":1,"investigations":1,"revenue":23500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. GREENSHIELD CORPORATE","cases":1,"investigations":1,"revenue":8000},{"centre":"Ilasa Main Centre, Lagos","referrer":"MRS NURSE BISI","cases":1,"investigations":1,"revenue":12000},{"centre":"Ilasa Main Centre, Lagos","referrer":"SERENE HMO","cases":1,"investigations":2,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. SALAMAH","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"NIGERIAN MACHINE TOOLS","cases":1,"investigations":1,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Babafashola","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OBI MODUPE OLUWA CLINIC","cases":1,"investigations":2,"revenue":22000},{"centre":"Ijofi","referrer":"Dr. HALIF OGUNWALE","cases":1,"investigations":1,"revenue":15500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OKAFOR  MGH","cases":1,"investigations":1,"revenue":15000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OLAJIDE AJEABO","cases":1,"investigations":1,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ADENIRAN","cases":1,"investigations":2,"revenue":35500},{"centre":"Ijofi","referrer":"Dr. GLORY MEDICAL CENRE ,ILESA","cases":1,"investigations":1,"revenue":12200},{"centre":"Ilasa Main Centre, Lagos","referrer":"NIGERIAN MACHINE TOOLS","cases":1,"investigations":1,"revenue":15000},{"centre":"Ijofi","referrer":"Dr. CARE FRIEND DIAGNOSTIC LIMITED","cases":1,"investigations":1,"revenue":7150},{"centre":"Ilasa Main Centre, Lagos","referrer":"ALL DAY PHARMACY","cases":1,"investigations":1,"revenue":9000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. HEALTHY YOU PHARMACY","cases":1,"investigations":1,"revenue":10000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE TITI","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. Afunlehim O. H (DOCTOR)","cases":1,"investigations":1,"revenue":9000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AKINYEMI  ITIRE MCC","cases":1,"investigations":1,"revenue":9000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Afunlehim O. H (DOCTOR)","cases":1,"investigations":1,"revenue":9000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. DEBORAH MAY CLINIC","cases":1,"investigations":1,"revenue":4000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. AJAKAYE GHM","cases":1,"investigations":1,"revenue":15000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. NURSE JULIET AGUSI","cases":1,"investigations":1,"revenue":12500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. Oloyede","cases":1,"investigations":2,"revenue":11500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. MULTISHIELDS HMO","cases":1,"investigations":1,"revenue":3500},{"centre":"Ikeja Lagos Centre","referrer":"Dr. sure pvt","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AJALA  (08037245881)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. ABA","cases":1,"investigations":1,"revenue":1000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. A.B PHARMACY","cases":1,"investigations":1,"revenue":1000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE Rebecca","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. OKAFOR  MGH","cases":1,"investigations":1,"revenue":6500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. OGUNJIMI ADDEY JIMMY CLINIC","cases":1,"investigations":2,"revenue":19000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE ALABI AJEABO","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MICHAEL AYOOLA","cases":1,"investigations":1,"revenue":9000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. AISHAT HOSIPTAL","cases":1,"investigations":1,"revenue":2500},{"centre":"Ilasa Main Centre, Lagos","referrer":"may clinic","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. General Hospital","cases":1,"investigations":1,"revenue":6650},{"centre":"Ijofi","referrer":"Dr. NURSE OLAWUMI OSUNTOYE MOUNTAIN OF CONVENANT","cases":1,"investigations":1,"revenue":6600},{"centre":"Ilasa Main Centre, Lagos","referrer":"AYOBAMI AJEABO","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. GBEMISOLA IDI ARABA PHC","cases":1,"investigations":1,"revenue":10000},{"centre":"Ijofi","referrer":"Dr. KOMOLAFE BEN","cases":1,"investigations":1,"revenue":6000},{"centre":"Palm Avenue, Lagos","referrer":"PHARM MONDAY(DENOK)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. UCHE  (MD)","cases":1,"investigations":1,"revenue":2500},{"centre":"Ijofi","referrer":"Dr. PRIVATE P","cases":1,"investigations":1,"revenue":11000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. WAKWE MAY CLINIC","cases":1,"investigations":1,"revenue":9000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JOHN MGH","cases":1,"investigations":2,"revenue":30000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. WOLE OGEDENGBE","cases":1,"investigations":1,"revenue":6000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE JOY","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. Ileri Clinic","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. YAKUBU STELLA","cases":1,"investigations":1,"revenue":2000},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE KHADIJAH","cases":1,"investigations":1,"revenue":20000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. AKINLAWAN","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. IYERE,PHC","cases":1,"investigations":1,"revenue":14000},{"centre":"Ijofi","referrer":"Dr. JOSTADE PHAMA","cases":1,"investigations":1,"revenue":12000},{"centre":"Palm Avenue, Lagos","referrer":"Dr. JAMES JAMES","cases":1,"investigations":1,"revenue":14000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. NURSE ALLI","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. AKINBOWALE","cases":1,"investigations":1,"revenue":7150},{"centre":"Ilasa Main Centre, Lagos","referrer":"NURSE SEUN GANIU (PRIVATE)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. SANNI SNM (NURSE)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Mr. OGUNTADE GENERAL HOSPITAL,ILESA","cases":1,"investigations":1,"revenue":39200},{"centre":"Ijofi","referrer":"Dr. AWONIYI WESLEY ULTRASOUND AND DIAGNOSTIC CENTRE","cases":1,"investigations":1,"revenue":5500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Mrs. STAFF NKECHI (NURSE)","cases":1,"investigations":1,"revenue":11000},{"centre":"Ijofi","referrer":"Dr. HALIF   RX","cases":1,"investigations":1,"revenue":12000},{"centre":"Ijofi","referrer":"Dr. ADENLE","cases":1,"investigations":1,"revenue":5500},{"centre":"Palm Avenue, Lagos","referrer":"Dr. BAYODE GHM (DOCTOR)","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. BEJIDE,IYABO IYERE MATERNITY","cases":1,"investigations":1,"revenue":5500},{"centre":"Ilasa Main Centre, Lagos","referrer":"Dr. MODUPEOLUWA HOSPITAL","cases":1,"investigations":1,"revenue":4000},{"centre":"Ijofi","referrer":"Dr. OLUWATOFUNMI HOSPITAL,","cases":1,"investigations":1,"revenue":5500}],"agents":[{"agent":"MISS VIVIAN","cases":174,"investigations":176,"patients":170,"revenue":2947500,"paid":2161000},{"agent":"RAD. WILSON","cases":142,"investigations":142,"patients":139,"revenue":1132100,"paid":1132100},{"agent":"RAD OGUNDORO","cases":114,"investigations":114,"patients":113,"revenue":828850,"paid":828850},{"agent":"DR ODEWUMI","cases":102,"investigations":102,"patients":101,"revenue":596600,"paid":596600},{"agent":"MRS ELUU","cases":20,"investigations":20,"patients":20,"revenue":592800,"paid":529000},{"agent":"DR. OLORUNMO","cases":52,"investigations":52,"patients":52,"revenue":303400,"paid":303400},{"agent":"DR.  ASASILE","cases":40,"investigations":40,"patients":40,"revenue":233350,"paid":233350},{"agent":"DR. ADEYERA","cases":25,"investigations":25,"patients":24,"revenue":144700,"paid":144700},{"agent":"DR.ODEWUMI","cases":19,"investigations":19,"patients":19,"revenue":137100,"paid":132100},{"agent":"DR. OLANIYI","cases":22,"investigations":22,"patients":22,"revenue":119500,"paid":119500},{"agent":"DR. ADESUNKANMI","cases":18,"investigations":18,"patients":18,"revenue":112900,"paid":112900},{"agent":"DR. OLOWOMEYE","cases":16,"investigations":16,"patients":16,"revenue":90500,"paid":90500},{"agent":"DR   ABA","cases":10,"investigations":10,"patients":10,"revenue":58900,"paid":58900},{"agent":"DR.   ADESUNKANMI","cases":8,"investigations":8,"patients":8,"revenue":57100,"paid":57100},{"agent":"MRS ADERELE","cases":7,"investigations":7,"patients":7,"revenue":52500,"paid":52500},{"agent":"Dayo Adedayo","cases":3,"investigations":3,"patients":3,"revenue":12000,"paid":12000},{"agent":"Mr Patrick_RadiographerILESA","cases":2,"investigations":2,"patients":2,"revenue":2000,"paid":2000},{"agent":"Mr Ayinla_Radiographer","cases":1,"investigations":1,"patients":1,"revenue":1000,"paid":1000}],"case_types":[{"centre":"OAUTH Ilesa Centre","case_type":"Digital X-ray","cases":330,"investigations":330,"revenue":2568000},{"centre":"Ijofi","case_type":"USG","cases":239,"investigations":239,"revenue":1490850},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":218,"investigations":218,"revenue":1243850},{"centre":"Ijofi","case_type":"Lab","cases":196,"investigations":196,"revenue":3585700},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":146,"investigations":146,"revenue":838000},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":130,"investigations":130,"revenue":1212000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":104,"investigations":104,"revenue":1085500},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":45,"investigations":45,"revenue":262000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":32,"investigations":32,"revenue":446000},{"centre":"Ilasa Main Centre, Lagos","case_type":"Digital X-ray","cases":23,"investigations":23,"revenue":278000},{"centre":"Ijofi","case_type":"Digital X-ray","cases":23,"investigations":23,"revenue":163700},{"centre":"Ijofi","case_type":"ECG","cases":10,"investigations":10,"revenue":75000},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":4,"investigations":4,"revenue":36000},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":1,"investigations":1,"revenue":9000},{"centre":"Palm Avenue, Lagos","case_type":"Digital X-ray","cases":1,"investigations":1,"revenue":10000},{"centre":"OAUTH Ilesa Centre","case_type":"Lab","cases":1,"investigations":1,"revenue":10000}]}};
+const TARGETS      = {"Ilasa Main Centre, Lagos": {"1": 5000000, "2": 6100000, "3": 7000000, "4": 7950000}, "OAUTH Ilesa Centre": {"1": 5500000, "2": 7000000, "3": 7500000, "4": 8000000}, "Palm Avenue, Lagos": {"1": 2500000, "2": 3500000, "3": 4000000, "4": 4410000}, "Ijofi": {"1": 4250000, "2": 6000000, "3": 7500000, "4": 8500000}, "Ikeja Lagos Centre": {"1": 2000000, "2": 3000000, "3": 5250000, "4": 7250000}};
+const MNAMES       = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const BCOLORS      = {"Ijofi": "#FF7043", "Ikeja Lagos Centre": "#2196F3", "Ilasa Main Centre, Lagos": "#F4B942", "OAUTH Ilesa Centre": "#4CAF50", "Palm Avenue, Lagos": "#9C27B0"};
+const CTCOLORS     = {"Digital X-ray": "#9E9E9E", "ECG": "#9C27B0", "Lab": "#FF8C00", "USG": "#2196F3"};
+const COST_HISTORY = {"2026-01":{"Ilasa Main Centre, Lagos":{"direct_costs":1175500,"opex":1974617},"OAUTH Ilesa Centre":{"direct_costs":230845,"opex":43500},"Ijofi":{"direct_costs":551800,"opex":250050},"Palm Avenue, Lagos":{"direct_costs":345000,"opex":1114850},"Ikeja Lagos Centre":{"direct_costs":329132,"opex":1519520}},"2026-02":{"Ilasa Main Centre, Lagos":{"direct_costs":1113400,"opex":2095967},"OAUTH Ilesa Centre":{"direct_costs":827400,"opex":215012},"Ijofi":{"direct_costs":502720,"opex":952850},"Palm Avenue, Lagos":{"direct_costs":617420,"opex":1112900},"Ikeja Lagos Centre":{"direct_costs":231390,"opex":1275120}},"2026-03":{"Ilasa Main Centre, Lagos":{"direct_costs":1157962,"opex":3703567},"OAUTH Ilesa Centre":{"direct_costs":1253562,"opex":1133973},"Ijofi":{"direct_costs":1344956,"opex":1092400},"Palm Avenue, Lagos":{"direct_costs":261422,"opex":1750200},"Ikeja Lagos Centre":{"direct_costs":181200,"opex":1193550}}};
+const DEFAULT_COLORS = ['#2196F3','#F4B942','#4CAF50','#9C27B0','#FF7043','#00BCD4','#E91E63'];
+let charts = {};
+let currentView = 'monthly';
+
+function bColor(b,i){ return BCOLORS[b] || DEFAULT_COLORS[i%DEFAULT_COLORS.length]; }
+function ctColor(ct,i){ return CTCOLORS[ct] || DEFAULT_COLORS[i%DEFAULT_COLORS.length]; }
+function fmtN(v){ return 'NGN '+Math.round(v).toLocaleString(); }
+function fmtCompact(v){
+  const abs=Math.abs(v), sign=v<0?'-':'';
+  if(abs>=1e6) return sign+(abs/1e6).toFixed(2)+'M';
+  if(abs>=1e3) return sign+(abs/1e3).toFixed(2)+'k';
+  return Math.round(v).toString();
+}
+
+// Quarter-aware target helpers
+function getQuarter(m){ return Math.ceil(m/3); }
+function getMonthlyTarget(centre, m){
+  const q=getQuarter(m);
+  return (TARGETS[centre]&&TARGETS[centre][q])||0;
+}
+// Flat {centre: target} for a specific month
+function flatTargetsForMonth(monthNum){
+  const r={};
+  Object.keys(TARGETS).forEach(c=>{ r[c]=getMonthlyTarget(c,monthNum); });
+  return r;
+}
+// Flat {centre: avgMonthlyTarget} averaged across all 12 months of a year
+function flatTargetsAvg(){
+  const r={};
+  Object.keys(TARGETS).forEach(c=>{
+    const qt=TARGETS[c]||{};
+    r[c]=((qt[1]||0)*3+(qt[2]||0)*3+(qt[3]||0)*3+(qt[4]||0)*3)/12;
+  });
+  return r;
+}
+// Flat {centre: annualTarget} = sum of all 12 monthly targets
+function flatTargetsAnnual(){
+  const r={};
+  Object.keys(TARGETS).forEach(c=>{
+    const qt=TARGETS[c]||{};
+    r[c]=((qt[1]||0)+(qt[2]||0)+(qt[3]||0)+(qt[4]||0))*3;
+  });
+  return r;
+}
+
+function setView(v){
+  currentView = v;
+  document.getElementById('tabMonthly').className = 'view-tab'+(v==='monthly'?' active':'');
+  document.getElementById('tabYearly').className  = 'view-tab'+(v==='yearly'?' active':'');
+  // Month filter only applies to Monthly view
+  const mSel = document.getElementById('monthSel');
+  const mLbl = document.getElementById('monthLabel');
+  const hide = v === 'yearly';
+  mSel.style.display = hide ? 'none' : '';
+  mLbl.style.display = hide ? 'none' : '';
+  render();
+}
+
+// ---- Stacked-bar totals plugin ----
+// Anchors label to the actual rendered bar element position, not the scale value.
+// Vertical: finds the topmost canvas-y of any positive-value segment per column.
+// Horizontal: finds the rightmost canvas-x of any segment per row.
+const stackedTotalsPlugin={
+  id:'stackedTotals',
+  afterDatasetsDraw(chart){
+    const opts=(chart.options.plugins||{}).stackedTotals;
+    if(!opts||!opts.enabled) return;
+    const ctx=chart.ctx;
+    const isHoriz=chart.options.indexAxis==='y';
+    const n=(chart.data.labels||[]).length;
+
+    // Net total per index (for label text)
+    const totals=new Array(n).fill(0);
+    chart.data.datasets.forEach((ds,di)=>{
+      if(ds.type==='line') return;
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      (ds.data||[]).forEach((v,i)=>{ totals[i]+=Number(v)||0; });
+    });
+
+    // Anchor positions: topmost bar.y (min canvas-y) among positive segments (vert)
+    //                   rightmost bar.x (max canvas-x) for all segments (horiz)
+    const anchorPos=new Array(n).fill(isHoriz?-Infinity:Infinity);
+    const xCenter=new Array(n).fill(0);
+    const yCenter=new Array(n).fill(0);
+
+    chart.data.datasets.forEach((ds,di)=>{
+      if(ds.type==='line') return;
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      meta.data.forEach((bar,i)=>{
+        xCenter[i]=bar.x;
+        yCenter[i]=bar.y;
+        if(isHoriz){
+          if(bar.x>anchorPos[i]) anchorPos[i]=bar.x;
+        } else {
+          // Only track topmost y for positive-value segments
+          const v=Number((ds.data||[])[i]||0);
+          if(v>0 && bar.y<anchorPos[i]) anchorPos[i]=bar.y;
+        }
+      });
+    });
+
+    ctx.save();
+    ctx.font='bold 10px Arial,sans-serif';
+    ctx.fillStyle=opts.color||(getEffectiveTheme()==='dark'?'#e6edf3':'#333');
+
+    for(let i=0;i<n;i++){
+      if(!totals[i]) continue;
+      const text=fmtCompact(totals[i]);
+      if(isHoriz){
+        if(anchorPos[i]===-Infinity) continue;
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(text, anchorPos[i]+4, yCenter[i]);
+      } else {
+        if(anchorPos[i]===Infinity) continue; // no positive values in this column
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(text, xCenter[i], anchorPos[i]-3);
+      }
+    }
+    ctx.restore();
+  }
+};
+Chart.register(stackedTotalsPlugin);
+
+// ---- Theme toggle ----
+function getEffectiveTheme(){
+  const stored=localStorage.getItem('theme');
+  if(stored) return stored;
+  return window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  const btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=theme==='dark'?'☀ Light':'🌙 Dark';
+}
+function toggleTheme(){
+  const current=getEffectiveTheme();
+  const next=current==='dark'?'light':'dark';
+  localStorage.setItem('theme',next);
+  applyTheme(next);
+  renderAll();
+}
+function renderAll(){ render(); }
+
+function mkChart(id, type, labels, datasets, yLabel, stacked, indexAxis){
+  if(charts[id]){ charts[id].destroy(); }
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+  const opts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+      stackedTotals: stacked ? {enabled:true} : {enabled:false}
+    },
+    scales:{
+      x:{stacked:!!stacked,ticks:{color:tickColor},grid:{color:gridColor}},
+      y:{stacked:!!stacked,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+         title:{display:!!yLabel,text:yLabel||'',font:{size:9},color:tickColor}}
+    }
+  };
+  if(indexAxis) opts.indexAxis = indexAxis;
+  charts[id] = new Chart(document.getElementById(id),{type,data:{labels,datasets},options:opts});
+}
+
+// Revenue bar chart + dashed total-target line (Monthly view)
+function mkRevChart(id, xLabels, barDs, allCentres, month, year, branch){
+  if(charts[id]){ charts[id].destroy(); }
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+
+  // Build total target per x-label
+  const tgtData = month===0
+    ? xLabels.map((_,mi)=>{
+        const m=mi+1;
+        const cents=branch?[branch]:Object.keys(TARGETS);
+        return cents.reduce((s,c)=>s+getMonthlyTarget(c,m),0);
+      })
+    : [branch?(TARGETS[branch]&&TARGETS[branch][Math.ceil(month/3)]||0)
+             :Object.keys(TARGETS).reduce((s,c)=>s+getMonthlyTarget(c,month),0)];
+
+  const tgtDs={
+    label:'Target',type:'line',
+    data:tgtData,
+    borderColor:'#FF5722', borderWidth:2, borderDash:[6,3],
+    pointStyle:'triangle', pointRadius:5,
+    backgroundColor:'transparent', fill:false, tension:0, order:0
+  };
+
+  charts[id]=new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels:xLabels,datasets:[...barDs, tgtDs]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:tickColor},grid:{color:gridColor}},
+        y:{stacked:true,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+           title:{display:true,text:'Revenue (NGN)',font:{size:9},color:tickColor}}
+      }
+    }
+  });
+}
+
+// Revenue bar chart + annual target line (Yearly view)
+function mkRevChartYearly(id, yLabels, barDs, allCentres, branch){
+  if(charts[id]){ charts[id].destroy(); }
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+
+  // Annual target = sum of all 12 months of targets
+  const cents=branch?[branch]:Object.keys(TARGETS);
+  const annualTgt=cents.reduce((s,c)=>{
+    const qt=TARGETS[c]||{};
+    return s+((qt[1]||0)+(qt[2]||0)+(qt[3]||0)+(qt[4]||0))*3;
+  },0);
+  const tgtDs={
+    label:'Annual Target',type:'line',
+    data:yLabels.map(()=>annualTgt),
+    borderColor:'#FF5722', borderWidth:2, borderDash:[6,3],
+    pointStyle:'triangle', pointRadius:5,
+    backgroundColor:'transparent', fill:false, tension:0, order:0
+  };
+
+  charts[id]=new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels:yLabels,datasets:[...barDs, tgtDs]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:tickColor},grid:{color:gridColor}},
+        y:{stacked:true,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+           title:{display:true,text:'Revenue (NGN)',font:{size:9},color:tickColor}}
+      }
+    }
+  });
+}
+
+function render(){
+  const year   = parseInt(document.getElementById('yearSel').value);
+  const branch = document.getElementById('branchSel').value;
+  const month  = parseInt(document.getElementById('monthSel').value); // 0=All, 1-12=specific
+  if(currentView==='monthly') renderMonthly(year, branch, month);
+  else                         renderYearly(branch);
+  renderPnLCharts(year, branch, month);
+}
+
+// ---- MONTHLY VIEW: X-axis = Jan…Dec (all months) or single picked month ----
+function renderMonthly(year, branch, month){
+  // month=0 means All Months; month=1-12 means a specific month
+
+  // Build 12-entry array for the selected year
+  const monthKeys = Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+  const allEntries = monthKeys.map(k=>HISTORY[k]||null);
+
+  // When a specific month is selected, restrict to that one entry/label
+  const entries = month===0 ? allEntries : [allEntries[month-1]];
+  const xLabels = month===0 ? MNAMES      : [MNAMES[month-1]];
+  const periodLabel = month===0 ? ('Monthly Avg — '+year) : (MNAMES[month-1]+' '+year);
+
+  const suffix = month===0 ? 'Monthly' : 'Monthly';
+  document.getElementById('h1').textContent = 'Revenue by Location ('+periodLabel+')';
+  document.getElementById('h2').textContent = 'Tests Completed by Location ('+periodLabel+')';
+  document.getElementById('h3').textContent = 'No. of Patients by Location ('+periodLabel+')';
+  document.getElementById('h4').textContent = 'Active Referrers by Location ('+periodLabel+')';
+
+  // All branches present in the filtered entries
+  const allCentres = branch ? [branch] :
+    [...new Set(entries.filter(Boolean).flatMap(e=>Object.keys(e.centres||{})))].sort();
+
+  // Stacked datasets per metric
+  function dsMonthly(field){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:bColor(c,i),
+      data:entries.map(e=>{ if(!e) return 0; const cd=(e.centres||{})[c]; return cd?Math.round(cd[field]||0):0; })
+    }));
+  }
+  // Active referrers: unique names per entry
+  function dsMonthlyRefs(){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:bColor(c,i),
+      data:entries.map(e=>{ if(!e) return 0; return new Set((e.referrers||[]).filter(r=>r.centre===c).map(r=>r.referrer)).size; })
+    }));
+  }
+
+  // Revenue chart with target line overlay
+  mkRevChart('cRev', xLabels, dsMonthly('revenue'), allCentres, month, year, branch);
+  mkChart('cInv','bar',xLabels,dsMonthly('investigations'),  'Investigations',true);
+  mkChart('cPat','bar',xLabels,dsMonthly('patients'),        'Patients',true);
+  mkChart('cRef','bar',xLabels,dsMonthlyRefs(),               'Unique Referrers',true);
+
+  // Case type chart — aggregate across the filtered entries
+  renderCaseTypeChart(entries, branch);
+
+  // --- KPI card ---
+  const n_data = entries.filter(Boolean).length || 1;
+  const sumCentres = {};
+  allCentres.forEach(c=>{
+    sumCentres[c]={investigations:0,cases:0,patients:0,revenue:0,paid:0,due:0};
+    entries.filter(Boolean).forEach(e=>{
+      const cd=(e.centres||{})[c]; if(!cd) return;
+      sumCentres[c].investigations+=cd.investigations||0;
+      sumCentres[c].cases+=cd.cases||0;
+      sumCentres[c].patients+=cd.patients||0;
+      sumCentres[c].revenue+=cd.revenue||0;
+      sumCentres[c].paid+=cd.paid||0;
+      sumCentres[c].due+=cd.due||0;
+    });
+    // Unique referrers = union across filtered entries
+    const names=new Set();
+    entries.filter(Boolean).forEach(e=>(e.referrers||[]).filter(r=>r.centre===c).forEach(r=>names.add(r.referrer)));
+    sumCentres[c].unique_referrers=names.size;
+  });
+
+  // All Months -> show avg; specific month -> show actuals (monthCount=1 in both cases for target)
+  const kpiCentres = {};
+  allCentres.forEach(c=>{
+    const sc=sumCentres[c]||{};
+    kpiCentres[c] = month===0 ? {
+      investigations: Math.round((sc.investigations||0)/n_data),
+      cases:          Math.round((sc.cases||0)/n_data),
+      patients:       Math.round((sc.patients||0)/n_data),
+      revenue:        (sc.revenue||0)/n_data,
+      paid:           (sc.paid||0)/n_data,
+      due:            (sc.due||0)/n_data,
+      unique_referrers: sc.unique_referrers||0
+    } : {...sc};
+  });
+  const kpiTargets = month===0 ? flatTargetsAvg() : flatTargetsForMonth(month);
+  // Aggregate cost data across the filtered entries
+  const aggCostKeys={};
+  entries.filter(Boolean).forEach(e=>{
+    const k=e.year+'-'+String(e.month).padStart(2,'0');
+    const cd=COST_HISTORY[k]||{};
+    Object.keys(cd).forEach(c=>{
+      if(!aggCostKeys[c])aggCostKeys[c]={direct_costs:0,opex:0};
+      aggCostKeys[c].direct_costs+=(cd[c].direct_costs||0);
+      aggCostKeys[c].opex+=(cd[c].opex||0);
+    });
+  });
+  // For All Months avg, divide by n_data
+  const kpiCostKeys={};
+  if(month===0){Object.keys(aggCostKeys).forEach(c=>{kpiCostKeys[c]={direct_costs:aggCostKeys[c].direct_costs/n_data,opex:aggCostKeys[c].opex/n_data};});}
+  else{Object.assign(kpiCostKeys,aggCostKeys);}
+  renderKPICard(kpiCentres, branch, periodLabel, kpiTargets, 1, Object.keys(kpiCostKeys).length?kpiCostKeys:null);
+
+  // Agents — aggregate filtered entries
+  const agentMap={};
+  entries.filter(Boolean).forEach(e=>(e.agents||[]).forEach(a=>{
+    if(!agentMap[a.agent]) agentMap[a.agent]={agent:a.agent,investigations:0,cases:0,revenue:0,paid:0};
+    agentMap[a.agent].investigations+=a.investigations||0;
+    agentMap[a.agent].cases+=a.cases||0;
+    agentMap[a.agent].revenue+=a.revenue||0;
+    agentMap[a.agent].paid+=a.paid||0;
+  }));
+  renderAgentsChart(Object.values(agentMap).sort((a,b)=>b.revenue-a.revenue).slice(0,10));
+
+  // Referrers — aggregate filtered entries
+  const refMap={};
+  entries.filter(Boolean).forEach(e=>(e.referrers||[])
+    .filter(r=>!branch||r.centre===branch)
+    .forEach(r=>{const k=r.centre+'|'+r.referrer;
+      if(!refMap[k])refMap[k]={...r};
+      else{refMap[k].cases+=r.cases;refMap[k].investigations+=r.investigations;refMap[k].revenue+=r.revenue;}
+    }));
+  renderRefTable(Object.values(refMap).sort((a,b)=>b.cases-a.cases).slice(0,20), branch);
+}
+
+// ---- YEARLY VIEW: X-axis = 2026, 2027… ----
+function renderYearly(branch){
+  document.getElementById('h1').textContent = 'Revenue by Location (Yearly)';
+  document.getElementById('h2').textContent = 'Tests Completed by Location (Yearly)';
+  document.getElementById('h3').textContent = 'No. of Patients by Location (Yearly)';
+  document.getElementById('h4').textContent = 'Active Referrers by Location (Yearly)';
+
+  // Group all history keys by year
+  const yearSet = [...new Set(Object.keys(HISTORY).map(k=>k.split('-')[0]))].sort();
+  const yLabels = yearSet;
+
+  // All branches across entire history
+  const allCentres = branch ? [branch] :
+    [...new Set(Object.values(HISTORY).flatMap(e=>Object.keys(e.centres||{})))].sort();
+
+  // Aggregate per year per centre
+  function dsYearly(field){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:bColor(c,i),
+      data:yearSet.map(yr=>{
+        const entries=Object.entries(HISTORY).filter(([k])=>k.startsWith(yr+'-')).map(([,v])=>v);
+        const cd_sum=entries.reduce((s,e)=>{const cd=(e.centres||{})[c];return cd?s+(cd[field]||0):s;},0);
+        return Math.round(cd_sum);
+      })
+    }));
+  }
+
+  // Yearly unique referrers = union of all referrer names across months in that year
+  function dsYearlyRefs(){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:bColor(c,i),
+      data:yearSet.map(yr=>{
+        const entries=Object.values(HISTORY).filter((_,idx)=>Object.keys(HISTORY)[idx].startsWith(yr+'-'));
+        const names=new Set();
+        Object.entries(HISTORY).filter(([k])=>k.startsWith(yr+'-')).forEach(([,e])=>{
+          (e.referrers||[]).filter(r=>r.centre===c).forEach(r=>names.add(r.referrer));
+        });
+        return names.size;
+      })
+    }));
+  }
+
+  // Revenue chart with annual target line overlay
+  mkRevChartYearly('cRev', yLabels, dsYearly('revenue'), allCentres, branch);
+  mkChart('cInv','bar',yLabels,dsYearly('investigations'), 'Investigations',true);
+  mkChart('cPat','bar',yLabels,dsYearly('patients'),       'Patients',true);
+  mkChart('cRef','bar',yLabels,dsYearlyRefs(),              'Unique Referrers',true);
+
+  // Case type stacked bar — aggregate all history
+  renderCaseTypeChart(Object.values(HISTORY), branch);
+
+  // KPI card — grand total across all years
+  const totalCentres = {};
+  allCentres.forEach(c=>{
+    totalCentres[c]={investigations:0,cases:0,patients:0,revenue:0,paid:0,due:0};
+    Object.values(HISTORY).forEach(e=>{
+      const cd=(e.centres||{})[c]; if(!cd)return;
+      totalCentres[c].investigations+=cd.investigations||0;
+      totalCentres[c].cases+=cd.cases||0;
+      totalCentres[c].patients+=cd.patients||0;
+      totalCentres[c].revenue+=cd.revenue||0;
+      totalCentres[c].paid+=cd.paid||0;
+      totalCentres[c].due+=cd.due||0;
+    });
+    const names=new Set();
+    Object.values(HISTORY).forEach(e=>(e.referrers||[]).filter(r=>r.centre===c).forEach(r=>names.add(r.referrer)));
+    totalCentres[c].unique_referrers=names.size;
+  });
+  // Annual target × number of distinct years in history
+  const nYears = yearSet.length || 1;
+  // Aggregate all cost history for yearly view
+  const yearCostKeys={};
+  Object.values(COST_HISTORY).forEach(cd=>{
+    Object.keys(cd).forEach(c=>{
+      if(!yearCostKeys[c])yearCostKeys[c]={direct_costs:0,opex:0};
+      yearCostKeys[c].direct_costs+=(cd[c].direct_costs||0);
+      yearCostKeys[c].opex+=(cd[c].opex||0);
+    });
+  });
+  renderKPICard(totalCentres, branch, 'All Time', flatTargetsAnnual(), nYears, Object.keys(yearCostKeys).length?yearCostKeys:null);
+
+  // Top agents across all history
+  const agentMap={};
+  Object.values(HISTORY).forEach(e=>(e.agents||[]).forEach(a=>{
+    if(!agentMap[a.agent]) agentMap[a.agent]={agent:a.agent,investigations:0,cases:0,revenue:0,paid:0};
+    agentMap[a.agent].investigations+=a.investigations||0;
+    agentMap[a.agent].cases+=a.cases||0;
+    agentMap[a.agent].revenue+=a.revenue||0;
+    agentMap[a.agent].paid+=a.paid||0;
+  }));
+  renderAgentsChart(Object.values(agentMap).sort((a,b)=>b.revenue-a.revenue).slice(0,10));
+
+  // Top referrers across all history
+  const refMap={};
+  Object.values(HISTORY).forEach(e=>(e.referrers||[])
+    .filter(r=>!branch||r.centre===branch)
+    .forEach(r=>{const k=r.centre+'|'+r.referrer;
+      if(!refMap[k])refMap[k]={...r};
+      else{refMap[k].cases+=r.cases;refMap[k].investigations+=r.investigations;refMap[k].revenue+=r.revenue;}
+    }));
+  renderRefTable(Object.values(refMap).sort((a,b)=>b.cases-a.cases).slice(0,20), branch);
+}
+
+function renderCaseTypeChart(entries, branch){
+  const entryArr = Array.isArray(entries) ? entries : [entries];
+  const ctArr = entryArr.flatMap(e=>(e&&e.case_types||[])).filter(r=>!branch||r.centre===branch);
+  const ctTotals={};
+  ctArr.forEach(r=>{ctTotals[r.case_type]=(ctTotals[r.case_type]||0)+r.revenue;});
+  const ctLabels=Object.keys(ctTotals).sort((a,b)=>ctTotals[b]-ctTotals[a]);
+  const ctCentres=branch?[branch]:[...new Set(ctArr.map(r=>r.centre))].sort();
+  const ctDs=ctCentres.map((c,i)=>({
+    label:c, stack:'s', backgroundColor:bColor(c,i),
+    data:ctLabels.map(ct=>{
+      const rows=ctArr.filter(r=>r.centre===c&&r.case_type===ct);
+      return Math.round(rows.reduce((s,r)=>s+r.revenue,0));
+    })
+  }));
+  mkChart('cCT','bar',ctLabels,ctDs,'Revenue (NGN)',true);
+}
+
+function renderAgentsChart(agents){
+  // Top 10 agents by total revenue (paid + due = total fee)
+  const top=agents.slice().sort((a,b)=>(b.revenue||0)-(a.revenue||0)).slice(0,10);
+  const labels=top.map(a=>a.agent||'Unknown').reverse();
+  const paid=top.map(a=>a.paid||0).reverse();
+  const due=top.map(a=>((a.revenue||0)-(a.paid||0))).reverse();
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+  if(charts['cAgt']){charts['cAgt'].destroy();}
+  charts['cAgt']=new Chart(document.getElementById('cAgt'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Paid', data:paid,backgroundColor:'#4CAF50',borderRadius:3,stack:'s'},
+      {label:'Due',  data:due, backgroundColor:'#FF7043',borderRadius:3,stack:'s'}
+    ]},
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+           title:{display:true,text:'Revenue (NGN)',font:{size:9},color:tickColor}},
+        y:{stacked:true,ticks:{font:{size:10},color:tickColor},grid:{color:gridColor}}
+      }
+    }
+  });
+}
+
+function renderKPICard(centresRaw, branch, periodLabel, targets, monthCount, costKeys){
+  const cnames=branch?(centresRaw[branch]?[branch]:[]):Object.keys(centresRaw).sort();
+  let rev=0,paid=0,due=0,cases=0,inv=0,pat=0,refs=0,dc=0,opx=0;
+  cnames.forEach(c=>{
+    const cd=centresRaw[c]||{};
+    rev+=cd.revenue||0; paid+=cd.paid||0; due+=cd.due||0;
+    cases+=cd.cases||0; inv+=cd.investigations||0; pat+=cd.patients||0;
+    refs+=cd.unique_referrers||0;
+    if(costKeys){const cc=costKeys[c]||{}; dc+=cc.direct_costs||0; opx+=cc.opex||0;}
+  });
+  const gp=rev-dc; const np=gp-opx;
+  const hasCost=costKeys&&Object.keys(costKeys).length>0;
+  const monthlyTgt = branch?(targets[branch]||0):Object.values(targets).reduce((s,v)=>s+v,0);
+  const tgt = monthlyTgt * (monthCount||1);
+  const pct = tgt?(rev/tgt*100):0;
+  const sc  = pct>=100?'#28a745':pct>=80?'#ffc107':'#dc3545';
+  const npc = np>=0?'#28a745':'#dc3545';
+  const title = branch||'All Branches';
+  let pnlTiles='';
+  if(hasCost){
+    pnlTiles=
+      '<div class="kpi"><span class="kpi-lbl">Direct Costs</span><span class="kpi-val" style="color:#E53935">'+fmtN(dc)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Gross Profit</span><span class="kpi-val" style="color:'+(gp>=0?'#28a745':'#dc3545')+'">'+fmtN(gp)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Overhead/OpEx</span><span class="kpi-val" style="color:#E53935">'+fmtN(opx)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Net Profit/(Loss)</span><span class="kpi-val" style="color:'+npc+'">'+fmtN(np)+'</span></div>';
+  }
+  document.getElementById('kpiCard').innerHTML=
+    '<h3>'+title+' &nbsp;<small style="font-weight:400;font-size:10px;color:#888">'+periodLabel+'</small></h3>'+
+    '<div class="kpi-grid">'+
+      '<div class="kpi"><span class="kpi-lbl">Revenue</span><span class="kpi-val">'+fmtN(rev)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Paid</span><span class="kpi-val">'+fmtN(paid)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Due</span><span class="kpi-val">'+fmtN(due)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Cases</span><span class="kpi-val">'+cases.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Tests</span><span class="kpi-val">'+inv.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Patients</span><span class="kpi-val">'+pat.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Active Referrers</span><span class="kpi-val">'+refs.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">% of Target</span><span class="kpi-val" style="color:'+sc+'">'+pct.toFixed(1)+'%</span></div>'+
+      pnlTiles+
+    '</div>'+
+    '<div class="tbar-wrap"><div class="tbar" style="width:'+Math.min(pct,100).toFixed(1)+'%;background:'+sc+'"></div></div>'+
+    '<p class="tlbl" style="color:'+sc+'">Target: '+fmtN(tgt)+'</p>';
+}
+
+function renderPnLCharts(year, branch, month){
+  const hasCost=Object.keys(COST_HISTORY).length>0;
+  document.getElementById('pnlSection').style.display=hasCost?'':'none';
+  document.getElementById('pnlCostSection').style.display=hasCost?'':'none';
+  document.getElementById('pnlStackSection').style.display=hasCost?'':'none';
+  if(!hasCost)return;
+
+  // Collect keys to display
+  let keys;
+  if(currentView==='yearly'){
+    keys=Object.keys(COST_HISTORY).sort();
+  } else if(month===0){
+    keys=Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+  } else {
+    keys=[year+'-'+String(month).padStart(2,'0')];
+  }
+
+  // All branches with cost data
+  const allBranches=branch?[branch]:[...new Set(Object.values(COST_HISTORY).flatMap(m=>Object.keys(m)))].sort();
+
+  // For net profit chart: line per branch, x=periods
+  const xLabels=keys.map(k=>{
+    if(currentView==='yearly')return k;
+    const[y,m]=k.split('-');return MNAMES[parseInt(m)-1];
+  });
+
+  const npDs=allBranches.map((c,i)=>({
+    label:c.replace(' Main Centre, Lagos','').replace(' Centre','').replace(', Lagos',''),
+    borderColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+    backgroundColor:(BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length])+'33',
+    data:keys.map(k=>{
+      const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+      const cc=(COST_HISTORY[k]||{})[c]||{};
+      const rev=cd?cd.revenue:0;
+      const dc=cc.direct_costs||0; const opx=cc.opex||0;
+      return Math.round(rev-dc-opx);
+    }),
+    fill:false, tension:0.3, borderWidth:2, pointRadius:4
+  }));
+  const _isDark=getEffectiveTheme()==='dark';
+  const _grid=_isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const _tick=_isDark?'#adbac7':'#555';
+  if(charts['cPnL']){charts['cPnL'].destroy();}
+  charts['cPnL']=new Chart(document.getElementById('cPnL'),{
+    type:'line',
+    data:{labels:xLabels,datasets:npDs},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:_tick}}},
+      scales:{
+        x:{ticks:{color:_tick},grid:{color:_grid}},
+        y:{beginAtZero:false,ticks:{color:_tick},grid:{color:_grid},
+           title:{display:true,text:'Net Profit / (Loss) NGN',font:{size:9},color:_tick}}
+      }}
+  });
+
+  // Cost breakdown chart: grouped bars (Revenue, Direct Costs, OpEx) per branch for selected period
+  // Aggregate across selected keys
+  const revData=allBranches.map(c=>{
+    let s=0;
+    keys.forEach(k=>{const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);if(cd)s+=cd.revenue||0;});
+    return Math.round(s);
+  });
+  const dcData=allBranches.map(c=>{
+    let s=0;
+    keys.forEach(k=>{const cc=(COST_HISTORY[k]||{})[c]||{};s+=cc.direct_costs||0;});
+    return Math.round(s);
+  });
+  const opxData=allBranches.map(c=>{
+    let s=0;
+    keys.forEach(k=>{const cc=(COST_HISTORY[k]||{})[c]||{};s+=cc.opex||0;});
+    return Math.round(s);
+  });
+  const npTot=allBranches.map((_,i)=>revData[i]-dcData[i]-opxData[i]);
+  const bLabels=allBranches.map(c=>c.replace(' Main Centre, Lagos','').replace(' Centre','').replace(', Lagos',''));
+  if(charts['cPnLCost']){charts['cPnLCost'].destroy();}
+  charts['cPnLCost']=new Chart(document.getElementById('cPnLCost'),{
+    type:'bar',
+    data:{labels:bLabels,datasets:[
+      {label:'Revenue',backgroundColor:'rgba(33,150,243,0.8)',data:revData},
+      {label:'Direct Costs',backgroundColor:'rgba(229,57,53,0.7)',data:dcData},
+      {label:'Overhead/OpEx',backgroundColor:'rgba(255,152,0,0.7)',data:opxData},
+      {label:'Net Profit',backgroundColor:npTot.map(v=>v>=0?'rgba(27,94,32,0.85)':'rgba(183,28,28,0.85)'),data:npTot}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:_tick}}},
+      scales:{
+        x:{beginAtZero:true,ticks:{color:_tick},grid:{color:_grid}},
+        y:{beginAtZero:false,ticks:{color:_tick},grid:{color:_grid},
+           title:{display:true,text:'NGN',font:{size:9},color:_tick}}
+      }}
+  });
+
+  // Stacked chart: behaviour changes based on view mode
+  // Yearly → X = years, bars = Net Profit per year stacked by branch
+  // All Months → X = Jan-Dec, bars = Net Profit per month stacked by branch
+  // Specific month → X = cost categories, bars = breakdown stacked by branch
+  let stackLabels, stackDs, stackTitle, stackYLabel;
+
+  function shortName(c){ return c.replace(' Main Centre, Lagos','').replace(' Centre','').replace(', Lagos',''); }
+
+  if(currentView==='yearly'){
+    const yearSet=[...new Set(Object.keys(COST_HISTORY).map(k=>k.split('-')[0]))].sort();
+    stackLabels=yearSet;
+    stackTitle='P&L — Net Profit by Year (Branches Stacked)';
+    stackYLabel='Net Profit (NGN)';
+    stackDs=allBranches.map((c,i)=>({
+      label:shortName(c), stack:'s',
+      backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:yearSet.map(yr=>{
+        let r=0,dc=0,ox=0;
+        Object.keys(COST_HISTORY).filter(k=>k.startsWith(yr+'-')).forEach(k=>{
+          const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+          if(cd) r+=cd.revenue||0;
+          const cc=(COST_HISTORY[k]||{})[c]||{};
+          dc+=cc.direct_costs||0; ox+=cc.opex||0;
+        });
+        return Math.round(r-dc-ox);
+      })
+    }));
+  } else if(month===0){
+    const monthKeys=Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+    stackLabels=MNAMES;
+    stackTitle='P&L — Net Profit by Month '+year+' (Branches Stacked)';
+    stackYLabel='Net Profit (NGN)';
+    stackDs=allBranches.map((c,i)=>({
+      label:shortName(c), stack:'s',
+      backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:monthKeys.map(k=>{
+        const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+        const cc=(COST_HISTORY[k]||{})[c]||{};
+        const r=cd?cd.revenue||0:0;
+        return Math.round(r-(cc.direct_costs||0)-(cc.opex||0));
+      })
+    }));
+  } else {
+    // Specific month: X = 4 cost categories
+    stackLabels=['Revenue','Direct Costs','Overhead / OpEx','Net Profit'];
+    stackTitle='P&L — Cost Breakdown (Branches Stacked)';
+    stackYLabel='NGN';
+    stackDs=allBranches.map((c,i)=>{
+      let s_rev=0,s_dc=0,s_opx=0;
+      keys.forEach(k=>{
+        const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+        if(cd) s_rev+=cd.revenue||0;
+        const cc=(COST_HISTORY[k]||{})[c]||{};
+        s_dc+=cc.direct_costs||0; s_opx+=cc.opex||0;
+      });
+      return{label:shortName(c),stack:'s',
+        backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+        data:[Math.round(s_rev),Math.round(s_dc),Math.round(s_opx),Math.round(s_rev-s_dc-s_opx)]};
+    });
+  }
+
+  const titleEl=document.getElementById('pnlStackTitle');
+  if(titleEl) titleEl.textContent=stackTitle;
+
+  if(charts['cPnLStack']){charts['cPnLStack'].destroy();}
+  charts['cPnLStack']=new Chart(document.getElementById('cPnLStack'),{
+    type:'bar',
+    data:{labels:stackLabels,datasets:stackDs},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:_tick}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:_tick},grid:{color:_grid}},
+        y:{stacked:true,beginAtZero:false,ticks:{color:_tick},grid:{color:_grid},
+           title:{display:true,text:stackYLabel,font:{size:9},color:_tick}}
+      }}
+  });
+}
+
+function renderRefTable(refs, branch){
+  const rows=(branch?refs.filter(r=>r.centre===branch):refs).slice(0,20);
+  let html='<table><thead><tr><th>Centre</th><th>Referrer</th><th>Cases</th><th>Investigations</th><th>Revenue</th></tr></thead><tbody>';
+  rows.forEach(r=>{ html+='<tr><td>'+r.centre+'</td><td>'+r.referrer+'</td><td>'+r.cases+'</td><td>'+r.investigations+'</td><td>'+fmtN(r.revenue)+'</td></tr>'; });
+  html+='</tbody></table>';
+  if(!rows.length) html='<p class="no-data">No referrer data for selection.</p>';
+  document.getElementById('refTable').innerHTML=html;
+}
+
+(function init(){
+  // Apply saved or system theme before first render
+  applyTheme(getEffectiveTheme());
+
+  const keys=Object.keys(HISTORY).sort().reverse();
+  if(keys.length){
+    const[y]=keys[0].split('-');
+    document.getElementById('yearSel').value=y;
+  }
+  document.getElementById('monthSel').value='0'; // default: All Months
+  render();
+
+  // Also re-render if OS theme changes (and no user override stored)
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
+    if(!localStorage.getItem('theme')){ applyTheme(getEffectiveTheme()); renderAll(); }
+  });
+})();
+</script>
+</body>
+</html>

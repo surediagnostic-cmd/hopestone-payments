@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sure Diagnostics LIS Dashboard — March 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f4f8;color:#1a2a3a;font-size:13px}
+header{background:#0D2137;color:#fff;padding:18px 28px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{font-size:17px;font-weight:700;letter-spacing:.5px}
+.sub{font-size:11px;color:#a0b4c8;margin-top:3px}
+.badge-preloaded{background:#16a085;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.container{max-width:1300px;margin:0 auto;padding:16px}
+.upload-zone{border:2px dashed #a0b4c8;border-radius:8px;padding:14px 20px;margin-bottom:14px;background:#fff;display:flex;align-items:center;gap:16px;flex-wrap:wrap;cursor:pointer}
+.upload-zone:hover{border-color:#2E86AB}
+.upload-zone input{display:none}
+.upload-label{color:#2E86AB;font-weight:700;cursor:pointer;font-size:13px}
+.upload-hint{color:#6a8099;font-size:11px;margin-top:2px}
+.btn{padding:6px 14px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap}
+.btn-reset{background:#e74c3c;color:#fff}
+.filter-bar{background:#fff;border-radius:8px;padding:10px 16px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.filter-bar label{font-size:11px;font-weight:700;color:#4a5568}
+.filter-bar select{border:1px solid #d0dce8;border-radius:4px;padding:4px 8px;font-size:12px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.card{background:#fff;border-radius:8px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.centre-name{font-weight:700;font-size:11px;padding:3px 8px;border-radius:4px;color:#fff;display:inline-block;margin-bottom:6px}
+.revenue{font-size:17px;font-weight:700;color:#1a2a3a;margin:4px 0 2px}
+.target-label{font-size:10px;color:#6a8099}
+.progress-bar-bg{background:#e8edf2;border-radius:4px;height:8px;margin:6px 0}
+.progress-bar-fill{height:8px;border-radius:4px}
+.ach-pct{font-size:13px;font-weight:700;margin:3px 0}
+.variance{font-size:11px;margin-bottom:4px}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.green-badge{background:#D5F5E3;color:#1e8449}
+.amber-badge{background:#FEF9E7;color:#b7770d}
+.red-badge{background:#FADBD8;color:#922b21}
+.section-title{font-size:14px;font-weight:700;color:#0D2137;margin:18px 0 10px;border-left:4px solid #2E86AB;padding-left:10px}
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
+.charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px}
+.chart-card{background:#fff;border-radius:8px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.chart-card h3{font-size:12px;font-weight:700;color:#1a2a3a;margin-bottom:8px;text-align:center}
+.chart-card canvas{max-height:210px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;font-size:12px}
+thead th{background:#1A3A5C;color:#fff;padding:8px 10px;text-align:center;font-size:11px;font-weight:700}
+thead th:first-child{text-align:left}
+tbody tr:nth-child(even) td{background:#EBF3FB}
+tbody tr:nth-child(odd) td{background:#fff}
+tbody td{padding:6px 10px;border-bottom:1px solid #e0eaf2;text-align:center}
+tbody td:first-child{text-align:left}
+.subtotal-row td{background:#d0dce8!important;font-weight:700}
+.total-row td{background:#0D2137!important;color:#fff!important;font-weight:700}
+.ach-green{background:#D5F5E3!important;color:#1e8449;font-weight:700}
+.ach-amber{background:#FEF9E7!important;color:#b7770d;font-weight:700}
+.ach-red{background:#FADBD8!important;color:#922b21;font-weight:700}
+.cbadge{display:inline-block;padding:2px 7px;border-radius:3px;color:#fff;font-size:11px;font-weight:700}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>SURE DIAGNOSTICS LIS DASHBOARD &mdash; MARCH 2026</h1>
+    <div class="sub" id="headerSub">Loading...</div>
+  </div>
+  <div id="preloadedBadge"></div>
+</header>
+<div class="container">
+  <div class="upload-zone" onclick="document.getElementById('csvUpload').click()">
+    <div>
+      <div class="upload-label">&#8593; Drop CSV here or click to upload</div>
+      <div class="upload-hint">Upload a LabsmartLIS cases CSV to regenerate all tables and charts</div>
+    </div>
+    <input type="file" id="csvUpload" accept=".csv" onchange="handleCSVUpload(event)">
+    <button class="btn btn-reset" onclick="event.stopPropagation();resetToPreloaded()">&#8635; Reset to Pre-loaded</button>
+  </div>
+  <div class="filter-bar">
+    <div><label>Month:&nbsp;</label><select id="filterMonth" onchange="applyFilters()"><option value="2026-03">Mar 2026</option></select></div>
+    <div><label>Year:&nbsp;</label><select id="filterYear" onchange="applyFilters()"><option value="2026">2026</option></select></div>
+    <div><label>Centres:&nbsp;</label>
+      <select id="filterCentre" multiple size="1" style="min-width:200px" onchange="applyFilters()">
+        <option value="OAUTH Ilesa Centre" selected>OAUTH Ilesa Centre</option>
+        <option value="Ilasa Main Centre, Lagos" selected>Ilasa Main Centre, Lagos</option>
+        <option value="Palm Avenue, Lagos" selected>Palm Avenue, Lagos</option>
+        <option value="Sure Ilesha, Osun" selected>Sure Ilesha, Osun</option>
+        <option value="Ikeja Lagos Centre" selected>Ikeja Lagos Centre</option>
+      </select>
+    </div>
+    <button class="btn" style="background:#2E86AB;color:#fff" onclick="selectAllCentres()">All Centres</button>
+  </div>
+  <div class="section-title">Target vs Actual &mdash; 2026-Q1</div>
+  <div class="cards-grid" id="cardsGrid"></div>
+  <div class="section-title">Centre Summary</div>
+  <div id="table1Container"></div>
+  <div class="section-title">Centre Performance</div>
+  <div class="charts-grid">
+    <div class="chart-card"><h3>Unique Patients by Centre</h3><canvas id="chartPatients"></canvas></div>
+    <div class="chart-card"><h3>Revenue by Centre</h3><canvas id="chartRevenue"></canvas></div>
+    <div class="chart-card"><h3>Total Investigations by Centre</h3><canvas id="chartInvestigations"></canvas></div>
+    <div class="chart-card"><h3>Unique Referrers by Centre</h3><canvas id="chartReferrers"></canvas></div>
+  </div>
+  <div class="section-title">Monthly Trends by Location</div>
+  <div class="charts-row">
+    <div class="chart-card"><h3>Patients per Month by Centre</h3><canvas id="chartMthPatients"></canvas></div>
+    <div class="chart-card"><h3>Investigations per Month by Centre</h3><canvas id="chartMthInvestigations"></canvas></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card"><h3>Referrers per Month by Centre</h3><canvas id="chartMthReferrers"></canvas></div>
+    <div class="chart-card"><h3>Revenue per Month by Centre</h3><canvas id="chartMthRevenueCentre"></canvas></div>
+  </div>
+  <div class="section-title">Monthly Trends by Case Type</div>
+  <div class="charts-row">
+    <div class="chart-card"><h3>Tests per Month by Case Type</h3><canvas id="chartMthTests"></canvas></div>
+    <div class="chart-card"><h3>Revenue per Month by Case Type</h3><canvas id="chartMthRevenueCaseType"></canvas></div>
+  </div>
+  <div class="section-title">Centre-Case Breakdown</div>
+  <div id="table2Container"></div>
+  <div class="section-title">Referrer Rebate</div>
+  <div id="table3Container"></div>
+</div>
+<script>
+// ── Pre-loaded Data ──────────────────────────────────────────────────────────
+const REPORT_MONTH = "2026-03";
+const REPORT_LABEL = "Mar 2026";
+const PRELOADED_TOTAL_ROWS = 1503;
+
+const PRELOADED_CENTRE_AGG = {
+  "OAUTH Ilesa Centre":       {uniquePatients:503, totalInv:549, pvtCount:0,   uniqueRef:1,  feeDue:0,      discount:0,      feePaidDue:3821850},
+  "Ilasa Main Centre, Lagos": {uniquePatients:277, totalInv:303, pvtCount:119, uniqueRef:74, feeDue:289000, discount:2300,   feePaidDue:2361700},
+  "Palm Avenue, Lagos":       {uniquePatients:134, totalInv:151, pvtCount:57,  uniqueRef:24, feeDue:275000, discount:0,      feePaidDue:1366500},
+  "Sure Ilesha, Osun":        {uniquePatients:433, totalInv:468, pvtCount:0,   uniqueRef:41, feeDue:481500, discount:384200, feePaidDue:4931050},
+  "Ikeja Lagos Centre":       {uniquePatients:27,  totalInv:32,  pvtCount:1,   uniqueRef:8,  feeDue:401000, discount:0,      feePaidDue:446000}
+};
+
+const PRELOADED_BREAKDOWN = {
+  "OAUTH Ilesa Centre":       {"Digital X-ray":{qty:330,feePaidDue:2568000},"USG":{qty:218,feePaidDue:1243850},"Lab":{qty:1,feePaidDue:10000}},
+  "Ilasa Main Centre, Lagos": {"Lab":{qty:130,feePaidDue:1209700},"USG":{qty:146,feePaidDue:838000},"Digital X-ray":{qty:23,feePaidDue:278000},"ECG":{qty:4,feePaidDue:36000}},
+  "Palm Avenue, Lagos":       {"Lab":{qty:104,feePaidDue:1085500},"USG":{qty:45,feePaidDue:262000},"Digital X-ray":{qty:1,feePaidDue:10000},"ECG":{qty:1,feePaidDue:9000}},
+  "Sure Ilesha, Osun":        {"Lab":{qty:196,feePaidDue:3206500},"USG":{qty:239,feePaidDue:1485850},"Digital X-ray":{qty:23,feePaidDue:163700},"ECG":{qty:10,feePaidDue:75000}},
+  "Ikeja Lagos Centre":       {"Lab":{qty:32,feePaidDue:446000}}
+};
+
+const PRELOADED_REBATE = {
+  "Ilasa Main Centre, Lagos": [
+    {referrer:"Mrs. AWOTUNDUN (GBAJA HOSP)",feePaid:215500,rate:"20%",rebate:43100},
+    {referrer:"Dr. AKINTOLA",feePaid:74500,rate:"20%",rebate:14900},
+    {referrer:"Dr. EBUKA SMC",feePaid:72000,rate:"20%",rebate:14400},
+    {referrer:"Miss. NURSE akinlawon",feePaid:71500,rate:"20%",rebate:14300},
+    {referrer:"Mrs. SULAIMON AJEABO",feePaid:50500,rate:"20%",rebate:10100},
+    {referrer:"Dr. THANNI GHM",feePaid:39000,rate:"20%",rebate:7800},
+    {referrer:"Nurse OJ",feePaid:38000,rate:"20%",rebate:7600},
+    {referrer:"Dr. ACCURATE DIAGNOSTICS",feePaid:36000,rate:"20%",rebate:7200},
+    {referrer:"Dr. ADENIRAN",feePaid:33200,rate:"20%",rebate:6640},
+    {referrer:"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",feePaid:31000,rate:"20%",rebate:6200},
+    {referrer:"Dr. BAYODE GHM (DOCTOR)",feePaid:27500,rate:"20%",rebate:5500},
+    {referrer:"A4H",feePaid:26000,rate:"20%",rebate:5200},
+    {referrer:"Mrs. CONFIDENCE PHARM",feePaid:23500,rate:"20%",rebate:4700},
+    {referrer:"Dr. OBI MODUPE OLUWA CLINIC",feePaid:22000,rate:"20%",rebate:4400},
+    {referrer:"Dr. MERCY ORABEL PHARM",feePaid:21500,rate:"20%",rebate:4300},
+    {referrer:"mama COMFORT ADEYERI",feePaid:21000,rate:"20%",rebate:4200},
+    {referrer:"NURSE ROSEMARY",feePaid:20000,rate:"20%",rebate:4000},
+    {referrer:"Dr. STAFF SOFIAT",feePaid:20000,rate:"20%",rebate:4000},
+    {referrer:"NURSE KHADIJAH",feePaid:20000,rate:"20%",rebate:4000},
+    {referrer:"Dr. OGUNJIMI ADDEY JIMMY CLINIC",feePaid:19000,rate:"20%",rebate:3800},
+    {referrer:"Dr. OLABISI MGH",feePaid:18000,rate:"20%",rebate:3600},
+    {referrer:"Dr. IJEOMA ILASA PHC",feePaid:17000,rate:"20%",rebate:3400},
+    {referrer:"Dr. GOZIE GHM (MCC)",feePaid:16500,rate:"20%",rebate:3300},
+    {referrer:"NURSE OLAYINKA ST KIZITO",feePaid:15000,rate:"20%",rebate:3000},
+    {referrer:"Dr. OKAFOR MGH",feePaid:15000,rate:"20%",rebate:3000},
+    {referrer:"NURSE YETUNDE",feePaid:15000,rate:"20%",rebate:3000},
+    {referrer:"Dr. GOZIE MGH",feePaid:13500,rate:"20%",rebate:2700},
+    {referrer:"Dr. ugochukwu anthony smc",feePaid:13000,rate:"20%",rebate:2600},
+    {referrer:"NURSE TEBUN ONAYEMI (AJEABO)",feePaid:13000,rate:"20%",rebate:2600},
+    {referrer:"MRS NURSE BISI",feePaid:12000,rate:"20%",rebate:2400},
+    {referrer:"Mrs. STAFF RASHIDAT OLAYIWOLA",feePaid:12000,rate:"20%",rebate:2400},
+    {referrer:"Dr. Oloyede",feePaid:11500,rate:"20%",rebate:2300},
+    {referrer:"Mrs. STAFF NKECHI (NURSE)",feePaid:11000,rate:"20%",rebate:2200},
+    {referrer:"Dr. Nurse Ibitoye",feePaid:10000,rate:"20%",rebate:2000},
+    {referrer:"Dr. OLAJIDE AJEABO",feePaid:10000,rate:"20%",rebate:2000},
+    {referrer:"Dr. NURSE Rebecca",feePaid:10000,rate:"20%",rebate:2000},
+    {referrer:"Dr. GBEMISOLA IDI ARABA PHC",feePaid:10000,rate:"20%",rebate:2000},
+    {referrer:"ALL DAY PHARMACY",feePaid:9000,rate:"20%",rebate:1800},
+    {referrer:"Dr. AKINYEMI ITIRE MCC",feePaid:9000,rate:"20%",rebate:1800},
+    {referrer:"Dr. Afunlehim O.H (DOCTOR)",feePaid:9000,rate:"20%",rebate:1800},
+    {referrer:"Dr. MICHAEL AYOOLA",feePaid:9000,rate:"20%",rebate:1800},
+    {referrer:"Dr. WAKWE MAY CLINIC",feePaid:9000,rate:"20%",rebate:1800},
+    {referrer:"OIC OLADAPO",feePaid:8000,rate:"20%",rebate:1600},
+    {referrer:"Dr. ADEYEYE",feePaid:8000,rate:"20%",rebate:1600},
+    {referrer:"Mrs. NURSE OGABI IDI-ARABA PHC",feePaid:8000,rate:"20%",rebate:1600},
+    {referrer:"NURSE OLUSI TOYIN",feePaid:8000,rate:"20%",rebate:1600},
+    {referrer:"MGH",feePaid:6000,rate:"20%",rebate:1200},
+    {referrer:"Dr. WOLE OGEDENGBE",feePaid:6000,rate:"20%",rebate:1200},
+    {referrer:"Dr. MARIAM ALI",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"CAC OKE IYE",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. ILASA PHC",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. SALAMAH",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. Babafashola",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"NURSE TITI",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. DEBORAH MAY CLINIC",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"NURSE ALABI AJEABO",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"may clinic",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"NURSE JOY",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Mrs. AKINLAWAN",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. NURSE ALLI",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"NURSE SEUN GANIU",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Mrs. SANNI SNM",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. MODUPEOLUWA HOSPITAL",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. AISHAT HOSIPTAL",feePaid:2500,rate:"20%",rebate:500},
+    {referrer:"Dr. UCHE (MD)",feePaid:2500,rate:"20%",rebate:500},
+    {referrer:"Dr. AANUOLUWA CLINIC",feePaid:2000,rate:"20%",rebate:400},
+    {referrer:"Mrs. YAKUBU STELLA",feePaid:2000,rate:"20%",rebate:400},
+    {referrer:"Dr. ABA",feePaid:1000,rate:"20%",rebate:200},
+    {referrer:"Dr. A.B PHARMACY",feePaid:1000,rate:"20%",rebate:200}
+  ],
+  "Palm Avenue, Lagos": [
+    {referrer:"Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",feePaid:149000,rate:"20%",rebate:29800},
+    {referrer:"PHARM DEBORAH MED AXIS",feePaid:61500,rate:"20%",rebate:12300},
+    {referrer:"Dr. OBI MODUPE OLUWA CLINIC",feePaid:56000,rate:"20%",rebate:11200},
+    {referrer:"MEVAN PHARM EMEKA",feePaid:51500,rate:"20%",rebate:10300},
+    {referrer:"Dr. JOSEPH OGUNSUYI",feePaid:49000,rate:"20%",rebate:9800},
+    {referrer:"Dr. ADEYEYE (MODUPEOLUWA HOSP)",feePaid:40500,rate:"20%",rebate:8100},
+    {referrer:"Dr. JOHN MGH",feePaid:30000,rate:"20%",rebate:6000},
+    {referrer:"Dr. Babafashola",feePaid:22000,rate:"20%",rebate:4400},
+    {referrer:"Dr. ADEBAYO",feePaid:16500,rate:"20%",rebate:3300},
+    {referrer:"Dr. AJAKAYE GHM",feePaid:15000,rate:"20%",rebate:3000},
+    {referrer:"Dr. Nurse kafayat",feePaid:15000,rate:"20%",rebate:3000},
+    {referrer:"Dr. JAMES JAMES",feePaid:14000,rate:"20%",rebate:2800},
+    {referrer:"Dr. NURSE JULIET AGUSI",feePaid:12500,rate:"20%",rebate:2500},
+    {referrer:"Dr. HEALTHY YOU PHARMACY",feePaid:10000,rate:"20%",rebate:2000},
+    {referrer:"Dr. Afunlehim O.H (DOCTOR)",feePaid:9000,rate:"20%",rebate:1800},
+    {referrer:"Dr. MODUPEOLUWA HOSPITAL",feePaid:8000,rate:"20%",rebate:1600},
+    {referrer:"Dr. General hospital Mushin",feePaid:7000,rate:"20%",rebate:1400},
+    {referrer:"Dr. Nurse Oku",feePaid:6500,rate:"20%",rebate:1300},
+    {referrer:"Dr. OKAFOR MGH",feePaid:6500,rate:"20%",rebate:1300},
+    {referrer:"Dr. OGUNSUYI J",feePaid:6000,rate:"20%",rebate:1200},
+    {referrer:"PHARM MONDAY(DENOK)",feePaid:4000,rate:"20%",rebate:800},
+    {referrer:"Dr. BAYODE GHM (DOCTOR)",feePaid:4000,rate:"20%",rebate:800}
+  ],
+  "Ikeja Lagos Centre": [
+    {referrer:"HOPE STONE",feePaid:21500,rate:"20%",rebate:4300},
+    {referrer:"Dr. PRIVATE P",feePaid:16000,rate:"20%",rebate:3200},
+    {referrer:"Dr. HEALTH PLUS ADDAS MALL",feePaid:3500,rate:"20%",rebate:700}
+  ]
+};
+
+const PRELOADED_MONTHLY = {
+  byCentre: {
+    "2026-03": {
+      "OAUTH Ilesa Centre":       {patients:503, invCount:549, referrers:1,  revenue:3821850},
+      "Ilasa Main Centre, Lagos": {patients:277, invCount:303, referrers:74, revenue:2361700},
+      "Palm Avenue, Lagos":       {patients:134, invCount:151, referrers:24, revenue:1366500},
+      "Sure Ilesha, Osun":        {patients:433, invCount:468, referrers:41, revenue:4931050},
+      "Ikeja Lagos Centre":       {patients:27,  invCount:32,  referrers:8,  revenue:446000}
+    }
+  },
+  byCaseType: {
+    "2026-03": {
+      "Digital X-ray": {qty:377, revenue:3019700},
+      "USG":           {qty:648, revenue:3829700},
+      "Lab":           {qty:463, revenue:5957700},
+      "ECG":           {qty:15,  revenue:120000}
+    }
+  }
+};
+
+const Q_TARGETS = {
+  "2026-Q1": {"OAUTH Ilesa Centre":5500000,"Ilasa Main Centre, Lagos":5000000,"Palm Avenue, Lagos":2500000,"Sure Ilesha, Osun":4250000,"Ikeja Lagos Centre":2000000},
+  "2026-Q2": {"OAUTH Ilesa Centre":7000000,"Ilasa Main Centre, Lagos":5700000,"Palm Avenue, Lagos":3000000,"Sure Ilesha, Osun":5250000,"Ikeja Lagos Centre":3000000},
+  "2026-Q3": {"OAUTH Ilesa Centre":7500000,"Ilasa Main Centre, Lagos":6500000,"Palm Avenue, Lagos":3750000,"Sure Ilesha, Osun":6100000,"Ikeja Lagos Centre":5250000},
+  "2026-Q4": {"OAUTH Ilesa Centre":8000000,"Ilasa Main Centre, Lagos":7000000,"Palm Avenue, Lagos":4000000,"Sure Ilesha, Osun":7000000,"Ikeja Lagos Centre":7250000}
+};
+const DAILY_TARGETS = {
+  "2026-Q1": {"OAUTH Ilesa Centre":220000,"Ilasa Main Centre, Lagos":200000,"Palm Avenue, Lagos":100000,"Sure Ilesha, Osun":170000,"Ikeja Lagos Centre":80000},
+  "2026-Q2": {"OAUTH Ilesa Centre":280000,"Ilasa Main Centre, Lagos":228000,"Palm Avenue, Lagos":120000,"Sure Ilesha, Osun":210000,"Ikeja Lagos Centre":120000}
+};
+
+const CENTRE_COLORS = {
+  "OAUTH Ilesa Centre":       "#C55A11",
+  "Ilasa Main Centre, Lagos": "#2E86AB",
+  "Palm Avenue, Lagos":       "#16A085",
+  "Sure Ilesha, Osun":        "#E67E22",
+  "Ikeja Lagos Centre":       "#8E44AD"
+};
+const CENTRES_ORDER = ["OAUTH Ilesa Centre","Ilasa Main Centre, Lagos","Palm Avenue, Lagos","Sure Ilesha, Osun","Ikeja Lagos Centre"];
+const REBATE_CENTRES = ["Ilasa Main Centre, Lagos","Palm Avenue, Lagos","Ikeja Lagos Centre"];
+const CASE_TYPE_COLORS = {"Lab":"#3498DB","USG":"#E74C3C","Digital X-ray":"#2ECC71","ECG":"#F39C12"};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let usePreloaded = true, allRows = [];
+const charts = {};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getQuarter(m) { return m.slice(0,4) + "-Q" + Math.ceil(parseInt(m.slice(5))/3); }
+function getTargets(months) {
+  if (!months || !months.length) return Q_TARGETS["2026-Q1"];
+  const mid = months[Math.floor(months.length/2)];
+  return Q_TARGETS[getQuarter(mid)] || Q_TARGETS["2026-Q1"];
+}
+function fmt(n) { return "\u20A6" + Math.round(n).toLocaleString(); }
+function fmtN(n) { return Math.round(n).toLocaleString(); }
+
+function getSelectedCentres() {
+  const sel = document.getElementById("filterCentre");
+  const v = Array.from(sel.options).filter(function(o){return o.selected;}).map(function(o){return o.value;});
+  return v.length ? v : CENTRES_ORDER;
+}
+function selectAllCentres() {
+  Array.from(document.getElementById("filterCentre").options).forEach(function(o){o.selected=true;});
+  applyFilters();
+}
+
+// ── CSV Upload ────────────────────────────────────────────────────────────────
+function handleCSVUpload(e) {
+  var f = e.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(ev) {
+    usePreloaded = false;
+    document.getElementById("preloadedBadge").innerHTML = "<span class='badge-preloaded' style='background:#e67e22'>CSV Uploaded</span>";
+    parseAndSetRows(ev.target.result);
+    applyFilters();
+  };
+  r.readAsText(f);
+}
+
+function resetToPreloaded() {
+  usePreloaded = true; allRows = [];
+  document.getElementById("csvUpload").value = "";
+  document.getElementById("preloadedBadge").innerHTML = "<span class='badge-preloaded'>&#10003; Showing Mar 2026 pre-loaded data</span>";
+  document.getElementById("filterMonth").innerHTML = "<option value='2026-03'>Mar 2026</option>";
+  document.getElementById("filterYear").innerHTML = "<option value='2026'>2026</option>";
+  applyFilters();
+}
+
+function parseCSVLine(line) {
+  var result=[], cur="", inQ=false;
+  for (var i=0; i<line.length; i++) {
+    var ch=line[i];
+    if (ch==='"') { inQ=!inQ; }
+    else if (ch===',' && !inQ) { result.push(cur); cur=""; }
+    else { cur+=ch; }
+  }
+  result.push(cur); return result;
+}
+
+function parseAndSetRows(csv) {
+  var lines = csv.trim().split("\n");
+  var hdrs = lines[0].split(",").map(function(h){return h.trim();});
+  allRows = [];
+  for (var i=1; i<lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var vals = parseCSVLine(lines[i]);
+    var row = {};
+    hdrs.forEach(function(h,idx){ row[h]=(vals[idx]||"").trim(); });
+    if (row["Canceled"] !== "true") allRows.push(row);
+  }
+  var months = Array.from(new Set(allRows.map(function(r){return (r["Date"]||"").slice(0,7);}))).sort();
+  var years = Array.from(new Set(months.map(function(m){return m.slice(0,4);}))).sort();
+  document.getElementById("filterMonth").innerHTML = months.map(function(m){return "<option value='"+m+"'>"+m+"</option>";}).join("");
+  document.getElementById("filterYear").innerHTML = years.map(function(y){return "<option value='"+y+"'>"+y+"</option>";}).join("");
+}
+
+// ── Compute from rows ─────────────────────────────────────────────────────────
+function computeFromRows(rows, centres) {
+  var num = function(v){ return parseFloat(v)||0; };
+  var fr = rows.filter(function(r){ return centres.indexOf(r["Collection centre"])>=0; });
+  var centreAgg = {};
+  fr.forEach(function(r) {
+    var c=r["Collection centre"];
+    if (!centreAgg[c]) centreAgg[c]={pat:new Set(),totalInv:0,pvt:0,refs:new Set(),feeDue:0,disc:0,fpd:0};
+    var a=centreAgg[c]; a.pat.add(r["Patient"]); a.totalInv++;
+    var ref=r["Referrer"]||"";
+    if (/pvt/i.test(ref)) a.pvt++; else a.refs.add(ref);
+    a.feeDue+=num(r["Fee Due"]); a.disc+=num(r["Discount"]);
+    a.fpd+=num(r["Fee Paid"])+num(r["Fee Due"]);
+  });
+  var summary={};
+  Object.entries(centreAgg).forEach(function(e) {
+    var c=e[0], a=e[1];
+    summary[c]={uniquePatients:a.pat.size,totalInv:a.totalInv,pvtCount:a.pvt,uniqueRef:a.refs.size,feeDue:a.feeDue,discount:a.disc,feePaidDue:a.fpd};
+  });
+  var breakdown={};
+  fr.forEach(function(r) {
+    var c=r["Collection centre"],ct=r["Case Type"];
+    if (!breakdown[c]) breakdown[c]={};
+    if (!breakdown[c][ct]) breakdown[c][ct]={qty:0,feePaidDue:0};
+    breakdown[c][ct].qty++; breakdown[c][ct].feePaidDue+=num(r["Fee Paid"])+num(r["Fee Due"]);
+  });
+  var rebate={};
+  REBATE_CENTRES.filter(function(c){return centres.indexOf(c)>=0;}).forEach(function(c) {
+    var rm={};
+    fr.filter(function(r){return r["Collection centre"]===c && !/pvt/i.test(r["Referrer"]||"");}).forEach(function(r) {
+      var ref=r["Referrer"]||"";
+      if (!rm[ref]) rm[ref]={feePaid:0,inv:[]};
+      rm[ref].feePaid+=num(r["Fee Paid"]); rm[ref].inv.push(r["Investigations"]||"");
+    });
+    rebate[c]=Object.entries(rm).map(function(e) {
+      var ref=e[0], d=e[1];
+      var hasOS=d.inv.some(function(inv){return /\bOS\b/i.test(inv);});
+      var rt=hasOS?0.1:0.2;
+      return {referrer:ref,feePaid:Math.round(d.feePaid),rate:hasOS?"10%":"20%",rebate:Math.round(d.feePaid*rt)};
+    }).filter(function(r){return r.feePaid>0;}).sort(function(a,b){return b.feePaid-a.feePaid;});
+  });
+  var byCentre={}, byCaseType={};
+  fr.forEach(function(r) {
+    var month=(r["Date"]||"").slice(0,7), c=r["Collection centre"], ct=r["Case Type"];
+    var ref=r["Referrer"]||"", rev=num(r["Fee Paid"])+num(r["Fee Due"]);
+    if (!byCentre[month]) byCentre[month]={};
+    if (!byCentre[month][c]) byCentre[month][c]={pat:new Set(),invCount:0,refs:new Set(),revenue:0};
+    byCentre[month][c].pat.add(r["Patient"]); byCentre[month][c].invCount++;
+    if (!/pvt/i.test(ref)) byCentre[month][c].refs.add(ref);
+    byCentre[month][c].revenue+=rev;
+    if (!byCaseType[month]) byCaseType[month]={};
+    if (!byCaseType[month][ct]) byCaseType[month][ct]={qty:0,revenue:0};
+    byCaseType[month][ct].qty++; byCaseType[month][ct].revenue+=rev;
+  });
+  var bc={}, bct={};
+  Object.entries(byCentre).forEach(function(e) {
+    var m=e[0],cm=e[1]; bc[m]={};
+    Object.entries(cm).forEach(function(e2){
+      var c=e2[0],d=e2[1]; bc[m][c]={patients:d.pat.size,invCount:d.invCount,referrers:d.refs.size,revenue:Math.round(d.revenue)};
+    });
+  });
+  Object.entries(byCaseType).forEach(function(e) {
+    var m=e[0],cm=e[1]; bct[m]={};
+    Object.entries(cm).forEach(function(e2){ var ct=e2[0],d=e2[1]; bct[m][ct]={qty:d.qty,revenue:Math.round(d.revenue)}; });
+  });
+  return {summary:summary,breakdown:breakdown,rebate:rebate,monthly:{byCentre:bc,byCaseType:bct}};
+}
+
+// ── Apply filters ─────────────────────────────────────────────────────────────
+function applyFilters() {
+  var sel = getSelectedCentres();
+  var data;
+  if (usePreloaded) {
+    var summary={}, breakdown={}, rebate={};
+    sel.forEach(function(c){ if(PRELOADED_CENTRE_AGG[c]) summary[c]=PRELOADED_CENTRE_AGG[c]; });
+    sel.forEach(function(c){ if(PRELOADED_BREAKDOWN[c]) breakdown[c]=PRELOADED_BREAKDOWN[c]; });
+    REBATE_CENTRES.filter(function(c){return sel.indexOf(c)>=0;}).forEach(function(c){ rebate[c]=PRELOADED_REBATE[c]; });
+    var bc={};
+    Object.entries(PRELOADED_MONTHLY.byCentre).forEach(function(e) {
+      var m=e[0],cm=e[1]; bc[m]={};
+      sel.forEach(function(c){ if(cm[c]) bc[m][c]=cm[c]; });
+    });
+    data={summary:summary,breakdown:breakdown,rebate:rebate,monthly:{byCentre:bc,byCaseType:PRELOADED_MONTHLY.byCaseType}};
+  } else {
+    var selM=document.getElementById("filterMonth").value;
+    var selY=document.getElementById("filterYear").value;
+    var fr=allRows.filter(function(r){
+      var d=r["Date"]||""; return d.startsWith(selY) && (!selM || d.slice(0,7)===selM);
+    });
+    data=computeFromRows(fr, sel);
+  }
+  renderAll(data, sel);
+}
+
+// ── Render all ────────────────────────────────────────────────────────────────
+function renderAll(data, sel) {
+  var months = Object.keys(data.monthly.byCentre).sort();
+  var targets = getTargets(months);
+  renderCards(data.summary, sel, targets);
+  renderTable1(data.summary, sel, targets);
+  renderTable2(data.breakdown, sel);
+  renderTable3(data.rebate, sel);
+  renderCharts(data, sel, months);
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+function renderCards(summary, sel, targets) {
+  var g = document.getElementById("cardsGrid"); g.innerHTML = "";
+  sel.forEach(function(c) {
+    var d=summary[c]; if(!d) return;
+    var t=targets[c]||1, ach=d.feePaidDue/t, pct=Math.min(100,ach*100).toFixed(1);
+    var col=ach>=1?"#16a085":ach>=0.7?"#e67e22":"#e74c3c";
+    var bc=ach>=1?"green-badge":ach>=0.7?"amber-badge":"red-badge";
+    var st=ach>=1?"&#10003; TARGET MET":ach>=0.7?"&#9650; CLOSE":"&#10007; BELOW TARGET";
+    var v=d.feePaidDue-t;
+    var vcol=v>=0?"#1e8449":"#922b21";
+    var vsign=v>=0?"+":"";
+    var div=document.createElement("div"); div.className="card";
+    div.innerHTML="<div class='centre-name' style='background:"+CENTRE_COLORS[c]+"'>"+c+"</div>"+
+      "<div class='revenue'>"+fmt(d.feePaidDue)+"</div>"+
+      "<div class='target-label'>of "+fmt(t)+" target</div>"+
+      "<div class='progress-bar-bg'><div class='progress-bar-fill' style='width:"+pct+"%;background:"+col+"'></div></div>"+
+      "<div class='ach-pct' style='color:"+col+"'>"+(ach*100).toFixed(1)+"%</div>"+
+      "<div class='variance' style='color:"+vcol+"'>"+vsign+fmt(v)+"</div>"+
+      "<span class='status-badge "+bc+"'>"+st+"</span>";
+    g.appendChild(div);
+  });
+}
+
+// ── Table 1: Centre Summary ───────────────────────────────────────────────────
+function renderTable1(summary, sel, targets) {
+  var h="<table><thead><tr>"+
+    "<th>Collection Centre</th><th>Unique Patients</th><th>Total Investigations</th>"+
+    "<th>Dr. PVT Cases</th><th>Unique Referrers</th><th>Fee Due (&#8358;)</th>"+
+    "<th>Discount (&#8358;)</th><th>Fee Paid+Due (&#8358;)</th><th>Q Target (&#8358;)</th><th>Achievement %</th>"+
+    "</tr></thead><tbody>";
+  var tP=0,tI=0,tPvt=0,tFD=0,tDc=0,tFPD=0,tT=0;
+  sel.forEach(function(c) {
+    var d=summary[c]; if(!d) return;
+    var t=targets[c]||0, ach=t?d.feePaidDue/t:0;
+    var ac=ach>=1?"ach-green":ach>=0.7?"ach-amber":"ach-red";
+    h+="<tr><td><span class='cbadge' style='background:"+CENTRE_COLORS[c]+"'>"+c+"</span></td>"+
+      "<td>"+fmtN(d.uniquePatients)+"</td><td>"+fmtN(d.totalInv)+"</td>"+
+      "<td>"+fmtN(d.pvtCount)+"</td><td>"+fmtN(d.uniqueRef)+"</td>"+
+      "<td>"+fmt(d.feeDue)+"</td><td>"+fmt(d.discount)+"</td>"+
+      "<td><strong>"+fmt(d.feePaidDue)+"</strong></td><td>"+fmt(t)+"</td>"+
+      "<td class='"+ac+"'>"+(ach*100).toFixed(1)+"%</td></tr>";
+    tP+=d.uniquePatients; tI+=d.totalInv; tPvt+=d.pvtCount;
+    tFD+=d.feeDue; tDc+=d.discount; tFPD+=d.feePaidDue; tT+=t;
+  });
+  var ta=tT?tFPD/tT:0, tc=ta>=1?"ach-green":ta>=0.7?"ach-amber":"ach-red";
+  h+="<tr class='total-row'><td>TOTAL</td><td>"+fmtN(tP)+"</td><td>"+fmtN(tI)+"</td>"+
+    "<td>"+fmtN(tPvt)+"</td><td>&mdash;</td>"+
+    "<td>"+fmt(tFD)+"</td><td>"+fmt(tDc)+"</td>"+
+    "<td>"+fmt(tFPD)+"</td><td>"+fmt(tT)+"</td>"+
+    "<td class='"+tc+"'>"+(ta*100).toFixed(1)+"%</td></tr>";
+  h+="</tbody></table>";
+  document.getElementById("table1Container").innerHTML=h;
+}
+
+// ── Table 2: Case Breakdown ───────────────────────────────────────────────────
+function renderTable2(breakdown, sel) {
+  var h="<table><thead><tr><th>Collection Centre</th><th>Case Type</th><th>Qty</th><th>Fee Paid+Due (&#8358;)</th></tr></thead><tbody>";
+  var gQ=0, gF=0;
+  sel.forEach(function(c) {
+    var bd=breakdown[c]; if(!bd) return;
+    var items=Object.entries(bd).sort(function(a,b){return b[1].feePaidDue-a[1].feePaidDue;});
+    var sQ=items.reduce(function(s,e){return s+e[1].qty;},0);
+    var sF=items.reduce(function(s,e){return s+e[1].feePaidDue;},0);
+    gQ+=sQ; gF+=sF;
+    items.forEach(function(e,j) {
+      var ct=e[0], v=e[1];
+      h+="<tr><td>"+(j===0?"<span class='cbadge' style='background:"+CENTRE_COLORS[c]+"'>"+c+"</span>":"")+"</td>"+
+        "<td>"+ct+"</td><td>"+fmtN(v.qty)+"</td><td>"+fmt(v.feePaidDue)+"</td></tr>";
+    });
+    h+="<tr class='subtotal-row'><td colspan='2'>"+c+" Subtotal</td><td>"+fmtN(sQ)+"</td><td>"+fmt(sF)+"</td></tr>";
+  });
+  h+="<tr class='total-row'><td colspan='2'>GRAND TOTAL</td><td>"+fmtN(gQ)+"</td><td>"+fmt(gF)+"</td></tr>";
+  h+="</tbody></table>";
+  document.getElementById("table2Container").innerHTML=h;
+}
+
+// ── Table 3: Rebate ───────────────────────────────────────────────────────────
+function renderTable3(rebate, sel) {
+  var h="<table><thead><tr><th>Collection Centre</th><th style='text-align:left'>Referrer</th><th>Fee Paid (&#8358;)</th><th>Rebate Rate</th><th>Rebate (&#8358;)</th></tr></thead><tbody>";
+  var gF=0, gR=0;
+  REBATE_CENTRES.filter(function(c){return sel.indexOf(c)>=0;}).forEach(function(c) {
+    var rows=rebate[c]; if(!rows||!rows.length) return;
+    var sF=rows.reduce(function(s,r){return s+r.feePaid;},0);
+    var sR=rows.reduce(function(s,r){return s+r.rebate;},0);
+    gF+=sF; gR+=sR;
+    rows.forEach(function(r,j) {
+      h+="<tr><td>"+(j===0?"<span class='cbadge' style='background:"+CENTRE_COLORS[c]+"'>"+c+"</span>":"")+"</td>"+
+        "<td style='text-align:left'>"+r.referrer+"</td><td>"+fmt(r.feePaid)+"</td>"+
+        "<td>"+r.rate+"</td><td>"+fmt(r.rebate)+"</td></tr>";
+    });
+    h+="<tr class='subtotal-row'><td colspan='2'>"+c+" Subtotal</td><td>"+fmt(sF)+"</td><td>&mdash;</td><td>"+fmt(sR)+"</td></tr>";
+  });
+  h+="<tr class='total-row'><td colspan='2'>GRAND TOTAL</td><td>"+fmt(gF)+"</td><td>&mdash;</td><td>"+fmt(gR)+"</td></tr>";
+  h+="</tbody></table>";
+  document.getElementById("table3Container").innerHTML=h;
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+function dChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function renderCharts(data, sel, months) {
+  var summary=data.summary, monthly=data.monthly;
+  var cLabs=sel.filter(function(c){return summary[c];});
+  var cCols=cLabs.map(function(c){return CENTRE_COLORS[c];});
+
+  // A1 Patients doughnut
+  dChart("chartPatients");
+  charts["chartPatients"]=new Chart(document.getElementById("chartPatients"),{
+    type:"doughnut",
+    data:{labels:cLabs, datasets:[{data:cLabs.map(function(c){return summary[c]?summary[c].uniquePatients:0;}), backgroundColor:cCols, borderWidth:2}]},
+    options:{plugins:{legend:{position:"bottom",labels:{font:{size:10}}}}}
+  });
+
+  // A2 Revenue doughnut
+  dChart("chartRevenue");
+  charts["chartRevenue"]=new Chart(document.getElementById("chartRevenue"),{
+    type:"doughnut",
+    data:{labels:cLabs, datasets:[{data:cLabs.map(function(c){return summary[c]?summary[c].feePaidDue:0;}), backgroundColor:cCols, borderWidth:2}]},
+    options:{plugins:{legend:{position:"bottom",labels:{font:{size:10}}},
+      tooltip:{callbacks:{label:function(ctx){return "\u20A6"+ctx.raw.toLocaleString();}}}}}
+  });
+
+  // A3 Investigations bar
+  dChart("chartInvestigations");
+  charts["chartInvestigations"]=new Chart(document.getElementById("chartInvestigations"),{
+    type:"bar",
+    data:{labels:cLabs.map(function(c){return c.split(",")[0];}), datasets:[{label:"Investigations", data:cLabs.map(function(c){return summary[c]?summary[c].totalInv:0;}), backgroundColor:cCols}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  // A4 Referrers bar
+  dChart("chartReferrers");
+  charts["chartReferrers"]=new Chart(document.getElementById("chartReferrers"),{
+    type:"bar",
+    data:{labels:cLabs.map(function(c){return c.split(",")[0];}), datasets:[{label:"Referrers", data:cLabs.map(function(c){return summary[c]?summary[c].uniqueRef:0;}), backgroundColor:cCols}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  // B: Monthly stacked by centre
+  function stackedCentre(id, field, isCur) {
+    dChart(id);
+    charts[id]=new Chart(document.getElementById(id),{
+      type:"bar",
+      data:{
+        labels:months,
+        datasets:cLabs.map(function(c){return {
+          label:c,
+          data:months.map(function(m){return monthly.byCentre[m]&&monthly.byCentre[m][c]?monthly.byCentre[m][c][field]:0;}),
+          backgroundColor:CENTRE_COLORS[c],
+          stack:"stack"
+        };})
+      },
+      options:{
+        plugins:{legend:{position:"bottom",labels:{font:{size:9}}},
+          tooltip:{callbacks:isCur?{label:function(ctx){return ctx.dataset.label+": \u20A6"+ctx.raw.toLocaleString();}}:{}}},
+        scales:{x:{stacked:true}, y:{stacked:true, beginAtZero:true,
+          ticks:isCur?{callback:function(v){return "\u20A6"+v.toLocaleString();}}:{}}}
+      }
+    });
+  }
+  stackedCentre("chartMthPatients","patients",false);
+  stackedCentre("chartMthInvestigations","invCount",false);
+  stackedCentre("chartMthReferrers","referrers",false);
+  stackedCentre("chartMthRevenueCentre","revenue",true);
+
+  // C: Monthly stacked by case type
+  var bct=monthly.byCaseType;
+  var caseTypes=Array.from(new Set(Object.values(bct).reduce(function(a,m){return a.concat(Object.keys(m));},[])));
+
+  function stackedCT(id, field, isCur) {
+    dChart(id);
+    charts[id]=new Chart(document.getElementById(id),{
+      type:"bar",
+      data:{
+        labels:months,
+        datasets:caseTypes.map(function(ct){return {
+          label:ct,
+          data:months.map(function(m){return bct[m]&&bct[m][ct]?bct[m][ct][field]:0;}),
+          backgroundColor:CASE_TYPE_COLORS[ct]||"#95a5a6",
+          stack:"stack"
+        };})
+      },
+      options:{
+        plugins:{legend:{position:"bottom",labels:{font:{size:9}}},
+          tooltip:{callbacks:isCur?{label:function(ctx){return ctx.dataset.label+": \u20A6"+ctx.raw.toLocaleString();}}:{}}},
+        scales:{x:{stacked:true}, y:{stacked:true, beginAtZero:true,
+          ticks:isCur?{callback:function(v){return "\u20A6"+v.toLocaleString();}}:{}}}
+      }
+    });
+  }
+  stackedCT("chartMthTests","qty",false);
+  stackedCT("chartMthRevenueCaseType","revenue",true);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("headerSub").textContent =
+    PRELOADED_TOTAL_ROWS.toLocaleString() + " active records \u00B7 Generated " +
+    new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  document.getElementById("preloadedBadge").innerHTML =
+    "<span class='badge-preloaded'>&#10003; Showing Mar 2026 pre-loaded data</span>";
+  applyFilters();
+});
+</script>
+</body>
+</html>

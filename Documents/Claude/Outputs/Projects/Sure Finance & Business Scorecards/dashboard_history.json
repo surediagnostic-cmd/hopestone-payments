@@ -1,0 +1,3280 @@
+{
+  "weeks": {
+    "2026-03-23": {
+      "week_label": "Mon 23 \u2013 Sun 29 Mar 2026",
+      "year": 2026,
+      "month": 3,
+      "quarter": "Q1 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-03-23",
+        "2026-03-24",
+        "2026-03-25",
+        "2026-03-26",
+        "2026-03-27",
+        "2026-03-28",
+        "2026-03-29"
+      ],
+      "date_labels": [
+        "Mon 23 Mar",
+        "Tue 24 Mar",
+        "Wed 25 Mar",
+        "Thu 26 Mar",
+        "Fri 27 Mar",
+        "Sat 28 Mar",
+        "Sun 29 Mar"
+      ],
+      "summary": {
+        "total_investigations": 415,
+        "total_cases": 344,
+        "total_patients": 340,
+        "total_unique_referrers": 50,
+        "total_revenue": 2527900,
+        "total_paid": 2460900,
+        "total_due": 13000,
+        "total_discount": 0,
+        "cancelled": 6,
+        "collection_rate": 97.3
+      },
+      "daily": [
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 15,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 56000,
+          "paid": 53500,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 29,
+          "cases": 27,
+          "patients": 27,
+          "revenue": 179250,
+          "paid": 179250,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 45500,
+          "paid": 40000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-23",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 48,
+          "cases": 40,
+          "patients": 40,
+          "revenue": 317850,
+          "paid": 316050,
+          "due": 0,
+          "unique_referrers": 12
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 14,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 72500,
+          "paid": 66000,
+          "due": 6500,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 32,
+          "cases": 30,
+          "patients": 30,
+          "revenue": 205500,
+          "paid": 205500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 3,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 11000,
+          "paid": 11000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-24",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 22,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 128950,
+          "paid": 128750,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 5,
+          "cases": 5,
+          "patients": 5,
+          "revenue": 18000,
+          "paid": 18000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 24,
+          "cases": 22,
+          "patients": 22,
+          "revenue": 148500,
+          "paid": 148500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 43500,
+          "paid": 43500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-25",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 28,
+          "cases": 23,
+          "patients": 23,
+          "revenue": 179700,
+          "paid": 179500,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 58500,
+          "paid": 58500,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 20,
+          "cases": 19,
+          "patients": 19,
+          "revenue": 130500,
+          "paid": 130500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 36500,
+          "paid": 36500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-26",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 22,
+          "cases": 18,
+          "patients": 18,
+          "revenue": 143050,
+          "paid": 142850,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 6,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 36500,
+          "paid": 30000,
+          "due": 6500,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 25,
+          "cases": 17,
+          "patients": 17,
+          "revenue": 122500,
+          "paid": 104500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 7,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 70000,
+          "paid": 70000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-27",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 43,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 221100,
+          "paid": 195700,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 19000,
+          "paid": 19000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 12,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 69900,
+          "paid": 69900,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 2,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 14000,
+          "paid": 14000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-28",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 16,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 121100,
+          "paid": 120900,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-03-29",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 13,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 79000,
+          "paid": 79000,
+          "due": 0,
+          "unique_referrers": 1
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 54,
+          "cases": 49,
+          "patients": 49,
+          "revenue": 260500,
+          "paid": 245000,
+          "due": 13000,
+          "unique_referrers": 13
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 155,
+          "cases": 139,
+          "patients": 139,
+          "revenue": 935150,
+          "paid": 917150,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 27,
+          "cases": 18,
+          "patients": 18,
+          "revenue": 220500,
+          "paid": 215000,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 179,
+          "cases": 138,
+          "patients": 138,
+          "revenue": 1111750,
+          "paid": 1083750,
+          "due": 0,
+          "unique_referrers": 31
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 137,
+          "investigations": 137,
+          "revenue": 917150
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 66,
+          "investigations": 66,
+          "revenue": 411550
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 19,
+          "investigations": 19,
+          "revenue": 72000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 9,
+          "investigations": 9,
+          "revenue": 78100
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 9,
+          "investigations": 9,
+          "revenue": 79500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA",
+          "cases": 8,
+          "investigations": 8,
+          "revenue": 62500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. AWOTUNDUN (GBAJA HOSP)",
+          "cases": 7,
+          "investigations": 7,
+          "revenue": 62000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. LIVING PETALS MEDICAL CENTER ILESA",
+          "cases": 6,
+          "investigations": 6,
+          "revenue": 32000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 34100
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 39000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 50500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 24000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MAYFIELD MEDICAL CLINIC",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 71700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GENERAL HOSPITAL ILESA",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 32350
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 53700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DIVINE INTERNATIONAL HEALTH",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 50400
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 38000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 11500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT HOSPITAL ILESA",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 32800
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT LIFE KOMOLAFE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 13000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 14300
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. STAFF RASHIDAT OLAYIWOLA (NURSE)",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 18000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. JOHN MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 30000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HABIBULAHI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15200
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. WOLE OGEDENGBE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "NURSE JOY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. NURSE OGABI IDI-ARA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLABISI HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 8500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OMOLADE HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ROYAL SPECIALIST",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MERCY HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OASIS MEDICAL CENTRE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADEOLA SPECIALIST",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BLESSING HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. FIRST CHOICE HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GRACE HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. ODALELE HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. SUNMOLA SPECIALIST",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. MUYIBI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OBAFEMI AWOLOWO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADEYEMI MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ST. JOHN HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORY HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLUWOLE FAMILY CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PATHWAY HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PEACE HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4200
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. WELLNESS CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADESANYA FAMILY CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "investigations": 415,
+          "cases": 344,
+          "patients": 344,
+          "revenue": 2527900,
+          "paid": 2460900
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 200000,
+          "weekly": 1400000,
+          "monthly": 5000000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 220000,
+          "weekly": 1540000,
+          "monthly": 5500000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 100000,
+          "weekly": 700000,
+          "monthly": 2500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 170000,
+          "weekly": 1190000,
+          "monthly": 4250000
+        }
+      }
+    },
+    "2026-03-30": {
+      "week_label": "Mon 30 \u2013 Sun 05 Apr 2026",
+      "year": 2026,
+      "month": 3,
+      "quarter": "Q1 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-03-30",
+        "2026-03-31",
+        "2026-04-01",
+        "2026-04-02",
+        "2026-04-03",
+        "2026-04-04",
+        "2026-04-05"
+      ],
+      "date_labels": [
+        "Mon 30 Mar",
+        "Tue 31 Mar",
+        "Wed 01 Apr",
+        "Thu 02 Apr",
+        "Fri 03 Apr",
+        "Sat 04 Apr",
+        "Sun 05 Apr"
+      ],
+      "summary": {
+        "total_investigations": 360,
+        "total_cases": 294,
+        "total_patients": 285,
+        "total_unique_referrers": 47,
+        "total_revenue": 2303450,
+        "total_paid": 2295150,
+        "total_due": 7500,
+        "total_discount": 0,
+        "cancelled": 0,
+        "collection_rate": 99.6
+      },
+      "daily": [
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 32,
+          "cases": 28,
+          "patients": 28,
+          "revenue": 202500,
+          "paid": 202500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 26,
+          "cases": 22,
+          "patients": 21,
+          "revenue": 205500,
+          "paid": 205500,
+          "due": 0,
+          "unique_referrers": 10
+        },
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 26,
+          "cases": 17,
+          "patients": 16,
+          "revenue": 193400,
+          "paid": 193000,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-03-30",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 4,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 14500,
+          "paid": 14500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 30,
+          "cases": 29,
+          "patients": 29,
+          "revenue": 184500,
+          "paid": 184500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 33,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 182100,
+          "paid": 181700,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 6,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 24000,
+          "paid": 24000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-03-31",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 3,
+          "patients": 2,
+          "revenue": 45000,
+          "paid": 45000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 14,
+          "cases": 13,
+          "patients": 13,
+          "revenue": 93300,
+          "paid": 93300,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 18,
+          "cases": 15,
+          "patients": 14,
+          "revenue": 105500,
+          "paid": 105500,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 28,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 167350,
+          "paid": 167350,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-01",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 6,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 24000,
+          "paid": 24000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 22,
+          "cases": 16,
+          "patients": 14,
+          "revenue": 178000,
+          "paid": 178000,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 9,
+          "cases": 7,
+          "patients": 6,
+          "revenue": 118500,
+          "paid": 118500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 6,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 23750,
+          "paid": 23750,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-02",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 24,
+          "cases": 21,
+          "patients": 21,
+          "revenue": 146850,
+          "paid": 145850,
+          "due": 1000,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 6,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 34700,
+          "paid": 34700,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 12,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 73500,
+          "paid": 73500,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 4,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 25000,
+          "paid": 18500,
+          "due": 6500,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-03",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 16,
+          "cases": 13,
+          "patients": 13,
+          "revenue": 94500,
+          "paid": 94500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 6,
+          "patients": 6,
+          "revenue": 61000,
+          "paid": 61000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 5,
+          "cases": 5,
+          "patients": 3,
+          "revenue": 14500,
+          "paid": 14500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 9,
+          "cases": 9,
+          "patients": 9,
+          "revenue": 51000,
+          "paid": 51000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-04",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 3500,
+          "paid": 3500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-05",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 5,
+          "cases": 4,
+          "patients": 4,
+          "revenue": 31500,
+          "paid": 31500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-05",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 5500,
+          "paid": 5500,
+          "due": 0,
+          "unique_referrers": 1
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 144,
+          "cases": 129,
+          "patients": 129,
+          "revenue": 878200,
+          "paid": 877200,
+          "due": 1000,
+          "unique_referrers": 1
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 95,
+          "cases": 71,
+          "patients": 67,
+          "revenue": 647500,
+          "paid": 647500,
+          "due": 0,
+          "unique_referrers": 23
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 87,
+          "cases": 69,
+          "patients": 68,
+          "revenue": 536250,
+          "paid": 535450,
+          "due": 0,
+          "unique_referrers": 19
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 34,
+          "cases": 25,
+          "patients": 21,
+          "revenue": 241500,
+          "paid": 235000,
+          "due": 6500,
+          "unique_referrers": 8
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 129,
+          "investigations": 144,
+          "revenue": 878200
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 36,
+          "investigations": 56,
+          "revenue": 307000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS",
+          "cases": 26,
+          "investigations": 28,
+          "revenue": 205350
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT",
+          "cases": 14,
+          "investigations": 17,
+          "revenue": 95500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA",
+          "cases": 11,
+          "investigations": 13,
+          "revenue": 49200
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. AWOTUNDUN (GBAJA HOSP)",
+          "cases": 6,
+          "investigations": 6,
+          "revenue": 62000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MAYFIELD MEDICAL CLINIC",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 32850
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 5,
+          "investigations": 7,
+          "revenue": 53000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE",
+          "cases": 4,
+          "investigations": 17,
+          "revenue": 96500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 4,
+          "investigations": 5,
+          "revenue": 55000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE GHM (MCC)",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 42000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 3,
+          "investigations": 4,
+          "revenue": 28950
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 20350
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Nurse OJ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 19000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OKOTORE,GENERAL HOSPITAL,",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT LIFE KOMOLAFE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 10500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELEYE MCC ITIRE",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 6500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HABIBULAHI",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 13500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ugochukwu anthony smc",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 19000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "NURSE OLAYINKA ST KIZITO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 11000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ACCURATE DIAGNOSTICS",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. BAYODE GHM (DOCTOR)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BEJIDE,IYABO IYERE MATERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BAYODE GHM (DOCTOR)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "OIC OLADAPO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLUWATOFUNMI HOSPITAL,",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AJEABO  ANC",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 8500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "AYANBODE AJEABO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OASIS HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Astramad",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 11500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADEBAYO",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 8500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. QUDUS UNIQUE CARE HOSPITAL",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 22000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OLUWATAYO MATRON (CAC OKE IYE)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELAKUN",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. Nurse Ibitoye",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. OKAFOR  MGH",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 57000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7150
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ANTO HOSPITAL,",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTOLA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DIVINE CLINIC OKE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. THANNI  GHM",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BELLO OSAGIE ILASA PHC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. FEMI O.O",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "cases": 146,
+          "investigations": 181,
+          "patients": 138,
+          "revenue": 1216350,
+          "paid": 1209850
+        },
+        {
+          "Agent": "DR. OLANIYI",
+          "cases": 39,
+          "investigations": 41,
+          "patients": 39,
+          "revenue": 233950,
+          "paid": 233950
+        },
+        {
+          "Agent": "RAD OGUNDORO",
+          "cases": 31,
+          "investigations": 38,
+          "patients": 31,
+          "revenue": 239150,
+          "paid": 238150
+        },
+        {
+          "Agent": "MISS VIVIAN",
+          "cases": 20,
+          "investigations": 37,
+          "patients": 19,
+          "revenue": 221800,
+          "paid": 221000
+        },
+        {
+          "Agent": "RAD. WILSON",
+          "cases": 29,
+          "investigations": 34,
+          "patients": 29,
+          "revenue": 224500,
+          "paid": 224500
+        },
+        {
+          "Agent": "DR. ADEYERA",
+          "cases": 27,
+          "investigations": 27,
+          "patients": 27,
+          "revenue": 152700,
+          "paid": 152700
+        },
+        {
+          "Agent": "MRS ADERELE",
+          "cases": 2,
+          "investigations": 2,
+          "patients": 2,
+          "revenue": 15000,
+          "paid": 15000
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 200000,
+          "weekly": 1400000,
+          "monthly": 5000000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 220000,
+          "weekly": 1540000,
+          "monthly": 5500000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 100000,
+          "weekly": 700000,
+          "monthly": 2500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 170000,
+          "weekly": 1190000,
+          "monthly": 4250000
+        }
+      }
+    },
+    "2026-04-20": {
+      "week_label": "Mon 20 \u2013 Sun 26 Apr 2026",
+      "year": 2026,
+      "month": 4,
+      "quarter": "Q2 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-04-20",
+        "2026-04-21",
+        "2026-04-22",
+        "2026-04-23",
+        "2026-04-24",
+        "2026-04-25",
+        "2026-04-26"
+      ],
+      "date_labels": [
+        "Mon 20 Apr",
+        "Tue 21 Apr",
+        "Wed 22 Apr",
+        "Thu 23 Apr",
+        "Fri 24 Apr",
+        "Sat 25 Apr",
+        "Sun 26 Apr"
+      ],
+      "summary": {
+        "total_investigations": 475,
+        "total_cases": 358,
+        "total_patients": 351,
+        "total_unique_referrers": 49,
+        "total_revenue": 3030750,
+        "total_paid": 2849950,
+        "total_due": 104000,
+        "total_discount": 76800,
+        "cancelled": 2,
+        "collection_rate": 94.0
+      },
+      "daily": [
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 102000,
+          "paid": 95500,
+          "due": 6500,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 33,
+          "cases": 32,
+          "patients": 32,
+          "revenue": 212500,
+          "paid": 212500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 7,
+          "cases": 5,
+          "patients": 3,
+          "revenue": 43000,
+          "paid": 43000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-20",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 96,
+          "cases": 54,
+          "patients": 54,
+          "revenue": 546450,
+          "paid": 396650,
+          "due": 78000,
+          "unique_referrers": 13
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 19,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 129500,
+          "paid": 123000,
+          "due": 6500,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 22,
+          "cases": 22,
+          "patients": 22,
+          "revenue": 152350,
+          "paid": 152350,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 11,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 120500,
+          "paid": 120500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-21",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 13,
+          "cases": 13,
+          "patients": 13,
+          "revenue": 71900,
+          "paid": 71900,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 12,
+          "cases": 8,
+          "patients": 6,
+          "revenue": 72000,
+          "paid": 65500,
+          "due": 6500,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 32,
+          "cases": 29,
+          "patients": 29,
+          "revenue": 200400,
+          "paid": 200400,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 14,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 52500,
+          "paid": 52500,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-22",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 39,
+          "cases": 25,
+          "patients": 25,
+          "revenue": 181600,
+          "paid": 180000,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 11,
+          "cases": 5,
+          "patients": 5,
+          "revenue": 66500,
+          "paid": 66500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 31,
+          "cases": 26,
+          "patients": 26,
+          "revenue": 234500,
+          "paid": 234500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 8,
+          "cases": 7,
+          "patients": 6,
+          "revenue": 37000,
+          "paid": 37000,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-23",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 16,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 106300,
+          "paid": 104100,
+          "due": 0,
+          "unique_referrers": 7
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 15,
+          "cases": 12,
+          "patients": 10,
+          "revenue": 106500,
+          "paid": 100000,
+          "due": 6500,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 21,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 125850,
+          "paid": 125850,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 4,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 76000,
+          "paid": 76000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-24",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 21,
+          "cases": 17,
+          "patients": 17,
+          "revenue": 149000,
+          "paid": 147800,
+          "due": 0,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-25",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 10,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 59000,
+          "paid": 59000,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-25",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 5,
+          "cases": 5,
+          "patients": 5,
+          "revenue": 35900,
+          "paid": 35900,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-25",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 19000,
+          "paid": 19000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-26",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 18,
+          "cases": 14,
+          "patients": 14,
+          "revenue": 113000,
+          "paid": 113000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-26",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 17500,
+          "paid": 17500,
+          "due": 0,
+          "unique_referrers": 2
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 78,
+          "cases": 54,
+          "patients": 50,
+          "revenue": 535500,
+          "paid": 509500,
+          "due": 26000,
+          "unique_referrers": 17
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 162,
+          "cases": 148,
+          "patients": 148,
+          "revenue": 1074500,
+          "paid": 1074500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 44,
+          "cases": 29,
+          "patients": 26,
+          "revenue": 329000,
+          "paid": 329000,
+          "due": 0,
+          "unique_referrers": 10
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 191,
+          "cases": 127,
+          "patients": 127,
+          "revenue": 1091750,
+          "paid": 936950,
+          "due": 78000,
+          "unique_referrers": 25
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 24,
+          "investigations": 37,
+          "revenue": 203000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. kadri AJEABO",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 51000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 26000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " Nurse OJ",
+          "cases": 3,
+          "investigations": 6,
+          "revenue": 28000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " NURSE FATIMA",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 25000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 20000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BELLO OSAGIE ILASA PHC",
+          "cases": 2,
+          "investigations": 3,
+          "revenue": 32000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. IJEOMA PALM AVE PHC",
+          "cases": 2,
+          "investigations": 3,
+          "revenue": 31000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. NURSE OPEYEMI BLESSING",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " NURSE ROSEMARY",
+          "cases": 1,
+          "investigations": 6,
+          "revenue": 35500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTOLA ",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 22000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. MONELIN SMC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OBI MODUPE OLUWA CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 25000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. Segun Oyatoki",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. THANNI  GHM",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ugochukwu anthony smc",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 147,
+          "investigations": 161,
+          "revenue": 1069500
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 14,
+          "investigations": 23,
+          "revenue": 208500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. IJEOMA PALM AVE PHC",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 32500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 3,
+          "investigations": 6,
+          "revenue": 19000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 2,
+          "investigations": 3,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": " MGH ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AMAMASI SENTINEL HOSPITAL MUSHIN ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. IJEOMA SENTINEL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. OLIYIDE GH",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 17000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Mrs. TOPFAM 28 OFADA MUSHIN",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 60,
+          "investigations": 61,
+          "revenue": 357750
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 17,
+          "investigations": 46,
+          "revenue": 222400
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA ",
+          "cases": 13,
+          "investigations": 18,
+          "revenue": 95200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE ",
+          "cases": 7,
+          "investigations": 15,
+          "revenue": 82300
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT HOSPITAL ILESA",
+          "cases": 3,
+          "investigations": 9,
+          "revenue": 56700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU ",
+          "cases": 3,
+          "investigations": 4,
+          "revenue": 34000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr.  MATRON,OKOTORE GENERAL HOSPITAL,ILESA ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 11000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. AFOLABI GENERAL HOSPITAL,ILESA",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 2,
+          "investigations": 4,
+          "revenue": 18800
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OASIS HOSPITAL ",
+          "cases": 2,
+          "investigations": 5,
+          "revenue": 48700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PHARMA EMMANUEL A .O,HEALTH CARE PHARMACY ILESA",
+          "cases": 2,
+          "investigations": 4,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ABA ",
+          "cases": 1,
+          "investigations": 8,
+          "revenue": 55200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BEJIDE,IYABO IYERE MATERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DE-SHALOM  PHARMACY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GLORY MEDICAL CENRE ,ILESA ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ILERI-OLUWA MARTERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. KOMOLAFE  OLUROTIMI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MESSIAH CLINIC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLAOLUWANI MATERNITY",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 7500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OLAYINKA O T",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. STANDARD HOSPITAL,",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "investigations": 201,
+          "cases": 120,
+          "patients": 113,
+          "revenue": 1310600,
+          "paid": 1138000
+        },
+        {
+          "Agent": "DR. OLORUNMO",
+          "investigations": 95,
+          "cases": 94,
+          "patients": 94,
+          "revenue": 556200,
+          "paid": 556200
+        },
+        {
+          "Agent": "MISS VIVIAN",
+          "investigations": 47,
+          "cases": 24,
+          "patients": 24,
+          "revenue": 259700,
+          "paid": 251500
+        },
+        {
+          "Agent": "DR.ODEWUMI",
+          "investigations": 38,
+          "cases": 38,
+          "patients": 38,
+          "revenue": 225650,
+          "paid": 225650
+        },
+        {
+          "Agent": "RAD. OGUNDORO",
+          "investigations": 38,
+          "cases": 32,
+          "patients": 32,
+          "revenue": 305500,
+          "paid": 305500
+        },
+        {
+          "Agent": "RAD. WILLSON",
+          "investigations": 31,
+          "cases": 27,
+          "patients": 27,
+          "revenue": 205100,
+          "paid": 205100
+        },
+        {
+          "Agent": "RAD. WILSON",
+          "investigations": 23,
+          "cases": 21,
+          "patients": 21,
+          "revenue": 153000,
+          "paid": 153000
+        },
+        {
+          "Agent": "MRS ADERELE",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 7500,
+          "paid": 7500
+        },
+        {
+          "Agent": "RANTI MARKETER",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 7500,
+          "paid": 7500
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 244000,
+          "weekly": 1708000,
+          "monthly": 6100000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 280000,
+          "weekly": 1960000,
+          "monthly": 7000000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 140000,
+          "weekly": 980000,
+          "monthly": 3500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 240000,
+          "weekly": 1680000,
+          "monthly": 6000000
+        }
+      }
+    },
+    "2026-04-13": {
+      "week_label": "Mon 13 \u2013 Sun 19 Apr 2026",
+      "year": 2026,
+      "month": 4,
+      "quarter": "Q2 2026",
+      "num_days": 7,
+      "centres": [
+        "Ilasa Main Centre, Lagos",
+        "OAUTH Ilesa Centre",
+        "Palm Avenue, Lagos",
+        "Sure Ilesha, Osun"
+      ],
+      "dates": [
+        "2026-04-13",
+        "2026-04-14",
+        "2026-04-15",
+        "2026-04-16",
+        "2026-04-17",
+        "2026-04-18",
+        "2026-04-19"
+      ],
+      "date_labels": [
+        "Mon 13 Apr",
+        "Tue 14 Apr",
+        "Wed 15 Apr",
+        "Thu 16 Apr",
+        "Fri 17 Apr",
+        "Sat 18 Apr",
+        "Sun 19 Apr"
+      ],
+      "summary": {
+        "total_investigations": 463,
+        "total_cases": 369,
+        "total_patients": 365,
+        "total_unique_referrers": 50,
+        "total_revenue": 2771950,
+        "total_paid": 2678850,
+        "total_due": 42500,
+        "total_discount": 50600,
+        "cancelled": 4,
+        "collection_rate": 96.6
+      },
+      "daily": [
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 21,
+          "cases": 12,
+          "patients": 11,
+          "revenue": 157500,
+          "paid": 151000,
+          "due": 6500,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 25,
+          "cases": 23,
+          "patients": 23,
+          "revenue": 162000,
+          "paid": 162000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 12,
+          "cases": 5,
+          "patients": 4,
+          "revenue": 73500,
+          "paid": 73500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-13",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 35,
+          "cases": 24,
+          "patients": 24,
+          "revenue": 241450,
+          "paid": 239850,
+          "due": 0,
+          "unique_referrers": 11
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 16,
+          "cases": 16,
+          "patients": 15,
+          "revenue": 112000,
+          "paid": 105500,
+          "due": 6500,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 27,
+          "cases": 24,
+          "patients": 24,
+          "revenue": 172500,
+          "paid": 172500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 19,
+          "cases": 9,
+          "patients": 8,
+          "revenue": 95000,
+          "paid": 95000,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-14",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 41,
+          "cases": 27,
+          "patients": 27,
+          "revenue": 227600,
+          "paid": 204800,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 10,
+          "cases": 7,
+          "patients": 7,
+          "revenue": 60500,
+          "paid": 54000,
+          "due": 6500,
+          "unique_referrers": 6
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 28,
+          "cases": 22,
+          "patients": 22,
+          "revenue": 170000,
+          "paid": 170000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 2000,
+          "paid": 2000,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-15",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 36,
+          "cases": 28,
+          "patients": 28,
+          "revenue": 246300,
+          "paid": 239100,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 8,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 47000,
+          "paid": 34000,
+          "due": 13000,
+          "unique_referrers": 4
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 21,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 132900,
+          "paid": 132900,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 2,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 18000,
+          "paid": 18000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-16",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 32,
+          "cases": 26,
+          "patients": 26,
+          "revenue": 128500,
+          "paid": 121000,
+          "due": 0,
+          "unique_referrers": 8
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 8,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 30000,
+          "paid": 30000,
+          "due": 0,
+          "unique_referrers": 4
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 23,
+          "cases": 20,
+          "patients": 20,
+          "revenue": 134500,
+          "paid": 134500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 5,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 31500,
+          "paid": 31500,
+          "due": 0,
+          "unique_referrers": 3
+        },
+        {
+          "Date": "2026-04-17",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 40,
+          "cases": 39,
+          "patients": 39,
+          "revenue": 189600,
+          "paid": 178100,
+          "due": 0,
+          "unique_referrers": 5
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 10,
+          "cases": 8,
+          "patients": 8,
+          "revenue": 80500,
+          "paid": 70500,
+          "due": 10000,
+          "unique_referrers": 4
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 14,
+          "cases": 12,
+          "patients": 12,
+          "revenue": 91500,
+          "paid": 91500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 7,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 28000,
+          "paid": 28000,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-18",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 11,
+          "cases": 11,
+          "patients": 11,
+          "revenue": 73500,
+          "paid": 73500,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Date": "2026-04-19",
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 10,
+          "cases": 10,
+          "patients": 10,
+          "revenue": 59500,
+          "paid": 59500,
+          "due": 0,
+          "unique_referrers": 1
+        },
+        {
+          "Date": "2026-04-19",
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 1,
+          "cases": 1,
+          "patients": 1,
+          "revenue": 6600,
+          "paid": 6600,
+          "due": 0,
+          "unique_referrers": 1
+        }
+      ],
+      "weekly": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "investigations": 73,
+          "cases": 59,
+          "patients": 57,
+          "revenue": 487500,
+          "paid": 445000,
+          "due": 42500,
+          "unique_referrers": 20
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "investigations": 148,
+          "cases": 131,
+          "patients": 131,
+          "revenue": 922900,
+          "paid": 922900,
+          "due": 0,
+          "unique_referrers": 2
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "investigations": 46,
+          "cases": 23,
+          "patients": 21,
+          "revenue": 248000,
+          "paid": 248000,
+          "due": 0,
+          "unique_referrers": 9
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "investigations": 196,
+          "cases": 156,
+          "patients": 156,
+          "revenue": 1113550,
+          "paid": 1062950,
+          "due": 0,
+          "unique_referrers": 21
+        }
+      ],
+      "top_referrers": [
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 28,
+          "investigations": 34,
+          "revenue": 177500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. FOOD CONCEPT CORPORATE",
+          "cases": 5,
+          "investigations": 5,
+          "revenue": 32500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Mrs. AWOTUNDUN (GBAJA HOSP) ",
+          "cases": 4,
+          "investigations": 10,
+          "revenue": 91500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " Nurse OJ",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 40000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. BELLO OSAGIE ILASA PHC",
+          "cases": 3,
+          "investigations": 5,
+          "revenue": 44000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ugochukwu anthony smc",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " MRS OLADOJA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 2500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " NURSE OLAYINKA ST KIZITO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": " mama COMFORT ADEYERI",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 3500
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELAKUN ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 15000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. ADELEYE MCC ITIRE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. AKINTOLA ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. EBUKA SMC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE GHM (MCC)",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. GOZIE MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. IJEOMA ILASA PHC",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OLABISI MGH",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. OVANSA ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. THANNI  GHM",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Ilasa Main Centre, Lagos",
+          "Referrer": "Dr. kadri AJEABO",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 130,
+          "investigations": 147,
+          "revenue": 917400
+        },
+        {
+          "Collection centre": "OAUTH Ilesa Centre",
+          "Referrer": "Dr. ADENLE MEMORIAL HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. PVT ",
+          "cases": 11,
+          "investigations": 18,
+          "revenue": 105000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. IJEOMA PALM AVE PHC",
+          "cases": 3,
+          "investigations": 3,
+          "revenue": 35500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": " MGH ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. OGUNSUYI J",
+          "cases": 2,
+          "investigations": 7,
+          "revenue": 39000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr.  NURSE GOD'S FAVOUR",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 8000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. AKINTUNDE MODUPEOLUWA HOSPITAL",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 4000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. JOSEPH OGUNSUYI",
+          "cases": 1,
+          "investigations": 8,
+          "revenue": 33000
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Nurse kafayat",
+          "cases": 1,
+          "investigations": 3,
+          "revenue": 10500
+        },
+        {
+          "Collection centre": "Palm Avenue, Lagos",
+          "Referrer": "Dr. Rotimi ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 9000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. (Prof.) ADEGOKE SAMUEL",
+          "cases": 55,
+          "investigations": 62,
+          "revenue": 208400
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OAUTHC DOCTORS ",
+          "cases": 51,
+          "investigations": 52,
+          "revenue": 350400
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE GENERAL, HOSPITAL",
+          "cases": 11,
+          "investigations": 12,
+          "revenue": 86100
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. PRIVATE ILESHA ",
+          "cases": 9,
+          "investigations": 12,
+          "revenue": 60700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAMIDELE MODUPEOLA (HOSPITAL,ILESA)",
+          "cases": 5,
+          "investigations": 9,
+          "revenue": 51200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DANIEL GENERAL, HOSPITAL",
+          "cases": 4,
+          "investigations": 4,
+          "revenue": 30600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. LIVING PETALS  MEDICAL CENTER ILESA",
+          "cases": 3,
+          "investigations": 5,
+          "revenue": 31000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. ABA ",
+          "cases": 2,
+          "investigations": 9,
+          "revenue": 63700
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DE-SHALOM  PHARMACY",
+          "cases": 2,
+          "investigations": 11,
+          "revenue": 58200
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. IYERE,PHC ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 11000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MAYFIELD MEDICAL CLINIC ",
+          "cases": 2,
+          "investigations": 2,
+          "revenue": 13750
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. AFOLABI GENERAL HOSPITAL,ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 12500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. BAKARE STATE HOSPITAL ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. DIVINE INTERNATIONAL HEALTH",
+          "cases": 1,
+          "investigations": 2,
+          "revenue": 21000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. GENERAL HOSPITAL ILESA",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 5500
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HABIBULAHI ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 10000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. HALIF OGUNWALE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 12000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. MORE ABUNDANT LIFE KOMOLAFE",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. OKOTORE,GENERAL HOSPITAL,  ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6600
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. SALIU ",
+          "cases": 1,
+          "investigations": 1,
+          "revenue": 6000
+        },
+        {
+          "Collection centre": "Sure Ilesha, Osun",
+          "Referrer": "Dr. VICTORIA MEDICAL CENTRE ",
+          "cases": 1,
+          "investigations": 6,
+          "revenue": 61700
+        }
+      ],
+      "agent_total": [
+        {
+          "Agent": "Walk-in / Unassigned",
+          "investigations": 152,
+          "cases": 114,
+          "patients": 110,
+          "revenue": 932950,
+          "paid": 889950
+        },
+        {
+          "Agent": "MISS VIVIAN",
+          "investigations": 115,
+          "cases": 78,
+          "patients": 78,
+          "revenue": 622100,
+          "paid": 573000
+        },
+        {
+          "Agent": "DR. EZEOMA",
+          "investigations": 62,
+          "cases": 61,
+          "patients": 61,
+          "revenue": 358900,
+          "paid": 358900
+        },
+        {
+          "Agent": "DR. OLOWOMEYE",
+          "investigations": 48,
+          "cases": 47,
+          "patients": 47,
+          "revenue": 288500,
+          "paid": 288500
+        },
+        {
+          "Agent": "RAD. WILSON",
+          "investigations": 44,
+          "cases": 33,
+          "patients": 33,
+          "revenue": 297500,
+          "paid": 297500
+        },
+        {
+          "Agent": "RAD OGUNDORO",
+          "investigations": 37,
+          "cases": 31,
+          "patients": 31,
+          "revenue": 243500,
+          "paid": 243500
+        },
+        {
+          "Agent": "MRS ADERELE",
+          "investigations": 3,
+          "cases": 3,
+          "patients": 3,
+          "revenue": 22500,
+          "paid": 22500
+        },
+        {
+          "Agent": "MISS. EUNICE",
+          "investigations": 2,
+          "cases": 2,
+          "patients": 2,
+          "revenue": 6000,
+          "paid": 5000
+        }
+      ],
+      "centre_targets": {
+        "Ilasa Main Centre, Lagos": {
+          "short": "Ilasa",
+          "color": "#2E86AB",
+          "daily": 244000,
+          "weekly": 1708000,
+          "monthly": 6100000
+        },
+        "OAUTH Ilesa Centre": {
+          "short": "OAUTH",
+          "color": "#8E44AD",
+          "daily": 280000,
+          "weekly": 1960000,
+          "monthly": 7000000
+        },
+        "Palm Avenue, Lagos": {
+          "short": "Palm Ave",
+          "color": "#16A085",
+          "daily": 140000,
+          "weekly": 980000,
+          "monthly": 3500000
+        },
+        "Sure Ilesha, Osun": {
+          "short": "Sure Ilesha",
+          "color": "#E67E22",
+          "daily": 240000,
+          "weekly": 1680000,
+          "monthly": 6000000
+        }
+      }
+    }
+  }
+}

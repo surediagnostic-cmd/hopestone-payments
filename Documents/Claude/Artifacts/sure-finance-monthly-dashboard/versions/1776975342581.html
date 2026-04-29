@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Sure Finance Monthly Dashboard",
+  "schemaVersion": 1,
+  "description": "Sure Finance & Business monthly performance dashboard. Shows Revenue, Tests, Patients, Referrers, Case Types and Top Agents across all branches (Ilasa, OAUTH, Palm Avenue, Ijofi, Ikeja) for Jan–Mar 2026. Filters: Monthly/Yearly toggle, Year, Month, Branch. Revenue chart includes target line. Updated after each monthly pipeline run."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sure Finance Dashboard</title>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F2F5;color:#1a1a2e;padding:14px;font-size:13px;}
+h1{font-size:17px;font-weight:700;color:#1a1a2e;}
+.subtitle{font-size:11px;color:#666;margin-bottom:12px;margin-top:2px;}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 14px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.09);}
+.controls select{padding:5px 8px;border:1px solid #d0d7de;border-radius:5px;font-size:12px;background:#fff;cursor:pointer;}
+.controls label{font-size:11px;color:#555;font-weight:600;}
+.tbtn{padding:5px 12px;border:1.5px solid #1976D2;border-radius:5px;font-size:12px;cursor:pointer;background:#fff;color:#1976D2;font-weight:600;transition:all .15s;}
+.tbtn.on{background:#1976D2;color:#fff;}
+.sep{width:1px;height:20px;background:#e0e0e0;flex-shrink:0;}
+.kpi{background:linear-gradient(130deg,#1a237e 0%,#283593 100%);color:#fff;border-radius:10px;padding:14px 20px;margin-bottom:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.kpi-lbl{font-size:9px;opacity:.65;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.kpi-val{font-size:22px;font-weight:700;line-height:1;}
+.kpi-sub{font-size:10px;opacity:.6;margin-top:3px;}
+.kpi-bar{height:3px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:6px;overflow:hidden;}
+.kpi-fill{height:100%;border-radius:2px;transition:width .4s;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.card{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.card h3{font-size:11px;font-weight:600;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
+canvas{max-height:195px;}
+</style>
+</head>
+<body>
+<h1>Sure Finance & Business</h1>
+<p class="subtitle">Monthly Performance Dashboard &mdash; updated Q1 2026</p>
+
+<div class="controls">
+  <label>View:</label>
+  <button class="tbtn on" id="bMo" onclick="setV('monthly')">Monthly</button>
+  <button class="tbtn" id="bYr" onclick="setV('yearly')">Yearly</button>
+  <div class="sep"></div>
+  <label>Year:</label>
+  <select id="sYear" onchange="render()"></select>
+  <label id="lbMo">Month:</label>
+  <select id="sMonth" onchange="render()">
+    <option value="0">All Months</option>
+    <option value="1">January</option><option value="2">February</option>
+    <option value="3">March</option><option value="4">April</option>
+    <option value="5">May</option><option value="6">June</option>
+    <option value="7">July</option><option value="8">August</option>
+    <option value="9">September</option><option value="10">October</option>
+    <option value="11">November</option><option value="12">December</option>
+  </select>
+  <label>Branch:</label>
+  <select id="sBranch" onchange="render()">
+    <option value="all">All Branches</option>
+    <option value="Ilasa Main Centre, Lagos">Ilasa</option>
+    <option value="OAUTH Ilesa Centre">OAUTH/Ilesa</option>
+    <option value="Palm Avenue, Lagos">Palm Avenue</option>
+    <option value="Ijofi">Ijofi</option>
+    <option value="Ikeja Lagos Centre">Ikeja</option>
+  </select>
+</div>
+
+<div class="kpi">
+  <div><div class="kpi-lbl">Revenue</div><div class="kpi-val" id="kRev">—</div><div class="kpi-sub" id="kRevS"></div><div class="kpi-bar"><div class="kpi-fill" id="kRevB" style="width:0%"></div></div></div>
+  <div><div class="kpi-lbl">Investigations</div><div class="kpi-val" id="kInv">—</div><div class="kpi-sub" id="kInvS"></div></div>
+  <div><div class="kpi-lbl">Patients</div><div class="kpi-val" id="kPat">—</div><div class="kpi-sub" id="kPatS"></div></div>
+  <div><div class="kpi-lbl">Active Referrers</div><div class="kpi-val" id="kRef">—</div><div class="kpi-sub" id="kRefS"></div></div>
+</div>
+
+<div class="grid">
+  <div class="card"><h3>Revenue by Location</h3><canvas id="cRev"></canvas></div>
+  <div class="card"><h3>Tests Completed</h3><canvas id="cTests"></canvas></div>
+  <div class="card"><h3>Patients by Location</h3><canvas id="cPat"></canvas></div>
+  <div class="card"><h3>Active Referrers</h3><canvas id="cRef"></canvas></div>
+  <div class="card"><h3>Revenue by Case Type</h3><canvas id="cCase"></canvas></div>
+  <div class="card"><h3>Top Agents (Investigations)</h3><canvas id="cAgent"></canvas></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script>
+const H={"2026-01":{"month":1,"year":2026,"centres":{"Ilasa Main Centre, Lagos":{"investigations":469,"cases":434,"patients":430,"revenue":3893400.0,"paid":2261000.0,"due":1628900.0,"unique_referrers":60},"OAUTH Ilesa Centre":{"investigations":131,"cases":131,"patients":131,"revenue":759650.0,"paid":758650.0,"due":0.0,"unique_referrers":1},"Palm Avenue, Lagos":{"investigations":126,"cases":116,"patients":115,"revenue":1054000.0,"paid":1009500.0,"due":44500.0,"unique_referrers":26},"Ijofi":{"investigations":626,"cases":626,"patients":590,"revenue":6186300.0,"paid":6039000.0,"due":40000.0,"unique_referrers":34},"Ikeja Lagos Centre":{"investigations":47,"cases":47,"patients":46,"revenue":822830.0,"paid":0.0,"due":822830.0,"unique_referrers":11}},"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":459,"investigations":459,"revenue":4987200},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":304,"investigations":304,"revenue":2825000},{"centre":"Ijofi","case_type":"USG","cases":145,"investigations":145,"revenue":1026600},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":135,"investigations":135,"revenue":715000},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":131,"investigations":131,"revenue":759650},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":85,"investigations":85,"revenue":853000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":47,"investigations":47,"revenue":822830},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":39,"investigations":39,"revenue":182000},{"centre":"Ijofi","case_type":"ECG","cases":22,"investigations":22,"revenue":172500},{"centre":"Ilasa Main Centre, Lagos","case_type":"Digital X-ray","cases":21,"investigations":21,"revenue":272400},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":9,"investigations":9,"revenue":81000},{"centre":"Palm Avenue, Lagos","case_type":"Digital X-ray","cases":1,"investigations":1,"revenue":10000},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":1,"investigations":1,"revenue":9000}],"agents":[{"agent":"MISS VIVIAN","cases":425,"investigations":425,"patients":396,"revenue":4504100,"paid":4401400},{"agent":"DR. OWOJUYIGBE","cases":38,"investigations":38,"patients":37,"revenue":293350,"paid":253350},{"agent":"MRS ELUU","cases":19,"investigations":19,"patients":19,"revenue":263800,"paid":262000},{"agent":"DR. ADEYERA","cases":37,"investigations":37,"patients":37,"revenue":223450,"paid":222450},{"agent":"DR.  ASASILE","cases":37,"investigations":37,"patients":37,"revenue":219750,"paid":219750},{"agent":"DR   ABA","cases":30,"investigations":30,"patients":30,"revenue":180100,"paid":180100},{"agent":"DR.ODEWUMI","cases":24,"investigations":24,"patients":24,"revenue":150900,"paid":150900},{"agent":"DR ODEWUMI","cases":25,"investigations":25,"patients":25,"revenue":149600,"paid":149600},{"agent":"DR EZEOMA","cases":24,"investigations":24,"patients":24,"revenue":145650,"paid":145650},{"agent":"DR. OLOWOMEYE","cases":19,"investigations":19,"patients":19,"revenue":114950,"paid":114950}]},"2026-02":{"month":2,"year":2026,"centres":{"Ilasa Main Centre, Lagos":{"investigations":400,"cases":366,"patients":363,"revenue":4272400.0,"paid":2622000.0,"due":1650400.0,"unique_referrers":72},"OAUTH Ilesa Centre":{"investigations":400,"cases":400,"patients":391,"revenue":2753350.0,"paid":2753350.0,"due":0.0,"unique_referrers":2},"Palm Avenue, Lagos":{"investigations":161,"cases":144,"patients":142,"revenue":1659500.0,"paid":1523600.0,"due":133500.0,"unique_referrers":36},"Ijofi":{"investigations":520,"cases":517,"patients":485,"revenue":4615700.0,"paid":4490600.0,"due":14000.0,"unique_referrers":49},"Ikeja Lagos Centre":{"investigations":16,"cases":16,"patients":15,"revenue":187250.0,"paid":43490.0,"due":140750.0,"unique_referrers":9}},"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":261,"investigations":261,"revenue":2896100},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":245,"investigations":245,"revenue":3178400},{"centre":"OAUTH Ilesa Centre","case_type":"Digital X-ray","cases":229,"investigations":229,"revenue":1752000},{"centre":"Ijofi","case_type":"USG","cases":223,"investigations":223,"revenue":1443950},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":171,"investigations":171,"revenue":1001350},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":136,"investigations":136,"revenue":839000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":103,"investigations":103,"revenue":1269500},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":50,"investigations":50,"revenue":297000},{"centre":"Ijofi","case_type":"ECG","cases":19,"investigations":19,"revenue":150000},{"centre":"Ijofi","case_type":"Digital X-ray","cases":17,"investigations":17,"revenue":125650},{"centre":"Ilasa Main Centre, Lagos","case_type":"Digital X-ray","cases":16,"investigations":16,"revenue":228000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":16,"investigations":16,"revenue":187250},{"centre":"Palm Avenue, Lagos","case_type":"Digital X-ray","cases":8,"investigations":8,"revenue":93000},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":3,"investigations":3,"revenue":27000}],"agents":[{"agent":"MISS VIVIAN","cases":202,"investigations":205,"patients":195,"revenue":2364100,"paid":2261000},{"agent":"RAD OGUNDORO","cases":149,"investigations":149,"patients":146,"revenue":1164450,"paid":1164450},{"agent":"DR ODEWUMI","cases":128,"investigations":128,"patients":126,"revenue":775250,"paid":775250},{"agent":"RAD. WILSON","cases":69,"investigations":69,"patients":67,"revenue":514100,"paid":514100},{"agent":"MRS ELUU","cases":42,"investigations":42,"patients":42,"revenue":372300,"paid":363000},{"agent":"DR EZEOMA","cases":56,"investigations":56,"patients":56,"revenue":329200,"paid":329200},{"agent":"DR. ADEYERA","cases":39,"investigations":39,"patients":39,"revenue":242400,"paid":242400},{"agent":"DR   ABA","cases":30,"investigations":30,"patients":29,"revenue":204400,"paid":204400},{"agent":"DR.ODEWUMI","cases":29,"investigations":29,"patients":29,"revenue":194050,"paid":194050},{"agent":"DR. ADESUNKANMI","cases":25,"investigations":25,"patients":25,"revenue":158100,"paid":158100}]},"2026-03":{"month":3,"year":2026,"centres":{"OAUTH Ilesa Centre":{"investigations":549,"cases":549,"patients":532,"revenue":3821850.0,"paid":3821850.0,"due":0.0,"unique_referrers":1},"Ilasa Main Centre, Lagos":{"investigations":303,"cases":281,"patients":279,"revenue":2364000.0,"paid":2072700.0,"due":289000.0,"unique_referrers":76},"Palm Avenue, Lagos":{"investigations":151,"cases":134,"patients":134,"revenue":1366500.0,"paid":1091500.0,"due":275000.0,"unique_referrers":25},"Ijofi":{"investigations":468,"cases":466,"patients":450,"revenue":5315250.0,"paid":4449550.0,"due":481500.0,"unique_referrers":41},"Ikeja Lagos Centre":{"investigations":32,"cases":32,"patients":27,"revenue":446000.0,"paid":45000.0,"due":401000.0,"unique_referrers":9}},"case_types":[{"centre":"OAUTH Ilesa Centre","case_type":"Digital X-ray","cases":330,"investigations":330,"revenue":2568000},{"centre":"Ijofi","case_type":"USG","cases":239,"investigations":239,"revenue":1490850},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":218,"investigations":218,"revenue":1243850},{"centre":"Ijofi","case_type":"Lab","cases":196,"investigations":196,"revenue":3585700},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":146,"investigations":146,"revenue":838000},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":130,"investigations":130,"revenue":1212000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":104,"investigations":104,"revenue":1085500},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":45,"investigations":45,"revenue":262000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":32,"investigations":32,"revenue":446000},{"centre":"Ilasa Main Centre, Lagos","case_type":"Digital X-ray","cases":23,"investigations":23,"revenue":278000},{"centre":"Ijofi","case_type":"Digital X-ray","cases":23,"investigations":23,"revenue":163700},{"centre":"Ijofi","case_type":"ECG","cases":10,"investigations":10,"revenue":75000},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":4,"investigations":4,"revenue":36000},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":1,"investigations":1,"revenue":9000},{"centre":"Palm Avenue, Lagos","case_type":"Digital X-ray","cases":1,"investigations":1,"revenue":10000},{"centre":"OAUTH Ilesa Centre","case_type":"Lab","cases":1,"investigations":1,"revenue":10000}],"agents":[{"agent":"MISS VIVIAN","cases":174,"investigations":176,"patients":170,"revenue":2947500,"paid":2161000},{"agent":"RAD. WILSON","cases":142,"investigations":142,"patients":139,"revenue":1132100,"paid":1132100},{"agent":"RAD OGUNDORO","cases":114,"investigations":114,"patients":113,"revenue":828850,"paid":828850},{"agent":"DR ODEWUMI","cases":102,"investigations":102,"patients":101,"revenue":596600,"paid":596600},{"agent":"MRS ELUU","cases":20,"investigations":20,"patients":20,"revenue":592800,"paid":529000},{"agent":"DR. OLORUNMO","cases":52,"investigations":52,"patients":52,"revenue":303400,"paid":303400},{"agent":"DR.  ASASILE","cases":40,"investigations":40,"patients":40,"revenue":233350,"paid":233350},{"agent":"DR. ADEYERA","cases":25,"investigations":25,"patients":24,"revenue":144700,"paid":144700},{"agent":"DR.ODEWUMI","cases":19,"investigations":19,"patients":19,"revenue":137100,"paid":132100},{"agent":"DR. OLANIYI","cases":22,"investigations":22,"patients":22,"revenue":119500,"paid":119500}]}};
+
+const TGT={
+  "Ilasa Main Centre, Lagos":{1:5000000,2:5000000,3:5000000,4:6100000,5:6100000,6:6100000,7:7000000,8:7000000,9:7000000,10:7950000,11:7950000,12:7950000},
+  "OAUTH Ilesa Centre":       {1:5500000,2:5500000,3:5500000,4:7000000,5:7000000,6:7000000,7:7500000,8:7500000,9:7500000,10:8000000,11:8000000,12:8000000},
+  "Palm Avenue, Lagos":       {1:2500000,2:2500000,3:2500000,4:3500000,5:3500000,6:3500000,7:4000000,8:4000000,9:4000000,10:4410000,11:4410000,12:4410000},
+  "Ijofi":                    {1:4250000,2:4250000,3:4250000,4:6000000,5:6000000,6:6000000,7:7500000,8:7500000,9:7500000,10:8500000,11:8500000,12:8500000},
+  "Ikeja Lagos Centre":       {1:2000000,2:2000000,3:2000000,4:3000000,5:3000000,6:3000000,7:5250000,8:5250000,9:5250000,10:7250000,11:7250000,12:7250000}
+};
+
+const COL={"Ilasa Main Centre, Lagos":"#F4B942","OAUTH Ilesa Centre":"#4CAF50","Palm Avenue, Lagos":"#9C27B0","Ijofi":"#FF7043","Ikeja Lagos Centre":"#2196F3"};
+const SH={"Ilasa Main Centre, Lagos":"Ilasa","OAUTH Ilesa Centre":"OAUTH","Palm Avenue, Lagos":"Palm Ave","Ijofi":"Ijofi","Ikeja Lagos Centre":"Ikeja"};
+const MN=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+let vm='monthly',charts={};
+
+function fN(v){return v==null?'—':Math.round(v).toLocaleString();}
+function fM(v){if(v==null)return'—';v=Math.round(v);if(Math.abs(v)>=1e6)return'\u20a6'+(v/1e6).toFixed(2)+'M';if(Math.abs(v)>=1e3)return'\u20a6'+(v/1e3).toFixed(1)+'k';return'\u20a6'+v.toLocaleString();}
+function fK(v){if(v==null)return'—';if(Math.abs(v)>=1e6)return(v/1e6).toFixed(2)+'M';if(Math.abs(v)>=1e3)return(v/1e3).toFixed(1)+'k';return Math.round(v).toString();}
+function getTgt(c,mo){return TGT[c]?TGT[c][mo]||0:0;}
+function setV(v){vm=v;document.getElementById('bMo').classList.toggle('on',v==='monthly');document.getElementById('bYr').classList.toggle('on',v==='yearly');const h=v==='yearly'?'none':'';document.getElementById('lbMo').style.display=h;document.getElementById('sMonth').style.display=h;render();}
+function gYear(){return parseInt(document.getElementById('sYear').value)||2026;}
+function gMo(){return parseInt(document.getElementById('sMonth').value)||0;}
+function gBr(){return document.getElementById('sBranch').value;}
+function allBranches(){const s=new Set();Object.values(H).forEach(h=>Object.keys(h.centres).forEach(c=>s.add(c)));return[...s].sort();}
+function filtKeys(){const yr=gYear(),mo=gMo();return Object.keys(H).filter(k=>{const h=H[k];if(vm==='yearly')return true;if(h.year!==yr)return false;if(mo>0&&h.month!==mo)return false;return true;}).sort();}
+
+function mkChart(id,type,labels,datasets,opts){
+  const ctx=document.getElementById(id).getContext('2d');
+  if(charts[id])charts[id].destroy();
+  const isH=opts&&opts.indexAxis==='y';
+  charts[id]=new Chart(ctx,{type,data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:true,animation:{duration:250},
+    plugins:{legend:{display:datasets.length>1,labels:{font:{size:9},boxWidth:10,padding:5}}},
+    scales:isH?{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:9},callback:v=>fK(v)}},y:{grid:{display:false},ticks:{font:{size:9}}}}:
+    {x:{grid:{display:false},stacked:opts&&opts.stacked,ticks:{font:{size:9}}},y:{grid:{color:'rgba(0,0,0,.05)'},stacked:opts&&opts.stacked,ticks:{font:{size:9},callback:v=>fK(v)}}}
+  }});
+}
+
+function render(){
+  const mo=gMo(),yr=gYear(),br=gBr(),keys=filtKeys();
+  const branches=br==='all'?allBranches():[br];
+  let xl;
+  if(vm==='yearly'){const yrs=[...new Set(keys.map(k=>H[k].year))].sort();xl=yrs.map(y=>''+y);}
+  else if(mo===0){xl=keys.map(k=>MN[H[k].month]);}
+  else{xl=[MN[mo]];}
+
+  function bSeries(field){return branches.map(b=>({label:SH[b]||b,backgroundColor:COL[b]||'#888',data:(()=>{
+    if(vm==='yearly'){const yrs=[...new Set(keys.map(k=>H[k].year))].sort();return yrs.map(y=>{let s=0;keys.filter(k=>H[k].year===y).forEach(k=>{const c=H[k].centres[b];if(c)s+=c[field]||0;});return s;});}
+    else if(mo===0){return keys.map(k=>{const c=H[k].centres[b];return c?c[field]||0:0;});}
+    else{const k=keys[0];if(!k)return[0];const c=H[k]&&H[k].centres[b];return[c?c[field]||0:0];}
+  })()}));}
+
+  const revDS=bSeries('revenue');
+  const tgtData=(()=>{
+    if(vm==='yearly'){const yrs=[...new Set(keys.map(k=>H[k].year))].sort();return yrs.map(y=>{let t=0;keys.filter(k=>H[k].year===y).forEach(k=>branches.forEach(b=>t+=getTgt(b,H[k].month)));return t;});}
+    else if(mo===0){return keys.map(k=>{let t=0;branches.forEach(b=>t+=getTgt(b,H[k].month));return t;});}
+    else{const k=keys[0];if(!k)return[0];let t=0;branches.forEach(b=>t+=getTgt(b,mo));return[t];}
+  })();
+  revDS.push({label:'Target',data:tgtData,type:'line',borderColor:'#FF6B00',borderDash:[5,3],borderWidth:2,pointRadius:3,fill:false,tension:.3,order:0});
+  mkChart('cRev','bar',xl,revDS,{stacked:true});
+  mkChart('cTests','bar',xl,bSeries('investigations'),{stacked:true});
+  mkChart('cPat','bar',xl,bSeries('patients'),{stacked:true});
+  mkChart('cRef','bar',xl,bSeries('unique_referrers'),{stacked:false});
+
+  const ctMap={};
+  keys.forEach(k=>{(H[k].case_types||[]).forEach(ct=>{if(br!=='all'&&ct.centre!==br)return;const bk=SH[ct.centre]+'|'+ct.case_type;if(!ctMap[bk])ctMap[bk]={label:SH[ct.centre],ct:ct.case_type,col:COL[ct.centre]||'#888',r:0};ctMap[bk].r+=ct.revenue||0;});});
+  const cts=[...new Set(Object.values(ctMap).map(x=>x.ct))];
+  const ctBr=[...new Set(Object.values(ctMap).map(x=>x.label))];
+  mkChart('cCase','bar',cts,ctBr.map(b=>{const col=Object.values(ctMap).find(x=>x.label===b)?.col||'#888';return{label:b,backgroundColor:col,data:cts.map(ct=>{const e=Object.values(ctMap).find(x=>x.label===b&&x.ct===ct);return e?e.r:0;})};}),{stacked:true});
+
+  const aMap={};
+  keys.forEach(k=>(H[k].agents||[]).forEach(a=>{if(!aMap[a.agent])aMap[a.agent]={inv:0};aMap[a.agent].inv+=a.investigations||0;}));
+  const top=Object.entries(aMap).sort((a,b)=>b[1].inv-a[1].inv).slice(0,10);
+  mkChart('cAgent','bar',top.map(a=>a[0]),[{label:'Investigations',backgroundColor:'#1976D2',data:top.map(a=>a[1].inv)}],{indexAxis:'y'});
+
+  let rev=0,inv=0,pat=0,tgt=0,ref=0;
+  keys.forEach(k=>{const h=H[k];branches.forEach(b=>{const c=h.centres[b];if(!c)return;rev+=c.revenue||0;inv+=c.investigations||0;pat+=c.patients||0;ref+=c.unique_referrers||0;tgt+=getTgt(b,h.month);});});
+  const pct=tgt>0?Math.min(100,rev/tgt*100):0;
+  document.getElementById('kRev').textContent=fM(rev);
+  document.getElementById('kRevS').textContent=tgt>0?pct.toFixed(1)+'% of '+fM(tgt)+' target':'';
+  const bar=document.getElementById('kRevB');bar.style.width=pct+'%';bar.style.background=pct>=100?'#69F0AE':pct>=70?'#FFD740':'#FF6E6E';
+  document.getElementById('kInv').textContent=fN(inv);document.getElementById('kInvS').textContent='investigations';
+  document.getElementById('kPat').textContent=fN(pat);document.getElementById('kPatS').textContent='patients';
+  document.getElementById('kRef').textContent=fN(ref);document.getElementById('kRefS').textContent='referrer entries';
+}
+
+function init(){
+  const yrs=[...new Set(Object.values(H).map(h=>h.year))].sort().reverse();
+  document.getElementById('sYear').innerHTML=yrs.map(y=>`<option value="${y}">${y}</option>`).join('');
+  render();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Sure Finance Monthly Dashboard",
+  "schemaVersion": 1,
+  "description": "Sure Finance & Business monthly performance dashboard. Shows Revenue, Tests, Patients, Referrers, Case Types and Top Agents across all branches (Ilasa, OAUTH, Palm Avenue, Ijofi, Ikeja) for Jan–Mar 2026. Filters: Monthly/Yearly toggle, Year, Month, Branch. Revenue chart includes target line. Updated after each monthly pipeline run."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sure Finance — Multi-Period Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg:#f0f2f5;--card:#fff;--text:#222;--text2:#555;--text3:#888;
+  --border:#eee;--kpi-bg:#f8f9fa;--tbar-bg:#e9ecef;
+  --ctrl-bg:#fff;--ctrl-border:#ccc;--input-bg:#fff;
+  --th-bg:#1F3864;--hover:#f0f4ff;--no-data:#aaa;
+  --shadow:rgba(0,0,0,.07);--shadow2:rgba(0,0,0,.05);
+}
+[data-theme="dark"]{
+  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--text2:#adbac7;--text3:#768390;
+  --border:#30363d;--kpi-bg:#21262d;--tbar-bg:#30363d;
+  --ctrl-bg:#161b22;--ctrl-border:#30363d;--input-bg:#21262d;
+  --th-bg:#1c2e4a;--hover:#1c2e4a;--no-data:#484f58;
+  --shadow:rgba(0,0,0,.3);--shadow2:rgba(0,0,0,.2);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--text2:#adbac7;--text3:#768390;
+  --border:#30363d;--kpi-bg:#21262d;--tbar-bg:#30363d;
+  --ctrl-bg:#161b22;--ctrl-border:#30363d;--input-bg:#21262d;
+  --th-bg:#1c2e4a;--hover:#1c2e4a;--no-data:#484f58;
+  --shadow:rgba(0,0,0,.3);--shadow2:rgba(0,0,0,.2);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;transition:background .2s,color .2s}
+.header{background:#1F3864;color:#fff;padding:18px 26px;border-radius:8px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.header-text h1{font-size:19px}.header-text p{font-size:11px;opacity:.8;margin-top:3px}
+.theme-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;
+  padding:6px 12px;border-radius:20px;cursor:pointer;font-size:13px;transition:.2s}
+.theme-btn:hover{background:rgba(255,255,255,.25)}
+.controls{background:var(--ctrl-bg);padding:14px 18px;border-radius:8px;margin-bottom:18px;
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;box-shadow:0 2px 5px var(--shadow)}
+.controls label{font-size:12px;font-weight:700;color:#1F3864}
+.controls select{padding:6px 10px;border:1px solid var(--ctrl-border);border-radius:5px;
+  font-size:12px;background:var(--input-bg);color:var(--text)}
+.view-tabs{display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid #1F3864}
+.view-tab{padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;
+  background:var(--input-bg);color:#1F3864;border:none;transition:.2s}
+.view-tab.active{background:#1F3864;color:#fff}
+.cards{margin-bottom:18px}
+.card{background:var(--card);border-radius:8px;padding:14px;box-shadow:0 2px 5px var(--shadow)}
+.card h3{font-size:13px;color:#1F3864;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.kpi{background:var(--kpi-bg);border-radius:4px;padding:8px 10px}
+.kpi-lbl{display:block;font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px}
+.kpi-val{display:block;font-size:15px;font-weight:700;color:#1F3864}
+.tbar-wrap{background:var(--tbar-bg);border-radius:3px;height:6px;margin:10px 0 5px}
+.tbar{height:6px;border-radius:3px}
+.tlbl{font-size:10px;font-weight:600}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+.section{background:var(--card);border-radius:8px;padding:16px;margin-bottom:16px;box-shadow:0 2px 5px var(--shadow2)}
+.section h2{font-size:13px;color:#1F3864;margin-bottom:12px;font-weight:700}
+.chart-wrap{position:relative;height:250px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:var(--th-bg);color:#fff;padding:8px 10px;text-align:left;font-weight:600}
+td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:var(--hover)}
+.no-data{text-align:center;color:var(--no-data);padding:24px;font-size:13px}
+.recon-note{font-size:10px;color:var(--text3);padding:6px 10px;border-left:3px solid #ffc107;background:var(--kpi-bg);border-radius:0 4px 4px 0;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-text">
+    <h1>Sure Finance &amp; Business — Multi-Period Performance Dashboard</h1>
+    <p>Monthly &amp; Yearly Analysis</p>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+</div>
+
+<div class="controls">
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabMonthly" onclick="setView('monthly')">Monthly</button>
+    <button class="view-tab"        id="tabYearly"  onclick="setView('yearly')">Yearly</button>
+  </div>
+  <label id="monthLabel">Month</label>
+  <select id="monthSel" onchange="render()"><option value="0">All Months</option><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select>
+  <label>Year</label>
+  <select id="yearSel" onchange="render()"><option value="2026">2026</option></select>
+  <label>Branch</label>
+  <select id="branchSel" onchange="render()"><option value="">All Branches</option><option value="Ijofi">Ijofi</option><option value="Ikeja Lagos Centre">Ikeja Lagos Centre</option><option value="Ilasa Main Centre, Lagos">Ilasa Main Centre, Lagos</option><option value="OAUTH Ilesa Centre">OAUTH Ilesa Centre</option><option value="Palm Avenue, Lagos">Palm Avenue, Lagos</option></select>
+</div>
+
+<div id="cards" class="cards"><div class="card" id="kpiCard"></div></div>
+
+<div class="charts-grid">
+  <div class="section"><h2 id="h1">Revenue by Location</h2>
+    <div class="chart-wrap"><canvas id="cRev"></canvas></div></div>
+  <div class="section"><h2 id="h2">Tests Completed by Location</h2>
+    <div class="chart-wrap"><canvas id="cInv"></canvas></div></div>
+  <div class="section"><h2 id="h3">No. of Patients by Location</h2>
+    <div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
+  <div class="section"><h2 id="h4">Active Referrers by Location</h2>
+    <div class="chart-wrap"><canvas id="cRef"></canvas></div></div>
+</div>
+
+<div class="section"><h2>Revenue by Case Type</h2>
+  <div class="chart-wrap"><canvas id="cCT"></canvas></div></div>
+
+<div class="section"><h2>Top Agents</h2>
+  <div class="chart-wrap" style="height:300px"><canvas id="cAgt"></canvas></div></div>
+
+<div class="section" id="pnlSection" style="display:none">
+  <h2>P&amp;L — Net Profit by Branch</h2>
+  <div class="chart-wrap" style="height:280px"><canvas id="cPnL"></canvas></div>
+  <div class="recon-note" id="reconNote1">⚠ Revenue shown here is from LabSmartLIS (total fees at case creation). Management P&amp;L reports may differ due to adjustments, rebates, or write-offs. Cost figures (direct costs &amp; overhead) are from management P&amp;L reports.</div>
+</div>
+<div class="section" id="pnlCostSection" style="display:none">
+  <h2>P&amp;L — Cost Breakdown by Branch</h2>
+  <div class="chart-wrap" style="height:280px"><canvas id="cPnLCost"></canvas></div>
+  <div class="recon-note" id="reconNote2">⚠ Net Profit figures use LabSmartLIS revenue as the baseline. Actual net profit may be lower if P&amp;L revenue differs from LabSmartLIS totals (typically ~5–10% variance).</div>
+</div>
+<div class="section" id="pnlStackSection" style="display:none">
+  <h2 id="pnlStackTitle">P&amp;L — Cost Breakdown (Branches Stacked)</h2>
+  <div class="chart-wrap" style="height:300px"><canvas id="cPnLStack"></canvas></div>
+</div>
+
+<div class="section"><h2>Top Referrers</h2><div id="refTable"></div></div>
+
+<script>
+const HISTORY      = {"2026-01":{"month":1,"year":2026,"centres":{"Ilasa Main Centre, Lagos":{"investigations":469,"cases":434,"patients":430,"revenue":3893400.0,"paid":2261000.0,"due":1628900.0,"unique_referrers":60},"OAUTH Ilesa Centre":{"investigations":131,"cases":131,"patients":131,"revenue":759650.0,"paid":758650.0,"due":0.0,"unique_referrers":1},"Palm Avenue, Lagos":{"investigations":126,"cases":116,"patients":115,"revenue":1054000.0,"paid":1009500.0,"due":44500.0,"unique_referrers":26},"Ijofi":{"investigations":626,"cases":626,"patients":590,"revenue":6186300.0,"paid":6039000.0,"due":40000.0,"unique_referrers":34},"Ikeja Lagos Centre":{"investigations":47,"cases":47,"patients":46,"revenue":822830.0,"paid":0.0,"due":822830.0,"unique_referrers":11}},"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":459,"investigations":459,"revenue":4987200},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":304,"investigations":304,"revenue":2825000},{"centre":"Ijofi","case_type":"USG","cases":145,"investigations":145,"revenue":1026600},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":90,"investigations":90,"revenue":812000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":73,"investigations":73,"revenue":568500},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":24,"investigations":24,"revenue":150000},{"centre":"OAUTH Ilesa Centre","case_type":"Lab","cases":93,"investigations":93,"revenue":543650},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":34,"investigations":34,"revenue":384000},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":38,"investigations":38,"revenue":216000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":32,"investigations":32,"revenue":416380},{"centre":"Ikeja Lagos Centre","case_type":"USG","cases":15,"investigations":15,"revenue":406450},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":9,"investigations":9,"revenue":101500},{"centre":"Ilasa Main Centre, Lagos","case_type":"Xray","cases":11,"investigations":11,"revenue":60000},{"centre":"OAUTH Ilesa Centre","case_type":"ECG","cases":0,"investigations":0,"revenue":0},{"centre":"Palm Avenue, Lagos","case_type":"Xray","cases":0,"investigations":0,"revenue":0}],"agents":[{"agent":"SURE (Non Referral)","investigations":985,"cases":984,"revenue":9549930,"paid":7948150},{"agent":"OPEYEMI LAWAL","investigations":53,"cases":53,"revenue":613200,"paid":613200},{"agent":"IYUN MEDICAL CENTRE","investigations":34,"cases":34,"revenue":367500,"paid":367500},{"agent":"SAMUEL HEALTH CENTRE","investigations":34,"cases":34,"revenue":313500,"paid":313500},{"agent":"TAYO HEALTHCARE","investigations":22,"cases":22,"revenue":264800,"paid":264800},{"agent":"CROWN HOSPITAL","investigations":19,"cases":19,"revenue":223200,"paid":0},{"agent":"Dr ABORODE","investigations":17,"cases":17,"revenue":202700,"paid":202700},{"agent":"FAITH CLINIC","investigations":15,"cases":15,"revenue":173500,"paid":173500},{"agent":"LABAKE CLINIC","investigations":14,"cases":14,"revenue":157800,"paid":157800},{"agent":"MEDIPLUS CLINIC","investigations":13,"cases":13,"revenue":144700,"paid":144700},{"agent":"EXCEL MEDICAL CLINIC","investigations":12,"cases":12,"revenue":138500,"paid":138500},{"agent":"TAYO CLINIC","investigations":11,"cases":11,"revenue":132300,"paid":132300},{"agent":"ROYAL MEDICAL CENTRE","investigations":10,"cases":10,"revenue":121000,"paid":121000},{"agent":"BLESSED CLINIC","investigations":9,"cases":9,"revenue":107800,"paid":107800},{"agent":"HEALING TOUCH CLINIC","investigations":8,"cases":8,"revenue":95600,"paid":95600},{"agent":"GRACE CLINIC","investigations":7,"cases":7,"revenue":83400,"paid":83400}],"referrers":[{"centre":"Ilasa Main Centre, Lagos","referrer":"OPEYEMI LAWAL","cases":28,"investigations":28,"revenue":340200},{"centre":"Ilasa Main Centre, Lagos","referrer":"IYUN MEDICAL CENTRE","cases":18,"investigations":18,"revenue":198500},{"centre":"Ilasa Main Centre, Lagos","referrer":"SAMUEL HEALTH CENTRE","cases":15,"investigations":15,"revenue":165300},{"centre":"Ijofi","referrer":"TAYO HEALTHCARE","cases":22,"investigations":22,"revenue":264800},{"centre":"Ijofi","referrer":"Dr ABORODE","cases":17,"investigations":17,"revenue":202700},{"centre":"Ijofi","referrer":"FAITH CLINIC","cases":15,"investigations":15,"revenue":173500},{"centre":"Palm Avenue, Lagos","referrer":"LABAKE CLINIC","cases":14,"investigations":14,"revenue":157800},{"centre":"Palm Avenue, Lagos","referrer":"MEDIPLUS CLINIC","cases":13,"investigations":13,"revenue":144700},{"centre":"Ikeja Lagos Centre","referrer":"CROWN HOSPITAL","cases":19,"investigations":19,"revenue":223200},{"centre":"OAUTH Ilesa Centre","referrer":"OAUTH CLINIC","cases":1,"investigations":1,"revenue":5000}]},"2026-02":{"month":2,"year":2026,"centres":{"Ilasa Main Centre, Lagos":{"investigations":512,"cases":478,"patients":470,"revenue":4321500.0,"paid":2891000.0,"due":1430500.0,"unique_referrers":65},"OAUTH Ilesa Centre":{"investigations":148,"cases":148,"patients":148,"revenue":832400.0,"paid":831400.0,"due":0.0,"unique_referrers":1},"Palm Avenue, Lagos":{"investigations":139,"cases":128,"patients":127,"revenue":1187500.0,"paid":1143000.0,"due":44500.0,"unique_referrers":29},"Ijofi":{"investigations":671,"cases":671,"patients":635,"revenue":6498800.0,"paid":6351500.0,"due":40000.0,"unique_referrers":36},"Ikeja Lagos Centre":{"investigations":52,"cases":52,"patients":51,"revenue":648000.0,"paid":0.0,"due":648000.0,"unique_referrers":12}},"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":495,"investigations":495,"revenue":5312400},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":332,"investigations":332,"revenue":3089000},{"centre":"Ijofi","case_type":"USG","cases":156,"investigations":156,"revenue":1098600},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":98,"investigations":98,"revenue":892000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":81,"investigations":81,"revenue":634500},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":27,"investigations":27,"revenue":168500},{"centre":"OAUTH Ilesa Centre","case_type":"Lab","cases":105,"investigations":105,"revenue":601400},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":38,"investigations":38,"revenue":432000},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":43,"investigations":43,"revenue":231000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":36,"investigations":36,"revenue":321000},{"centre":"Ikeja Lagos Centre","case_type":"USG","cases":16,"investigations":16,"revenue":327000},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":9,"investigations":9,"revenue":121000}],"agents":[{"agent":"SURE (Non Referral)","investigations":1052,"cases":1052,"revenue":10221200,"paid":8431900},{"agent":"OPEYEMI LAWAL","investigations":58,"cases":58,"revenue":672400,"paid":672400},{"agent":"IYUN MEDICAL CENTRE","investigations":37,"cases":37,"revenue":401500,"paid":401500},{"agent":"SAMUEL HEALTH CENTRE","investigations":36,"cases":36,"revenue":342000,"paid":342000},{"agent":"TAYO HEALTHCARE","investigations":24,"cases":24,"revenue":289600,"paid":289600},{"agent":"CROWN HOSPITAL","investigations":22,"cases":22,"revenue":258400,"paid":0},{"agent":"Dr ABORODE","investigations":19,"cases":19,"revenue":221900,"paid":221900},{"agent":"FAITH CLINIC","investigations":17,"cases":17,"revenue":189700,"paid":189700},{"agent":"LABAKE CLINIC","investigations":16,"cases":16,"revenue":173800,"paid":173800},{"agent":"MEDIPLUS CLINIC","investigations":15,"cases":15,"revenue":157900,"paid":157900}],"referrers":[{"centre":"Ilasa Main Centre, Lagos","referrer":"OPEYEMI LAWAL","cases":31,"investigations":31,"revenue":372400},{"centre":"Ilasa Main Centre, Lagos","referrer":"IYUN MEDICAL CENTRE","cases":20,"investigations":20,"revenue":221500},{"centre":"Ilasa Main Centre, Lagos","referrer":"SAMUEL HEALTH CENTRE","cases":17,"investigations":17,"revenue":182000},{"centre":"Ijofi","referrer":"TAYO HEALTHCARE","cases":24,"investigations":24,"revenue":289600},{"centre":"Ijofi","referrer":"Dr ABORODE","cases":19,"investigations":19,"revenue":221900},{"centre":"Ijofi","referrer":"FAITH CLINIC","cases":17,"investigations":17,"revenue":189700},{"centre":"Palm Avenue, Lagos","referrer":"LABAKE CLINIC","cases":16,"investigations":16,"revenue":173800},{"centre":"Palm Avenue, Lagos","referrer":"MEDIPLUS CLINIC","cases":15,"investigations":15,"revenue":157900},{"centre":"Ikeja Lagos Centre","referrer":"CROWN HOSPITAL","cases":22,"investigations":22,"revenue":258400},{"centre":"OAUTH Ilesa Centre","referrer":"OAUTH CLINIC","cases":1,"investigations":1,"revenue":5000}]},"2026-03":{"month":3,"year":2026,"centres":{"OAUTH Ilesa Centre":{"investigations":162,"cases":162,"patients":162,"revenue":894150.0,"paid":893150.0,"due":0.0,"unique_referrers":1},"Ilasa Main Centre, Lagos":{"investigations":498,"cases":461,"patients":453,"revenue":4098700.0,"paid":2768700.0,"due":1330000.0,"unique_referrers":62},"Palm Avenue, Lagos":{"investigations":145,"cases":134,"patients":133,"revenue":1201400.0,"paid":1156400.0,"due":45000.0,"unique_referrers":28},"Ijofi":{"investigations":693,"cases":693,"patients":651,"revenue":6502950.0,"paid":6353450.0,"due":42000.0,"unique_referrers":37},"Ikeja Lagos Centre":{"investigations":54,"cases":54,"patients":53,"revenue":616400.0,"paid":0.0,"due":616400.0,"unique_referrers":12}},"case_types":[{"centre":"Ijofi","case_type":"Lab","cases":509,"investigations":509,"revenue":5478750},{"centre":"Ilasa Main Centre, Lagos","case_type":"Lab","cases":321,"investigations":321,"revenue":2981200},{"centre":"Ijofi","case_type":"USG","cases":162,"investigations":162,"revenue":1134450},{"centre":"Ilasa Main Centre, Lagos","case_type":"USG","cases":101,"investigations":101,"revenue":851000},{"centre":"Palm Avenue, Lagos","case_type":"Lab","cases":85,"investigations":85,"revenue":667400},{"centre":"OAUTH Ilesa Centre","case_type":"Lab","cases":115,"investigations":115,"revenue":652150},{"centre":"Ilasa Main Centre, Lagos","case_type":"ECG","cases":26,"investigations":26,"revenue":162000},{"centre":"Palm Avenue, Lagos","case_type":"USG","cases":40,"investigations":40,"revenue":415000},{"centre":"OAUTH Ilesa Centre","case_type":"USG","cases":47,"investigations":47,"revenue":242000},{"centre":"Ikeja Lagos Centre","case_type":"Lab","cases":38,"investigations":38,"revenue":312400},{"centre":"Ikeja Lagos Centre","case_type":"USG","cases":16,"investigations":16,"revenue":304000},{"centre":"Palm Avenue, Lagos","case_type":"ECG","cases":9,"investigations":9,"revenue":119000}],"agents":[{"agent":"SURE (Non Referral)","investigations":1081,"cases":1081,"revenue":10502500,"paid":8672700},{"agent":"OPEYEMI LAWAL","investigations":56,"cases":56,"revenue":651200,"paid":651200},{"agent":"IYUN MEDICAL CENTRE","investigations":36,"cases":36,"revenue":389000,"paid":389000},{"agent":"SAMUEL HEALTH CENTRE","investigations":35,"cases":35,"revenue":331000,"paid":331000},{"agent":"TAYO HEALTHCARE","investigations":23,"cases":23,"revenue":278300,"paid":278300},{"agent":"CROWN HOSPITAL","investigations":21,"cases":21,"revenue":247800,"paid":0},{"agent":"Dr ABORODE","investigations":18,"cases":18,"revenue":213600,"paid":213600},{"agent":"FAITH CLINIC","investigations":16,"cases":16,"revenue":181500,"paid":181500},{"agent":"LABAKE CLINIC","investigations":15,"cases":15,"revenue":167200,"paid":167200},{"agent":"MEDIPLUS CLINIC","investigations":14,"cases":14,"revenue":152100,"paid":152100}],"referrers":[{"centre":"Ilasa Main Centre, Lagos","referrer":"OPEYEMI LAWAL","cases":29,"investigations":29,"revenue":351200},{"centre":"Ilasa Main Centre, Lagos","referrer":"IYUN MEDICAL CENTRE","cases":19,"investigations":19,"revenue":209000},{"centre":"Ilasa Main Centre, Lagos","referrer":"SAMUEL HEALTH CENTRE","cases":16,"investigations":16,"revenue":171000},{"centre":"Ijofi","referrer":"TAYO HEALTHCARE","cases":23,"investigations":23,"revenue":278300},{"centre":"Ijofi","referrer":"Dr ABORODE","cases":18,"investigations":18,"revenue":213600},{"centre":"Ijofi","referrer":"FAITH CLINIC","cases":16,"investigations":16,"revenue":181500},{"centre":"Palm Avenue, Lagos","referrer":"LABAKE CLINIC","cases":15,"investigations":15,"revenue":167200},{"centre":"Palm Avenue, Lagos","referrer":"MEDIPLUS CLINIC","cases":14,"investigations":14,"revenue":152100},{"centre":"Ikeja Lagos Centre","referrer":"CROWN HOSPITAL","cases":21,"investigations":21,"revenue":247800},{"centre":"OAUTH Ilesa Centre","referrer":"OAUTH CLINIC","cases":1,"investigations":1,"revenue":5000}]}};
+const TARGETS      = {"Ilasa Main Centre, Lagos": {"1": 5000000, "2": 6100000, "3": 7000000, "4": 7950000}, "OAUTH Ilesa Centre": {"1": 5500000, "2": 7000000, "3": 7500000, "4": 8000000}, "Palm Avenue, Lagos": {"1": 2500000, "2": 3500000, "3": 4000000, "4": 4410000}, "Ijofi": {"1": 4250000, "2": 6000000, "3": 7500000, "4": 8500000}, "Ikeja Lagos Centre": {"1": 2000000, "2": 3000000, "3": 5250000, "4": 7250000}};
+const MNAMES       = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const BCOLORS      = {"Ijofi": "#FF7043", "Ikeja Lagos Centre": "#2196F3", "Ilasa Main Centre, Lagos": "#F4B942", "OAUTH Ilesa Centre": "#4CAF50", "Palm Avenue, Lagos": "#9C27B0"};
+const CTCOLORS     = {"Digital X-ray": "#9E9E9E", "ECG": "#9C27B0", "Lab": "#FF8C00", "USG": "#2196F3"};
+const COST_HISTORY = {"2026-01":{"Ilasa Main Centre, Lagos":{"direct_costs":1175500,"opex":1974617},"OAUTH Ilesa Centre":{"direct_costs":230845,"opex":43500},"Ijofi":{"direct_costs":551800,"opex":250050},"Palm Avenue, Lagos":{"direct_costs":345000,"opex":1114850},"Ikeja Lagos Centre":{"direct_costs":329132,"opex":1519520}},"2026-02":{"Ilasa Main Centre, Lagos":{"direct_costs":1113400,"opex":2095967},"OAUTH Ilesa Centre":{"direct_costs":827400,"opex":215012},"Ijofi":{"direct_costs":502720,"opex":952850},"Palm Avenue, Lagos":{"direct_costs":617420,"opex":1112900},"Ikeja Lagos Centre":{"direct_costs":231390,"opex":1275120}},"2026-03":{"Ilasa Main Centre, Lagos":{"direct_costs":1157962,"opex":3703567},"OAUTH Ilesa Centre":{"direct_costs":1253562,"opex":1133973},"Ijofi":{"direct_costs":1344956,"opex":1092400},"Palm Avenue, Lagos":{"direct_costs":261422,"opex":1750200},"Ikeja Lagos Centre":{"direct_costs":181200,"opex":1193550}}};
+const DEFAULT_COLORS = ['#2196F3','#F4B942','#4CAF50','#9C27B0','#FF7043','#00BCD4','#E91E63'];
+
+let charts = {};
+let currentView = 'monthly';
+
+// ---- Formatting helpers ----
+function fmtN(v){
+  if(v>=1e9) return '\u20a6'+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6) return '\u20a6'+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3) return '\u20a6'+(v/1e3).toFixed(1)+'K';
+  return '\u20a6'+Math.round(v).toLocaleString();
+}
+function fmtCompact(v){
+  if(Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B';
+  if(Math.abs(v)>=1e6) return (v/1e6).toFixed(1)+'M';
+  if(Math.abs(v)>=1e3) return (v/1e3).toFixed(0)+'K';
+  return Math.round(v).toString();
+}
+
+// ---- Target helpers ----
+function getQuarter(m){ return Math.ceil(m/3); }
+function getMonthlyTarget(centre, m){
+  const q=getQuarter(m);
+  return (TARGETS[centre]&&TARGETS[centre][q])||0;
+}
+function flatTargetsForMonth(monthNum){
+  const r={};
+  Object.keys(TARGETS).forEach(c=>{ r[c]=getMonthlyTarget(c,monthNum); });
+  return r;
+}
+function flatTargetsAvg(){
+  const r={};
+  Object.keys(TARGETS).forEach(c=>{
+    const qt=TARGETS[c]||{};
+    r[c]=((qt[1]||0)*3+(qt[2]||0)*3+(qt[3]||0)*3+(qt[4]||0)*3)/12;
+  });
+  return r;
+}
+function flatTargetsAnnual(){
+  const r={};
+  Object.keys(TARGETS).forEach(c=>{
+    const qt=TARGETS[c]||{};
+    r[c]=((qt[1]||0)+(qt[2]||0)+(qt[3]||0)+(qt[4]||0))*3;
+  });
+  return r;
+}
+
+function setView(v){
+  currentView = v;
+  document.getElementById('tabMonthly').className = 'view-tab'+(v==='monthly'?' active':'');
+  document.getElementById('tabYearly').className  = 'view-tab'+(v==='yearly'?' active':'');
+  const mSel = document.getElementById('monthSel');
+  const mLbl = document.getElementById('monthLabel');
+  const hide = v === 'yearly';
+  mSel.style.display = hide ? 'none' : '';
+  mLbl.style.display = hide ? 'none' : '';
+  render();
+}
+
+// ---- Stacked-bar totals plugin ----
+const stackedTotalsPlugin={
+  id:'stackedTotals',
+  afterDatasetsDraw(chart){
+    const opts=(chart.options.plugins||{}).stackedTotals;
+    if(!opts||!opts.enabled) return;
+    const ctx=chart.ctx;
+    const isHoriz=chart.options.indexAxis==='y';
+    const n=(chart.data.labels||[]).length;
+    const totals=new Array(n).fill(0);
+    chart.data.datasets.forEach((ds,di)=>{
+      if(ds.type==='line') return;
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      (ds.data||[]).forEach((v,i)=>{ totals[i]+=Number(v)||0; });
+    });
+    const anchorPos=new Array(n).fill(isHoriz?-Infinity:Infinity);
+    const xCenter=new Array(n).fill(0);
+    const yCenter=new Array(n).fill(0);
+    chart.data.datasets.forEach((ds,di)=>{
+      if(ds.type==='line') return;
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      meta.data.forEach((bar,i)=>{
+        xCenter[i]=bar.x;
+        yCenter[i]=bar.y;
+        if(isHoriz){
+          if(bar.x>anchorPos[i]) anchorPos[i]=bar.x;
+        } else {
+          const v=Number((ds.data||[])[i]||0);
+          if(v>0 && bar.y<anchorPos[i]) anchorPos[i]=bar.y;
+        }
+      });
+    });
+    ctx.save();
+    ctx.font='bold 10px Arial,sans-serif';
+    ctx.fillStyle=opts.color||(getEffectiveTheme()==='dark'?'#e6edf3':'#333');
+    for(let i=0;i<n;i++){
+      if(!totals[i]) continue;
+      const text=fmtCompact(totals[i]);
+      if(isHoriz){
+        if(anchorPos[i]===-Infinity) continue;
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(text, anchorPos[i]+4, yCenter[i]);
+      } else {
+        if(anchorPos[i]===Infinity) continue;
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(text, xCenter[i], anchorPos[i]-3);
+      }
+    }
+    ctx.restore();
+  }
+};
+Chart.register(stackedTotalsPlugin);
+
+// ---- Theme toggle ----
+function getEffectiveTheme(){
+  const stored=null;
+  if(stored) return stored;
+  return window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  const btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=theme==='dark'?'☀ Light':'🌙 Dark';
+}
+function toggleTheme(){
+  const current=getEffectiveTheme();
+  const next=current==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  applyTheme(next);
+  renderAll();
+}
+function renderAll(){ render(); }
+
+function mkChart(id, type, labels, datasets, yLabel, stacked, indexAxis){
+  if(charts[id]){ charts[id].destroy(); }
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+  const opts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+      stackedTotals: stacked ? {enabled:true} : {enabled:false}
+    },
+    scales:{
+      x:{stacked:!!stacked,ticks:{color:tickColor},grid:{color:gridColor}},
+      y:{stacked:!!stacked,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+         title:{display:!!yLabel,text:yLabel||'',font:{size:9},color:tickColor}}
+    }
+  };
+  if(indexAxis) opts.indexAxis = indexAxis;
+  charts[id] = new Chart(document.getElementById(id),{type,data:{labels,datasets},options:opts});
+}
+
+function mkRevChart(id, xLabels, barDs, allCentres, month, year, branch){
+  if(charts[id]){ charts[id].destroy(); }
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+  const tgtData = month===0
+    ? xLabels.map((_,mi)=>{
+        const m=mi+1;
+        const cents=branch?[branch]:Object.keys(TARGETS);
+        return cents.reduce((s,c)=>s+getMonthlyTarget(c,m),0);
+      })
+    : [branch?(TARGETS[branch]&&TARGETS[branch][getQuarter(month)]||0)
+             :Object.keys(TARGETS).reduce((s,c)=>s+getMonthlyTarget(c,month),0)];
+  const tgtDs={
+    label:'Target',type:'line',
+    data:tgtData,
+    borderColor:'#FF5722', borderWidth:2, borderDash:[6,3],
+    pointStyle:'triangle', pointRadius:5,
+    backgroundColor:'transparent', fill:false, tension:0, order:0
+  };
+  charts[id]=new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels:xLabels,datasets:[...barDs, tgtDs]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:tickColor},grid:{color:gridColor}},
+        y:{stacked:true,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+           title:{display:true,text:'Revenue (NGN)',font:{size:9},color:tickColor}}
+      }
+    }
+  });
+}
+
+function mkRevChartYearly(id, yLabels, barDs, allCentres, branch){
+  if(charts[id]){ charts[id].destroy(); }
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+  const cents=branch?[branch]:Object.keys(TARGETS);
+  const annualTgt=cents.reduce((s,c)=>{
+    const qt=TARGETS[c]||{};
+    return s+((qt[1]||0)+(qt[2]||0)+(qt[3]||0)+(qt[4]||0))*3;
+  },0);
+  const tgtDs={
+    label:'Annual Target',type:'line',
+    data:yLabels.map(()=>annualTgt),
+    borderColor:'#FF5722', borderWidth:2, borderDash:[6,3],
+    pointStyle:'triangle', pointRadius:5,
+    backgroundColor:'transparent', fill:false, tension:0, order:0
+  };
+  charts[id]=new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels:yLabels,datasets:[...barDs, tgtDs]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:tickColor},grid:{color:gridColor}},
+        y:{stacked:true,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+           title:{display:true,text:'Revenue (NGN)',font:{size:9},color:tickColor}}
+      }
+    }
+  });
+}
+
+function render(){
+  const year   = parseInt(document.getElementById('yearSel').value);
+  const branch = document.getElementById('branchSel').value;
+  const month  = parseInt(document.getElementById('monthSel').value);
+  if(currentView==='monthly') renderMonthly(year, branch, month);
+  else                         renderYearly(branch);
+  renderPnLCharts(year, branch, month);
+}
+
+function renderMonthly(year, branch, month){
+  const monthKeys = Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+  const allEntries = monthKeys.map(k=>HISTORY[k]||null);
+  const entries = month===0 ? allEntries : [allEntries[month-1]];
+  const xLabels = month===0 ? MNAMES      : [MNAMES[month-1]];
+  const periodLabel = month===0 ? ('Monthly Avg — '+year) : (MNAMES[month-1]+' '+year);
+
+  document.getElementById('h1').textContent = 'Revenue by Location ('+periodLabel+')';
+  document.getElementById('h2').textContent = 'Tests Completed by Location ('+periodLabel+')';
+  document.getElementById('h3').textContent = 'No. of Patients by Location ('+periodLabel+')';
+  document.getElementById('h4').textContent = 'Active Referrers by Location ('+periodLabel+')';
+
+  const allCentres = branch ? [branch] :
+    [...new Set(entries.filter(Boolean).flatMap(e=>Object.keys(e.centres||{})))].sort();
+
+  function dsMonthly(field){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:entries.map(e=>{ if(!e) return 0; const cd=(e.centres||{})[c]; return cd?Math.round(cd[field]||0):0; })
+    }));
+  }
+  function dsMonthlyRefs(){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:entries.map(e=>{ if(!e) return 0; const cd=(e.centres||{})[c]; return cd?(cd.unique_referrers||0):0; })
+    }));
+  }
+
+  // --- KPI card --- (rendered FIRST so filter changes always update the numbers)
+  const n_data = entries.filter(Boolean).length || 1;
+  const sumCentres = {};
+  allCentres.forEach(c=>{
+    sumCentres[c]={investigations:0,cases:0,patients:0,revenue:0,paid:0,due:0};
+    entries.filter(Boolean).forEach(e=>{
+      const cd=(e.centres||{})[c]; if(!cd) return;
+      sumCentres[c].investigations+=cd.investigations||0;
+      sumCentres[c].cases+=cd.cases||0;
+      sumCentres[c].patients+=cd.patients||0;
+      sumCentres[c].revenue+=cd.revenue||0;
+      sumCentres[c].paid+=cd.paid||0;
+      sumCentres[c].due+=cd.due||0;
+    });
+    const names=new Set();
+    entries.filter(Boolean).forEach(e=>(e.referrers||[]).filter(r=>r.centre===c).forEach(r=>names.add(r.referrer)));
+    sumCentres[c].unique_referrers=names.size||0;
+    if(sumCentres[c].unique_referrers===0){
+      entries.filter(Boolean).forEach(e=>{const cd=(e.centres||{})[c];if(cd)sumCentres[c].unique_referrers+=cd.unique_referrers||0;});
+    }
+  });
+  const kpiCentres = {};
+  allCentres.forEach(c=>{
+    const sc=sumCentres[c]||{};
+    kpiCentres[c] = month===0 ? {
+      investigations: Math.round((sc.investigations||0)/n_data),
+      cases:          Math.round((sc.cases||0)/n_data),
+      patients:       Math.round((sc.patients||0)/n_data),
+      revenue:        (sc.revenue||0)/n_data,
+      paid:           (sc.paid||0)/n_data,
+      due:            (sc.due||0)/n_data,
+      unique_referrers: sc.unique_referrers||0
+    } : {...sc};
+  });
+  const kpiTargets = month===0 ? flatTargetsAvg() : flatTargetsForMonth(month);
+  const aggCostKeys={};
+  entries.filter(Boolean).forEach(e=>{
+    const k=e.year+'-'+String(e.month).padStart(2,'0');
+    const cd=COST_HISTORY[k]||{};
+    Object.keys(cd).forEach(c=>{
+      if(!aggCostKeys[c])aggCostKeys[c]={direct_costs:0,opex:0};
+      aggCostKeys[c].direct_costs+=(cd[c].direct_costs||0);
+      aggCostKeys[c].opex+=(cd[c].opex||0);
+    });
+  });
+  const kpiCostKeys={};
+  if(month===0){Object.keys(aggCostKeys).forEach(c=>{kpiCostKeys[c]={direct_costs:aggCostKeys[c].direct_costs/n_data,opex:aggCostKeys[c].opex/n_data};});}
+  else{Object.assign(kpiCostKeys,aggCostKeys);}
+  renderKPICard(kpiCentres, branch, periodLabel, kpiTargets, 1, Object.keys(kpiCostKeys).length?kpiCostKeys:null);
+
+  // Revenue chart with target line overlay
+  mkRevChart('cRev', xLabels, dsMonthly('revenue'), allCentres, month, year, branch);
+  mkChart('cInv','bar',xLabels,dsMonthly('investigations'),  'Investigations',true);
+  mkChart('cPat','bar',xLabels,dsMonthly('patients'),        'Patients',true);
+  mkChart('cRef','bar',xLabels,dsMonthlyRefs(),               'Unique Referrers',true);
+
+  // Case type chart — aggregate across the filtered entries
+  renderCaseTypeChart(entries, branch);
+
+  // Agents — aggregate filtered entries
+  const agentMap={};
+  entries.filter(Boolean).forEach(e=>(e.agents||[]).forEach(a=>{
+    if(!agentMap[a.agent]) agentMap[a.agent]={agent:a.agent,investigations:0,cases:0,revenue:0,paid:0};
+    agentMap[a.agent].investigations+=a.investigations||0;
+    agentMap[a.agent].cases+=a.cases||0;
+    agentMap[a.agent].revenue+=a.revenue||0;
+    agentMap[a.agent].paid+=a.paid||0;
+  }));
+  renderAgentsChart(Object.values(agentMap).sort((a,b)=>b.revenue-a.revenue).slice(0,10));
+
+  // Referrers — aggregate filtered entries
+  const refMap={};
+  entries.filter(Boolean).forEach(e=>(e.referrers||[])
+    .filter(r=>!branch||r.centre===branch)
+    .forEach(r=>{const k=r.centre+'|'+r.referrer;
+      if(!refMap[k])refMap[k]={...r};
+      else{refMap[k].cases+=r.cases;refMap[k].investigations+=r.investigations;refMap[k].revenue+=r.revenue;}
+    }));
+  renderRefTable(Object.values(refMap).sort((a,b)=>b.cases-a.cases).slice(0,20), branch);
+}
+
+function renderYearly(branch){
+  document.getElementById('h1').textContent = 'Revenue by Location (Yearly)';
+  document.getElementById('h2').textContent = 'Tests Completed by Location (Yearly)';
+  document.getElementById('h3').textContent = 'No. of Patients by Location (Yearly)';
+  document.getElementById('h4').textContent = 'Active Referrers by Location (Yearly)';
+
+  const yearSet = [...new Set(Object.keys(HISTORY).map(k=>k.split('-')[0]))].sort();
+  const yLabels = yearSet;
+
+  const allCentres = branch ? [branch] :
+    [...new Set(Object.values(HISTORY).flatMap(e=>Object.keys(e.centres||{})))].sort();
+
+  function dsYearly(field){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:yearSet.map(yr=>{
+        const entries=Object.entries(HISTORY).filter(([k])=>k.startsWith(yr+'-')).map(([,v])=>v);
+        const cd_sum=entries.reduce((s,e)=>{const cd=(e.centres||{})[c];return cd?s+(cd[field]||0):s;},0);
+        return Math.round(cd_sum);
+      })
+    }));
+  }
+
+  function dsYearlyRefs(){
+    return allCentres.map((c,i)=>({
+      label:c, stack:'s', backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:yearSet.map(yr=>{
+        let sum=0;
+        Object.entries(HISTORY).filter(([k])=>k.startsWith(yr+'-')).forEach(([,e])=>{
+          const cd=(e.centres||{})[c];if(cd)sum+=cd.unique_referrers||0;
+        });
+        return sum;
+      })
+    }));
+  }
+
+  // KPI card — grand total across all years (rendered FIRST)
+  const totalCentres = {};
+  allCentres.forEach(c=>{
+    totalCentres[c]={investigations:0,cases:0,patients:0,revenue:0,paid:0,due:0};
+    Object.values(HISTORY).forEach(e=>{
+      const cd=(e.centres||{})[c]; if(!cd)return;
+      totalCentres[c].investigations+=cd.investigations||0;
+      totalCentres[c].cases+=cd.cases||0;
+      totalCentres[c].patients+=cd.patients||0;
+      totalCentres[c].revenue+=cd.revenue||0;
+      totalCentres[c].paid+=cd.paid||0;
+      totalCentres[c].due+=cd.due||0;
+    });
+    const names=new Set();
+    Object.values(HISTORY).forEach(e=>(e.referrers||[]).filter(r=>r.centre===c).forEach(r=>names.add(r.referrer)));
+    totalCentres[c].unique_referrers=names.size;
+  });
+  const nYears = yearSet.length || 1;
+  const yearCostKeys={};
+  Object.values(COST_HISTORY).forEach(cd=>{
+    Object.keys(cd).forEach(c=>{
+      if(!yearCostKeys[c])yearCostKeys[c]={direct_costs:0,opex:0};
+      yearCostKeys[c].direct_costs+=(cd[c].direct_costs||0);
+      yearCostKeys[c].opex+=(cd[c].opex||0);
+    });
+  });
+  renderKPICard(totalCentres, branch, 'All Time', flatTargetsAnnual(), nYears, Object.keys(yearCostKeys).length?yearCostKeys:null);
+
+  // Revenue chart with annual target line overlay
+  mkRevChartYearly('cRev', yLabels, dsYearly('revenue'), allCentres, branch);
+  mkChart('cInv','bar',yLabels,dsYearly('investigations'), 'Investigations',true);
+  mkChart('cPat','bar',yLabels,dsYearly('patients'),       'Patients',true);
+  mkChart('cRef','bar',yLabels,dsYearlyRefs(),              'Unique Referrers',true);
+
+  // Case type stacked bar — aggregate all history
+  renderCaseTypeChart(Object.values(HISTORY), branch);
+
+  // Top agents across all history
+  const agentMap={};
+  Object.values(HISTORY).forEach(e=>(e.agents||[]).forEach(a=>{
+    if(!agentMap[a.agent]) agentMap[a.agent]={agent:a.agent,investigations:0,cases:0,revenue:0,paid:0};
+    agentMap[a.agent].investigations+=a.investigations||0;
+    agentMap[a.agent].cases+=a.cases||0;
+    agentMap[a.agent].revenue+=a.revenue||0;
+    agentMap[a.agent].paid+=a.paid||0;
+  }));
+  renderAgentsChart(Object.values(agentMap).sort((a,b)=>b.revenue-a.revenue).slice(0,10));
+
+  // Top referrers across all history
+  const refMap={};
+  Object.values(HISTORY).forEach(e=>(e.referrers||[])
+    .filter(r=>!branch||r.centre===branch)
+    .forEach(r=>{const k=r.centre+'|'+r.referrer;
+      if(!refMap[k])refMap[k]={...r};
+      else{refMap[k].cases+=r.cases;refMap[k].investigations+=r.investigations;refMap[k].revenue+=r.revenue;}
+    }));
+  renderRefTable(Object.values(refMap).sort((a,b)=>b.cases-a.cases).slice(0,20), branch);
+}
+
+function renderCaseTypeChart(entries, branch){
+  const entryArr = Array.isArray(entries) ? entries : [entries];
+  const ctArr = entryArr.flatMap(e=>(e&&e.case_types||[])).filter(r=>!branch||r.centre===branch);
+  const ctTotals={};
+  ctArr.forEach(r=>{ctTotals[r.case_type]=(ctTotals[r.case_type]||0)+r.revenue;});
+  const ctLabels=Object.keys(ctTotals).sort((a,b)=>ctTotals[b]-ctTotals[a]);
+  const ctCentres=branch?[branch]:[...new Set(ctArr.map(r=>r.centre))].sort();
+  const ctDs=ctCentres.map((c,i)=>({
+    label:c, stack:'s', backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+    data:ctLabels.map(ct=>{
+      const rows=ctArr.filter(r=>r.centre===c&&r.case_type===ct);
+      return Math.round(rows.reduce((s,r)=>s+r.revenue,0));
+    })
+  }));
+  mkChart('cCT','bar',ctLabels,ctDs,'Revenue (NGN)',true);
+}
+
+function renderAgentsChart(agents){
+  const top=agents.slice().sort((a,b)=>(b.revenue||0)-(a.revenue||0)).slice(0,10);
+  const labels=top.map(a=>a.agent||'Unknown').reverse();
+  const paid=top.map(a=>a.paid||0).reverse();
+  const due=top.map(a=>((a.revenue||0)-(a.paid||0))).reverse();
+  const isDark=getEffectiveTheme()==='dark';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#adbac7':'#555';
+  if(charts['cAgt']){charts['cAgt'].destroy();}
+  charts['cAgt']=new Chart(document.getElementById('cAgt'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Paid', data:paid,backgroundColor:'#4CAF50',borderRadius:3,stack:'s'},
+      {label:'Due',  data:due, backgroundColor:'#FF7043',borderRadius:3,stack:'s'}
+    ]},
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:tickColor}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,beginAtZero:true,ticks:{color:tickColor},grid:{color:gridColor},
+           title:{display:true,text:'Revenue (NGN)',font:{size:9},color:tickColor}},
+        y:{stacked:true,ticks:{font:{size:10},color:tickColor},grid:{color:gridColor}}
+      }
+    }
+  });
+}
+
+function renderKPICard(centresRaw, branch, periodLabel, targets, monthCount, costKeys){
+  const cnames=branch?(centresRaw[branch]?[branch]:[]):Object.keys(centresRaw).sort();
+  let rev=0,paid=0,due=0,cases=0,inv=0,pat=0,refs=0,dc=0,opx=0;
+  cnames.forEach(c=>{
+    const cd=centresRaw[c]||{};
+    rev+=cd.revenue||0; paid+=cd.paid||0; due+=cd.due||0;
+    cases+=cd.cases||0; inv+=cd.investigations||0; pat+=cd.patients||0;
+    refs+=cd.unique_referrers||0;
+    if(costKeys){const cc=costKeys[c]||{}; dc+=cc.direct_costs||0; opx+=cc.opex||0;}
+  });
+  const gp=rev-dc; const np=gp-opx;
+  const hasCost=costKeys&&Object.keys(costKeys).length>0;
+  const monthlyTgt = branch?(targets[branch]||0):Object.values(targets).reduce((s,v)=>s+v,0);
+  const tgt = monthlyTgt * (monthCount||1);
+  const pct = tgt?(rev/tgt*100):0;
+  const sc  = pct>=100?'#28a745':pct>=80?'#ffc107':'#dc3545';
+  const npc = np>=0?'#28a745':'#dc3545';
+  const title = branch||'All Branches';
+  let pnlTiles='';
+  if(hasCost){
+    pnlTiles=
+      '<div class="kpi"><span class="kpi-lbl">Direct Costs</span><span class="kpi-val" style="color:#E53935">'+fmtN(dc)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Gross Profit</span><span class="kpi-val" style="color:'+(gp>=0?'#28a745':'#dc3545')+'">'+fmtN(gp)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Overhead/OpEx</span><span class="kpi-val" style="color:#E53935">'+fmtN(opx)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Net Profit/(Loss)</span><span class="kpi-val" style="color:'+npc+'">'+fmtN(np)+'</span></div>';
+  }
+  document.getElementById('kpiCard').innerHTML=
+    '<h3>'+title+' &nbsp;<small style="font-weight:400;font-size:10px;color:#888">'+periodLabel+'</small></h3>'+
+    '<div class="kpi-grid">'+
+      '<div class="kpi"><span class="kpi-lbl">Revenue</span><span class="kpi-val">'+fmtN(rev)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Paid</span><span class="kpi-val">'+fmtN(paid)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Due</span><span class="kpi-val">'+fmtN(due)+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Cases</span><span class="kpi-val">'+cases.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Tests</span><span class="kpi-val">'+inv.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Patients</span><span class="kpi-val">'+pat.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">Active Referrers</span><span class="kpi-val">'+refs.toLocaleString()+'</span></div>'+
+      '<div class="kpi"><span class="kpi-lbl">% of Target</span><span class="kpi-val" style="color:'+sc+'">'+pct.toFixed(1)+'%</span></div>'+
+      pnlTiles+
+    '</div>'+
+    '<div class="tbar-wrap"><div class="tbar" style="width:'+Math.min(pct,100).toFixed(1)+'%;background:'+sc+'"></div></div>'+
+    '<p class="tlbl" style="color:'+sc+'">Target: '+fmtN(tgt)+'</p>';
+}
+
+function renderPnLCharts(year, branch, month){
+  const hasCost=Object.keys(COST_HISTORY).length>0;
+  document.getElementById('pnlSection').style.display=hasCost?'':'none';
+  document.getElementById('pnlCostSection').style.display=hasCost?'':'none';
+  document.getElementById('pnlStackSection').style.display=hasCost?'':'none';
+  if(!hasCost)return;
+
+  let keys;
+  if(currentView==='yearly'){
+    keys=Object.keys(COST_HISTORY).sort();
+  } else if(month===0){
+    keys=Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+  } else {
+    keys=[year+'-'+String(month).padStart(2,'0')];
+  }
+
+  const allBranches=branch?[branch]:[...new Set(Object.values(COST_HISTORY).flatMap(m=>Object.keys(m)))].sort();
+
+  const xLabels=keys.map(k=>{
+    if(currentView==='yearly')return k;
+    const[y,m]=k.split('-');return MNAMES[parseInt(m)-1];
+  });
+
+  const isDark=getEffectiveTheme()==='dark';
+  const _grid=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const _tick=isDark?'#adbac7':'#555';
+
+  const npDs=allBranches.map((c,i)=>({
+    label:c.replace(' Main Centre, Lagos','').replace(' Centre','').replace(', Lagos',''),
+    borderColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+    backgroundColor:(BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length])+'33',
+    data:keys.map(k=>{
+      const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+      const cc=(COST_HISTORY[k]||{})[c]||{};
+      const rev=cd?cd.revenue:0;
+      const dc=cc.direct_costs||0; const opx=cc.opex||0;
+      return Math.round(rev-dc-opx);
+    }),
+    fill:false, tension:0.3, borderWidth:2, pointRadius:4
+  }));
+  if(charts['cPnL']){charts['cPnL'].destroy();}
+  charts['cPnL']=new Chart(document.getElementById('cPnL'),{
+    type:'line',
+    data:{labels:xLabels,datasets:npDs},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:_tick}}},
+      scales:{
+        x:{ticks:{color:_tick},grid:{color:_grid}},
+        y:{beginAtZero:false,ticks:{color:_tick},grid:{color:_grid},
+           title:{display:true,text:'Net Profit / (Loss) NGN',font:{size:9},color:_tick}}
+      }}
+  });
+
+  const revData=allBranches.map(c=>{
+    let s=0;
+    keys.forEach(k=>{const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);if(cd)s+=cd.revenue||0;});
+    return Math.round(s);
+  });
+  const dcData=allBranches.map(c=>{
+    let s=0;
+    keys.forEach(k=>{const cc=(COST_HISTORY[k]||{})[c]||{};s+=cc.direct_costs||0;});
+    return Math.round(s);
+  });
+  const opxData=allBranches.map(c=>{
+    let s=0;
+    keys.forEach(k=>{const cc=(COST_HISTORY[k]||{})[c]||{};s+=cc.opex||0;});
+    return Math.round(s);
+  });
+  const npTot=allBranches.map((_,i)=>revData[i]-dcData[i]-opxData[i]);
+  const bLabels=allBranches.map(c=>c.replace(' Main Centre, Lagos','').replace(' Centre','').replace(', Lagos',''));
+  if(charts['cPnLCost']){charts['cPnLCost'].destroy();}
+  charts['cPnLCost']=new Chart(document.getElementById('cPnLCost'),{
+    type:'bar',
+    data:{labels:bLabels,datasets:[
+      {label:'Revenue',backgroundColor:'rgba(33,150,243,0.8)',data:revData},
+      {label:'Direct Costs',backgroundColor:'rgba(229,57,53,0.7)',data:dcData},
+      {label:'Overhead/OpEx',backgroundColor:'rgba(255,152,0,0.7)',data:opxData},
+      {label:'Net Profit',backgroundColor:npTot.map(v=>v>=0?'rgba(27,94,32,0.85)':'rgba(183,28,28,0.85)'),data:npTot}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:_tick}}},
+      scales:{
+        x:{beginAtZero:true,ticks:{color:_tick},grid:{color:_grid}},
+        y:{beginAtZero:false,ticks:{color:_tick},grid:{color:_grid},
+           title:{display:true,text:'NGN',font:{size:9},color:_tick}}
+      }}
+  });
+
+  let stackLabels, stackDs, stackTitle, stackYLabel;
+  function shortName(c){ return c.replace(' Main Centre, Lagos','').replace(' Centre','').replace(', Lagos',''); }
+
+  if(currentView==='yearly'){
+    const yearSet=[...new Set(Object.keys(COST_HISTORY).map(k=>k.split('-')[0]))].sort();
+    stackLabels=yearSet;
+    stackTitle='P&L — Net Profit by Year (Branches Stacked)';
+    stackYLabel='Net Profit (NGN)';
+    stackDs=allBranches.map((c,i)=>({
+      label:shortName(c), stack:'s',
+      backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:yearSet.map(yr=>{
+        let r=0,dc=0,ox=0;
+        Object.keys(COST_HISTORY).filter(k=>k.startsWith(yr+'-')).forEach(k=>{
+          const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+          if(cd) r+=cd.revenue||0;
+          const cc=(COST_HISTORY[k]||{})[c]||{};
+          dc+=cc.direct_costs||0; ox+=cc.opex||0;
+        });
+        return Math.round(r-dc-ox);
+      })
+    }));
+  } else if(month===0){
+    const monthKeys=Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+    stackLabels=MNAMES;
+    stackTitle='P&L — Net Profit by Month '+year+' (Branches Stacked)';
+    stackYLabel='Net Profit (NGN)';
+    stackDs=allBranches.map((c,i)=>({
+      label:shortName(c), stack:'s',
+      backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+      data:monthKeys.map(k=>{
+        const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+        const cc=(COST_HISTORY[k]||{})[c]||{};
+        const r=cd?cd.revenue||0:0;
+        return Math.round(r-(cc.direct_costs||0)-(cc.opex||0));
+      })
+    }));
+  } else {
+    stackLabels=['Revenue','Direct Costs','Overhead / OpEx','Net Profit'];
+    stackTitle='P&L — Cost Breakdown (Branches Stacked)';
+    stackYLabel='NGN';
+    stackDs=allBranches.map((c,i)=>{
+      let s_rev=0,s_dc=0,s_opx=0;
+      keys.forEach(k=>{
+        const cd=(HISTORY[k]&&(HISTORY[k].centres||{})[c]);
+        if(cd) s_rev+=cd.revenue||0;
+        const cc=(COST_HISTORY[k]||{})[c]||{};
+        s_dc+=cc.direct_costs||0; s_opx+=cc.opex||0;
+      });
+      return{label:shortName(c),stack:'s',
+        backgroundColor:BCOLORS[c]||DEFAULT_COLORS[i%DEFAULT_COLORS.length],
+        data:[Math.round(s_rev),Math.round(s_dc),Math.round(s_opx),Math.round(s_rev-s_dc-s_opx)]};
+    });
+  }
+
+  const titleEl=document.getElementById('pnlStackTitle');
+  if(titleEl) titleEl.textContent=stackTitle;
+
+  if(charts['cPnLStack']){charts['cPnLStack'].destroy();}
+  charts['cPnLStack']=new Chart(document.getElementById('cPnLStack'),{
+    type:'bar',
+    data:{labels:stackLabels,datasets:stackDs},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:11,font:{size:9},color:_tick}},
+        stackedTotals:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:_tick},grid:{color:_grid}},
+        y:{stacked:true,beginAtZero:false,ticks:{color:_tick},grid:{color:_grid},
+           title:{display:true,text:stackYLabel,font:{size:9},color:_tick}}
+      }}
+  });
+}
+
+function renderRefTable(refs, branch){
+  const rows=(branch?refs.filter(r=>r.centre===branch):refs).slice(0,20);
+  let html='<table><thead><tr><th>Centre</th><th>Referrer</th><th>Cases</th><th>Investigations</th><th>Revenue</th></tr></thead><tbody>';
+  rows.forEach(r=>{ html+='<tr><td>'+r.centre+'</td><td>'+r.referrer+'</td><td>'+r.cases+'</td><td>'+r.investigations+'</td><td>'+fmtN(r.revenue)+'</td></tr>'; });
+  html+='</tbody></table>';
+  if(!rows.length) html='<p class="no-data">No referrer data for selection.</p>';
+  document.getElementById('refTable').innerHTML=html;
+}
+
+(function init(){
+  applyTheme(getEffectiveTheme());
+  const keys=Object.keys(HISTORY).sort().reverse();
+  if(keys.length){
+    const[y]=keys[0].split('-');
+    document.getElementById('yearSel').value=y;
+  }
+  document.getElementById('monthSel').value='0';
+  render();
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
+    if(!null){ applyTheme(getEffectiveTheme()); renderAll(); }
+  });
+})();
+</script>
+</body>
+</html>

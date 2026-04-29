@@ -1,0 +1,14 @@
+{
+  "2026-03-30_2026-04-05": {
+    "week_title": "Mon 30 Mar \u2013 Sun 5 Apr 2026",
+    "week_start": "2026-03-30",
+    "week_end": "2026-04-05",
+    "totalCases": 285,
+    "totalInv": 360,
+    "totalRev": 2303450,
+    "totalPaid": 2295150,
+    "totalDue": 6500,
+    "totalRefs": 47,
+    "cancelled": 2
+  }
+}
