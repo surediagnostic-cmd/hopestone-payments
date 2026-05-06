@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Hopestone Payment Tracker",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/mac/Documents/02_Hopestone/Finance/.claude/worktrees/loving-grothendieck-55be10 && python3 app.py"],
+      "port": 5000,
+      "autoPort": true
+    }
+  ]
+}

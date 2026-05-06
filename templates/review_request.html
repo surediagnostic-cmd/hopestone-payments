@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Review {{ pr.reference }} — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Review Request{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('requests.view_request', req_id=pr.id) }}" class="btn btn-outline btn-sm">← View Details</a>
+{% endblock %}
+
+{% block extra_style %}
+.review-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+.info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 3px; }
+.info-value { font-size: 14px; color: var(--text); font-weight: 500; }
+.amount-highlight {
+  background: var(--primary-light); border: 2px solid var(--primary);
+  border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.amount-highlight .ah-label { font-size: 12px; font-weight: 700; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+.amount-highlight .ah-value { font-size: 28px; font-weight: 900; color: var(--primary-dark); }
+.action-card { position: sticky; top: 80px; }
+.action-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.btn-approve { background: var(--success); color: #fff; border: none; border-radius: var(--radius); padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-approve:hover { background: #219a52; transform: translateY(-1px); }
+.btn-reject  { background: var(--danger);  color: #fff; border: none; border-radius: var(--radius); padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-reject:hover  { background: #c0392b; transform: translateY(-1px); }
+@media(max-width:900px) { .review-grid { grid-template-columns: 1fr; } .action-card { position: static; } }
+{% endblock %}
+
+{% block content %}
+<!-- Request summary banner -->
+<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">Reference</div>
+      <div style="font-size:17px;font-weight:800;color:var(--primary);">{{ pr.reference }}</div>
+    </div>
+    <div style="width:1px;height:36px;background:var(--border);"></div>
+    <div>
+      <div class="info-label">Date</div>
+      <div class="info-value">{{ pr.date.strftime('%d %B %Y') }}</div>
+    </div>
+    <div style="width:1px;height:36px;background:var(--border);"></div>
+    <div>
+      <div class="info-label">Submitted By</div>
+      <div class="info-value">{{ pr.submitter.name if pr.submitter else '—' }}</div>
+    </div>
+    <div style="width:1px;height:36px;background:var(--border);"></div>
+    <div>
+      <div class="info-label">Branch</div>
+      <div class="info-value">{{ pr.branch.name if pr.branch else '—' }}</div>
+    </div>
+  </div>
+  <span class="badge badge-warning" style="font-size:13px;padding:6px 14px;">⏳ Pending Review</span>
+</div>
+
+<div class="review-grid">
+  <!-- Left: payment info -->
+  <div>
+    <!-- Beneficiary -->
+    <div class="card mb-3">
+      <div class="card-header"><span class="card-header-title">Beneficiary</span></div>
+      <div class="card-body">
+        <div style="font-size:18px;font-weight:800;margin-bottom:14px;">{{ pr.beneficiary_name }}</div>
+        <div class="form-row cols-2" style="gap:12px;">
+          <div>
+            <div class="info-label">Account Number</div>
+            <div class="info-value" style="font-family:monospace;font-size:15px;font-weight:700;">{{ pr.beneficiary_account }}</div>
+          </div>
+          <div>
+            <div class="info-label">Bank</div>
+            <div class="info-value">{{ pr.beneficiary_bank }}</div>
+          </div>
+          {% if pr.bank_code %}
+          <div>
+            <div class="info-label">Bank Code</div>
+            <div class="info-value mono">{{ pr.bank_code }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div class="card">
+      <div class="card-header"><span class="card-header-title">Line Items</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th style="text-align:center;">Qty</th>
+              <th style="text-align:right;">Rate (₦)</th>
+              <th style="text-align:right;">Amount (₦)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in pr.items %}
+            <tr>
+              <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
+              <td style="font-weight:500;">{{ item.description }}</td>
+              <td>
+                <div style="font-size:13px;">{{ item.category.name if item.category else '—' }}</div>
+                {% if item.category %}
+                  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;">
+                    {{ item.category.cost_type.replace('_', ' ').title() }}
+                  </div>
+                {% endif %}
+              </td>
+              <td style="text-align:center;">{{ item.quantity }}</td>
+              <td style="text-align:right;" class="amount">{{ format_naira(item.rate) }}</td>
+              <td style="text-align:right;font-weight:700;" class="amount-naira">{{ format_naira(item.amount) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" style="text-align:right;font-weight:700;padding:14px;border-top:2px solid var(--border);">Total Requested:</td>
+              <td style="text-align:right;font-weight:800;font-size:17px;color:var(--primary-dark);padding:14px;border-top:2px solid var(--border);">
+                {{ format_naira(pr.requested_amount) }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: approval form -->
+  <div class="action-card">
+    <div class="card">
+      <div class="card-header"><span class="card-header-title">MD Decision</span></div>
+      <div class="card-body">
+        <div class="amount-highlight">
+          <div>
+            <div class="ah-label">Requested Amount</div>
+            <div class="ah-value">{{ format_naira(pr.requested_amount) }}</div>
+          </div>
+          <span style="font-size:32px;">₦</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('approvals.review', req_id=pr.id) }}" id="reviewForm">
+          <div class="form-group">
+            <label class="form-label">Approved Amount</label>
+            <input type="number" name="approved_amount" class="form-control"
+                   value="{{ pr.requested_amount }}" min="0" step="0.01"
+                   style="font-size:18px;font-weight:700;text-align:right;" />
+            <div class="form-hint">Leave unchanged to approve the full requested amount.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Comment <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+            <textarea name="comment" class="form-control" rows="4"
+                      placeholder="Add a note for the accountant…"
+                      style="resize:vertical;"></textarea>
+          </div>
+
+          <div class="action-btn-row">
+            <button type="submit" name="action" value="approve" class="btn-approve"
+                    onclick="return confirm('Approve {{ pr.reference }}?')">
+              ✓ Approve
+            </button>
+            <button type="submit" name="action" value="reject" class="btn-reject"
+                    onclick="return confirm('Reject {{ pr.reference }}? This cannot be undone.')">
+              ✗ Reject
+            </button>
+          </div>
+        </form>
+
+        <hr class="divider" />
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+          <strong>Note:</strong> Once approved or rejected, the decision is recorded and the accountant will be notified. A rejected request cannot be re-submitted — the accountant must create a new one.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

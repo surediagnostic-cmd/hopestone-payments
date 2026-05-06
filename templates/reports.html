@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Reports — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block topbar_actions %}
+  <form method="GET" action="{{ url_for('reports.reports') }}" style="display:flex;align-items:center;gap:8px;">
+    <label style="font-size:13px;font-weight:600;color:var(--muted);">Year:</label>
+    <select name="year" onchange="this.form.submit()" class="form-control" style="width:110px;padding:6px 10px;">
+      {% for y in range(now.year, now.year - 4, -1) %}
+      <option value="{{ y }}" {% if y == year_filter %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  <a href="{{ url_for('requests.export_requests') }}" class="btn btn-outline btn-sm">⇩ Export Excel</a>
+{% endblock %}
+
+{% block extra_style %}
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.chart-card .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.chart-card .chart-body { padding: 20px; }
+.status-kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.kpi-mini { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+.kpi-mini .kv { font-size: 28px; font-weight: 800; }
+.kpi-mini .kl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--muted); margin-top: 4px; }
+.cat-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.cat-row:last-child { border-bottom: none; }
+.cat-bar-wrap { flex: 1; background: var(--bg); border-radius: 4px; height: 8px; overflow: hidden; }
+.cat-bar { height: 100%; border-radius: 4px; background: var(--primary); transition: width 0.4s; }
+.cat-bar.overhead { background: #95a5a6; }
+@media(max-width:900px) { .report-grid { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<!-- Status KPIs -->
+<div class="status-kpi-grid">
+  <div class="kpi-mini">
+    <div class="kv" style="color:var(--warning);">{{ status_map.get('pending', 0) }}</div>
+    <div class="kl">Pending</div>
+  </div>
+  <div class="kpi-mini">
+    <div class="kv" style="color:var(--success);">{{ status_map.get('approved', 0) }}</div>
+    <div class="kl">Approved</div>
+  </div>
+  <div class="kpi-mini">
+    <div class="kv" style="color:var(--danger);">{{ status_map.get('rejected', 0) }}</div>
+    <div class="kl">Rejected</div>
+  </div>
+</div>
+
+<!-- Summary row -->
+<div class="stat-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-label">Total Requested ({{ year_filter }})</div>
+    <div class="stat-value" style="font-size:20px;">{{ format_naira(total_requested) }}</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-label">Total Approved ({{ year_filter }})</div>
+    <div class="stat-value" style="font-size:20px;">{{ format_naira(total_approved) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Approval Rate</div>
+    {% set total_dec = status_map.get('approved', 0) + status_map.get('rejected', 0) %}
+    <div class="stat-value">{{ ((status_map.get('approved', 0) / total_dec * 100) | round(0) | int) if total_dec > 0 else 0 }}%</div>
+  </div>
+</div>
+
+<div class="report-grid">
+  <!-- Monthly bar chart -->
+  <div class="chart-card">
+    <div class="card-header">
+      <span class="card-header-title">Monthly Requested vs Approved ({{ year_filter }})</span>
+    </div>
+    <div class="chart-body">
+      <canvas id="monthlyChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Category breakdown -->
+  <div class="chart-card">
+    <div class="card-header">
+      <span class="card-header-title">Spend by Category (Approved, {{ year_filter }})</span>
+    </div>
+    <div class="chart-body">
+      {% if cat_data %}
+        {% set max_cat = cat_data[0].total | float %}
+        {% for row in cat_data %}
+        <div class="cat-row">
+          <div style="min-width:140px;font-size:13px;font-weight:600;color:var(--text);">
+            {{ row.category }}
+            <div style="font-size:10px;color:var(--muted);font-weight:400;text-transform:uppercase;">{{ row.cost_type.replace('_',' ') }}</div>
+          </div>
+          <div class="cat-bar-wrap">
+            <div class="cat-bar {% if row.cost_type == 'overhead' %}overhead{% endif %}"
+                 style="width:{{ ((row.total | float) / max_cat * 100) | round(1) }}%;"></div>
+          </div>
+          <div style="min-width:110px;text-align:right;font-size:13px;font-weight:700;color:var(--primary-dark);">
+            {{ format_naira(row.total) }}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📊</div>
+          <p>No approved payments in {{ year_filter }} yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Variance report -->
+{% if variances %}
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-header-title">⚠ Variance Report — Approved Amount ≠ Requested</span>
+    <span style="font-size:12px;color:var(--muted);">{{ variances|length }} records</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Beneficiary</th>
+          <th>Requested</th>
+          <th>Approved</th>
+          <th>Variance</th>
+          <th>Reviewed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pr in variances %}
+        {% set variance = (pr.approved_amount | float) - (pr.requested_amount | float) %}
+        <tr>
+          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
+          <td>{{ pr.beneficiary_name }}</td>
+          <td class="amount">{{ format_naira(pr.requested_amount) }}</td>
+          <td class="amount amount-naira">{{ format_naira(pr.approved_amount) }}</td>
+          <td class="amount" style="color:{{ 'var(--danger)' if variance < 0 else 'var(--success)' }};font-weight:700;">
+            {{ '+' if variance > 0 else '' }}{{ format_naira(variance) }}
+          </td>
+          <td style="font-size:12px;color:var(--muted);">{{ pr.reviewed_at.strftime('%d %b %Y') if pr.reviewed_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Monthly detail table -->
+{% if monthly_data %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-header-title">Monthly Breakdown ({{ year_filter }})</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Branch</th>
+          <th style="text-align:center;">Count</th>
+          <th style="text-align:right;">Requested</th>
+          <th style="text-align:right;">Approved</th>
+          <th style="text-align:right;">Variance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in monthly_data %}
+        {% set req_f = row.requested | float %}
+        {% set apr_f = (row.approved or 0) | float %}
+        <tr>
+          <td style="font-weight:600;">{{ months[(row.month | int) - 1] }}</td>
+          <td style="font-size:12px;color:var(--muted);">{{ row.branch }}</td>
+          <td style="text-align:center;">{{ row.count }}</td>
+          <td style="text-align:right;" class="amount">{{ format_naira(req_f) }}</td>
+          <td style="text-align:right;" class="amount amount-naira">{{ format_naira(apr_f) }}</td>
+          <td style="text-align:right;font-weight:700;color:{{ 'var(--danger)' if apr_f < req_f else 'var(--success)' }};">
+            {{ format_naira(apr_f - req_f) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Build monthly data arrays
+  const monthLabels = {{ months | tojson }};
+  const requested = new Array(12).fill(0);
+  const approved  = new Array(12).fill(0);
+
+  {% for row in monthly_data %}
+  requested[{{ (row.month | int) - 1 }}] += {{ row.requested | float }};
+  approved[{{ (row.month | int) - 1 }}]  += {{ (row.approved or 0) | float }};
+  {% endfor %}
+
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: monthLabels,
+      datasets: [
+        {
+          label: 'Requested',
+          data: requested,
+          backgroundColor: 'rgba(58, 159, 216, 0.25)',
+          borderColor: '#3a9fd8',
+          borderWidth: 2,
+          borderRadius: 4,
+        },
+        {
+          label: 'Approved',
+          data: approved,
+          backgroundColor: 'rgba(39, 174, 96, 0.75)',
+          borderColor: '#27ae60',
+          borderWidth: 2,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ₦' + ctx.parsed.y.toLocaleString('en-NG', { minimumFractionDigits: 2 }),
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => '₦' + (v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'k' : v),
+            font: { size: 11 },
+          },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+        },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } },
+      },
+    },
+  });
+</script>
+{% endblock %}

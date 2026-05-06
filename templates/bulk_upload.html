@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Bulk Upload — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Bulk Upload{% endblock %}
+
+{% block extra_style %}
+.upload-zone {
+  border: 2.5px dashed var(--border); border-radius: var(--radius);
+  padding: 40px 24px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: #fafcff;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--primary); background: var(--primary-light);
+}
+.upload-zone .upload-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.6; }
+.upload-zone .upload-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.upload-zone .upload-hint  { font-size: 13px; color: var(--muted); }
+.upload-zone input[type=file] { display: none; }
+.file-selected {
+  display: none; align-items: center; gap: 12px;
+  background: var(--success-light); border: 1.5px solid var(--success);
+  border-radius: var(--radius); padding: 12px 16px; margin-top: 12px;
+}
+.steps-list { counter-reset: step; list-style: none; }
+.steps-list li {
+  counter-increment: step;
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.steps-list li:last-child { border-bottom: none; }
+.steps-list li::before {
+  content: counter(step);
+  min-width: 26px; height: 26px;
+  background: var(--primary); color: #fff;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+.steps-list li .step-text { font-size: 13.5px; color: var(--text); line-height: 1.5; }
+.steps-list li .step-text strong { color: var(--primary-dark); }
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+
+  <!-- Upload form -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">Upload Payment Requests</span>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('requests.bulk_upload') }}"
+              enctype="multipart/form-data" id="uploadForm">
+
+          <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📂</div>
+            <div class="upload-label">Click to select or drag & drop your file</div>
+            <div class="upload-hint">Accepts .xlsx files only · Use the Hopestone template</div>
+            <input type="file" id="fileInput" name="file" accept=".xlsx" onchange="fileChosen(this)" />
+          </div>
+
+          <div class="file-selected" id="fileSelected">
+            <span style="font-size:24px;">📄</span>
+            <div>
+              <div style="font-weight:600;font-size:13.5px;" id="fileName"></div>
+              <div style="font-size:12px;color:var(--success);">Ready to upload</div>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" style="margin-left:auto;"
+                    onclick="clearFile()">Change</button>
+          </div>
+
+          <div class="flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+              ↑ Upload & Process
+            </button>
+            <a href="{{ url_for('requests.dashboard') }}" class="btn btn-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructions sidebar -->
+  <div>
+    <div class="card mb-2">
+      <div class="card-header">
+        <span class="card-header-title">How to Use</span>
+      </div>
+      <div class="card-body">
+        <ol class="steps-list">
+          <li><div class="step-text">
+            <strong>Download the template</strong> — it includes all valid branches and categories on the Instructions sheet.
+            <a href="{{ url_for('requests.download_template') }}" class="btn btn-primary btn-sm" style="display:inline-flex;margin-top:8px;">↓ Download Template</a>
+          </div></li>
+          <li><div class="step-text">
+            <strong>Fill in your payment rows</strong> — one row per line item. Use the exact branch and category names from the Instructions sheet.
+          </div></li>
+          <li><div class="step-text">
+            <strong>Save as .xlsx</strong> — do not change the file format.
+          </div></li>
+          <li><div class="step-text">
+            <strong>Upload here</strong> — the system will validate each row and report any errors.
+          </div></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">Required Columns</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;font-size:12.5px;">
+          <thead>
+            <tr>
+              <th style="padding:8px 14px;">Column</th>
+              <th style="padding:8px 14px;">Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set cols = [
+              ('Date (YYYY-MM-DD)', '2025-06-01'),
+              ('Branch', 'Hopestone Hospital (Ikeja)'),
+              ('Beneficiary Name', 'MedPharm Supplies'),
+              ('Account Number', '0012345678'),
+              ('Bank', 'Sterling Bank'),
+              ('Bank Code (opt)', '232'),
+              ('Description', 'Paracetamol 500mg x100'),
+              ('Category', 'Drugs'),
+              ('Quantity', '2'),
+              ('Rate (₦)', '3500'),
+              ('Amount (₦)', '7000'),
+            ] %}
+            {% for col, ex in cols %}
+            <tr>
+              <td style="padding:7px 14px;font-weight:600;border-bottom:1px solid var(--border);">{{ col }}</td>
+              <td style="padding:7px 14px;color:var(--muted);border-bottom:1px solid var(--border);">{{ ex }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function fileChosen(input) {
+    if (input.files && input.files[0]) {
+      document.getElementById('fileName').textContent = input.files[0].name;
+      document.getElementById('fileSelected').style.display = 'flex';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('dropZone').style.display = 'none';
+    }
+  }
+
+  function clearFile() {
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileSelected').style.display = 'none';
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('dropZone').style.display = 'block';
+  }
+
+  // Drag-and-drop
+  const zone = document.getElementById('dropZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.xlsx')) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('fileInput').files = dt.files;
+      fileChosen(document.getElementById('fileInput'));
+    } else {
+      alert('Please drop an .xlsx file.');
+    }
+  });
+</script>
+{% endblock %}

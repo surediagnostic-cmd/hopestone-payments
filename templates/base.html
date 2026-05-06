@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Hopestone Payment Tracker{% endblock %}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:       #3a9fd8;
+      --primary-dark:  #2980b9;
+      --primary-light: #e8f4fb;
+      --sidebar-bg:    #1a3a5c;
+      --sidebar-hover: #22496e;
+      --sidebar-active:#3a9fd8;
+      --sidebar-text:  #c8daea;
+      --sidebar-muted: #7a9bb5;
+      --bg:            #f0f4f8;
+      --card:          #ffffff;
+      --text:          #1e2d3d;
+      --muted:         #6b7f92;
+      --border:        #dce6ef;
+      --success:       #27ae60;
+      --success-light: #eafaf1;
+      --warning:       #f39c12;
+      --warning-light: #fef9e7;
+      --danger:        #e74c3c;
+      --danger-light:  #fdf2f2;
+      --info:          #3a9fd8;
+      --info-light:    #e8f4fb;
+      --radius:        8px;
+      --shadow:        0 2px 8px rgba(26,58,92,0.10);
+      --shadow-lg:     0 4px 20px rgba(26,58,92,0.14);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform 0.25s ease;
+    }
+
+    .sidebar-brand {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-brand .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .sidebar-brand .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #fff;
+      flex-shrink: 0;
+    }
+    .sidebar-brand .brand-text { color: #fff; }
+    .sidebar-brand .brand-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+    .sidebar-brand .brand-sub  { font-size: 10px; color: var(--sidebar-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+
+    .sidebar-user {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-user .user-name  { font-size: 13px; font-weight: 600; color: #fff; }
+    .sidebar-user .user-role  { font-size: 11px; color: var(--sidebar-muted); margin-top: 2px; }
+    .sidebar-user .user-branch{ font-size: 10px; color: var(--sidebar-muted); margin-top: 2px; }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-section-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--sidebar-muted);
+      padding: 10px 20px 4px;
+      font-weight: 600;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      border-radius: 0;
+    }
+    .nav-link:hover      { background: var(--sidebar-hover); color: #fff; }
+    .nav-link.active     { background: var(--primary); color: #fff; }
+    .nav-link .nav-icon  { font-size: 15px; width: 18px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 14px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-footer a {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--sidebar-muted); font-size: 13px; text-decoration: none;
+      transition: color 0.15s;
+    }
+    .sidebar-footer a:hover { color: var(--danger); }
+
+    /* ── Main content ── */
+    .main-wrapper {
+      margin-left: 240px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+    .page-content { padding: 28px; flex: 1; }
+
+    /* ── Alerts ── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .alert-success { background: var(--success-light); color: #1e7e45; border-left: 4px solid var(--success); }
+    .alert-danger  { background: var(--danger-light);  color: #a93226; border-left: 4px solid var(--danger);  }
+    .alert-warning { background: var(--warning-light); color: #9a6c00; border-left: 4px solid var(--warning); }
+    .alert-info    { background: var(--info-light);    color: #1a5f8a; border-left: 4px solid var(--info);    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-header-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .card-body { padding: 20px; }
+
+    /* ── KPI stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--primary);
+    }
+    .stat-card.success { border-top-color: var(--success); }
+    .stat-card.warning { border-top-color: var(--warning); }
+    .stat-card.danger  { border-top-color: var(--danger);  }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .stat-value { font-size: 26px; font-weight: 800; color: var(--text); margin: 6px 0 2px; line-height: 1; }
+    .stat-sub   { font-size: 12px; color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 13.5px; font-weight: 600;
+      border: none; cursor: pointer; text-decoration: none;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary  { background: var(--primary);      color: #fff; }
+    .btn-primary:hover  { background: var(--primary-dark); color: #fff; }
+    .btn-success  { background: var(--success);      color: #fff; }
+    .btn-danger   { background: var(--danger);       color: #fff; }
+    .btn-warning  { background: var(--warning);      color: #fff; }
+    .btn-outline  { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-lg { padding: 11px 22px; font-size: 15px; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11.5px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-success { background: var(--success-light); color: #1e7e45; }
+    .badge-danger  { background: var(--danger-light);  color: #a93226; }
+    .badge-warning { background: var(--warning-light); color: #9a6c00; }
+    .badge-info    { background: var(--info-light);    color: #1a5f8a; }
+    .badge-secondary { background: #eef2f6; color: var(--muted); }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th {
+      background: #f5f8fb; color: var(--muted);
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+      padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border);
+    }
+    td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #f8fbff; }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .form-label .required { color: var(--danger); margin-left: 2px; }
+    .form-control {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(58,159,216,0.15); }
+    .form-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+    .form-row { display: grid; gap: 16px; }
+    .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* ── Search bar ── */
+    .search-bar {
+      position: relative;
+      flex: 1;
+      max-width: 360px;
+    }
+    .search-bar input {
+      width: 100%; padding: 8px 12px 8px 36px;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      font-size: 13.5px; outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-bar input:focus { border-color: var(--primary); }
+    .search-bar .search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 14px;
+    }
+    .search-bar .clear-btn {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 14px; display: none;
+    }
+
+    /* ── Amount display ── */
+    .amount { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .amount-naira { color: var(--primary-dark); }
+
+    /* ── Responsive ── */
+    .hamburger {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: var(--text); font-size: 20px;
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrapper { margin-left: 0; }
+      .hamburger { display: block; }
+      .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Overlay ── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .overlay.show { display: block; }
+
+    /* ── Misc utilities ── */
+    .text-muted { color: var(--muted); }
+    .text-center { text-align: center; }
+    .mt-1 { margin-top: 8px; }
+    .mt-2 { margin-top: 16px; }
+    .mt-3 { margin-top: 24px; }
+    .mb-1 { margin-bottom: 8px; }
+    .mb-2 { margin-bottom: 16px; }
+    .mb-3 { margin-bottom: 24px; }
+    .flex { display: flex; }
+    .flex-center { display: flex; align-items: center; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .justify-between { justify-content: space-between; }
+    .w-full { width: 100%; }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state p { font-size: 14px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    {% block extra_style %}{% endblock %}
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <a href="{{ url_for('requests.dashboard') }}" class="brand-logo">
+      <div class="logo-icon">H</div>
+      <div class="brand-text">
+        <div class="brand-name">Hopestone</div>
+        <div class="brand-sub">Payment Tracker</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-name">{{ current_user.name }}</div>
+    <div class="user-role">{{ "MD / Admin" if current_user.is_mds else "Accountant" }}</div>
+    {% if not current_user.is_mds and current_user.branches %}
+    <div class="user-branch">
+      {% for b in current_user.branches %}{{ b.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="{{ url_for('requests.dashboard') }}" class="nav-link {% if request.endpoint == 'requests.dashboard' %}active{% endif %}">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a href="{{ url_for('requests.list_requests') }}" class="nav-link {% if request.endpoint == 'requests.list_requests' %}active{% endif %}">
+      <span class="nav-icon">≡</span> All Payments
+    </a>
+
+    <div class="nav-section-label">Actions</div>
+    <a href="{{ url_for('requests.new_request') }}" class="nav-link {% if request.endpoint == 'requests.new_request' %}active{% endif %}">
+      <span class="nav-icon">＋</span> New Request
+    </a>
+    <a href="{{ url_for('requests.bulk_upload') }}" class="nav-link {% if request.endpoint == 'requests.bulk_upload' %}active{% endif %}">
+      <span class="nav-icon">↑</span> Bulk Upload
+    </a>
+    <a href="{{ url_for('requests.download_template') }}" class="nav-link">
+      <span class="nav-icon">↓</span> Download Template
+    </a>
+    <a href="{{ url_for('requests.export_requests') }}" class="nav-link">
+      <span class="nav-icon">⇩</span> Export to Excel
+    </a>
+
+    {% if current_user.is_mds %}
+    <div class="nav-section-label">Analytics</div>
+    <a href="{{ url_for('reports.reports') }}" class="nav-link {% if request.endpoint == 'reports.reports' %}active{% endif %}">
+      <span class="nav-icon">◑</span> Reports
+    </a>
+
+    <div class="nav-section-label">Admin</div>
+    <a href="{{ url_for('admin.admin') }}" class="nav-link {% if request.endpoint == 'admin.admin' %}active{% endif %}">
+      <span class="nav-icon">⚙</span> Settings
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('auth.logout') }}">
+      <span>⏻</span> Log Out
+    </a>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <div class="flex-center gap-2">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+    </div>
+    <div class="topbar-actions">
+      {% block topbar_actions %}{% endblock %}
+    </div>
+  </header>
+
+  <main class="page-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">
+          <span>{{ msg }}</span>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script>
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

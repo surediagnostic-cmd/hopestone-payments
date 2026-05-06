@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Server Error — Hopestone Payment Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .error-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(26,58,92,0.12);
+      padding: 40px; max-width: 560px; width: 100%; text-align: center;
+    }
+    .error-icon { font-size: 56px; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 800; color: #1e2d3d; margin-bottom: 8px; }
+    p  { font-size: 14px; color: #6b7f92; line-height: 1.6; margin-bottom: 20px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-primary { background: #3a9fd8; color: #fff; }
+    .btn-primary:hover { background: #2980b9; }
+    .btn-outline { background: transparent; border: 1.5px solid #dce6ef; color: #1e2d3d; margin-left: 8px; }
+    .btn-outline:hover { border-color: #3a9fd8; color: #3a9fd8; }
+    details { margin-top: 24px; text-align: left; }
+    summary { font-size: 12px; color: #6b7f92; cursor: pointer; user-select: none; }
+    pre {
+      margin-top: 10px; padding: 14px; background: #1a3a5c; color: #a8d4f0;
+      border-radius: 8px; font-size: 11px; overflow-x: auto; line-height: 1.5;
+      max-height: 300px; overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-card">
+    <div class="error-icon">⚠️</div>
+    <h1>Something went wrong</h1>
+    <p>The server encountered an unexpected error. Your data is safe — please retry, or contact your system administrator if the problem persists.</p>
+    <div>
+      <a href="/dashboard" class="btn btn-primary">↩ Back to Dashboard</a>
+      <a href="javascript:location.reload()" class="btn btn-outline">↻ Retry</a>
+    </div>
+    {% if error %}
+    <details>
+      <summary>Technical details (for administrator)</summary>
+      <pre>{{ traceback or error }}</pre>
+    </details>
+    {% endif %}
+  </div>
+</body>
+</html>

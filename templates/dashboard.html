@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary btn-sm">＋ New Request</a>
+{% endblock %}
+
+{% block content %}
+{% if current_user.is_mds %}
+<!-- ─── MD Dashboard ─────────────────────────────────────────────────────── -->
+<div class="stat-grid">
+  <div class="stat-card warning">
+    <div class="stat-label">Pending Approval</div>
+    <div class="stat-value">{{ pending_count }}</div>
+    <div class="stat-sub">awaiting your review</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-label">Approved This Month</div>
+    <div class="stat-value">{{ approved_month }}</div>
+    <div class="stat-sub">requests approved</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-label">Total Pending Amount</div>
+    <div class="stat-value" style="font-size:18px;">{{ format_naira(total_pending_amt) }}</div>
+    <div class="stat-sub">across all pending requests</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Approved This Month</div>
+    <div class="stat-value" style="font-size:18px;">{{ format_naira(total_approved_amt) }}</div>
+    <div class="stat-sub">approval rate: {{ approval_rate }}%</div>
+  </div>
+</div>
+
+<!-- Pending approvals -->
+{% if pending %}
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-header-title">⏳ Pending Approvals</span>
+    <a href="{{ url_for('requests.list_requests', status='pending') }}" class="btn btn-outline btn-sm">View all</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Date</th>
+          <th>Beneficiary</th>
+          <th>Branch</th>
+          <th>Amount</th>
+          <th>Submitted By</th>
+          <th>Submitted</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pr in pending %}
+        <tr>
+          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
+          <td>{{ pr.date.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="font-weight:600;">{{ pr.beneficiary_name }}</div>
+            <div style="font-size:11px;color:var(--muted);">{{ pr.beneficiary_bank }}</div>
+          </td>
+          <td>{{ pr.branch.name if pr.branch else '—' }}</td>
+          <td class="amount amount-naira">{{ format_naira(pr.requested_amount) }}</td>
+          <td>{{ pr.submitter.name if pr.submitter else '—' }}</td>
+          <td style="color:var(--muted);font-size:12px;">{{ pr.created_at.strftime('%d %b, %H:%M') }}</td>
+          <td>
+            <a href="{{ url_for('approvals.review', req_id=pr.id) }}" class="btn btn-primary btn-sm">Review</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="empty-state">
+      <div class="empty-icon">✓</div>
+      <p><strong>No pending approvals</strong></p>
+      <p>All payment requests have been reviewed.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent payments -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-header-title">Recent Payments</span>
+    <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">View all</a>
+  </div>
+  <div class="table-wrap">
+    {% if recent %}
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Date</th>
+          <th>Beneficiary</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Upload</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pr in recent %}
+        <tr>
+          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
+          <td>{{ pr.date.strftime('%d %b %Y') }}</td>
+          <td>{{ pr.beneficiary_name }}</td>
+          <td class="amount amount-naira">{{ format_naira(pr.requested_amount) }}</td>
+          <td><span class="badge badge-{{ pr.status_color }}">{{ pr.status_label }}</span></td>
+          <td>
+            {% if pr.upload_status == 'uploaded' %}
+              <span class="badge badge-success">Uploaded</span>
+            {% elif pr.status == 'approved' %}
+              <span class="badge badge-secondary">Not uploaded</span>
+            {% else %}
+              <span style="color:var(--muted);font-size:12px;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No payment requests yet.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+<!-- ─── Accountant Dashboard ──────────────────────────────────────────────── -->
+<div class="stat-grid">
+  <div class="stat-card warning">
+    <div class="stat-label">My Pending</div>
+    <div class="stat-value">{{ my_pending }}</div>
+    <div class="stat-sub">awaiting MD review</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-label">Approved This Month</div>
+    <div class="stat-value">{{ my_approved_month }}</div>
+    <div class="stat-sub">requests approved</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Approved (All Time)</div>
+    <div class="stat-value" style="font-size:18px;">{{ format_naira(my_total_approved) }}</div>
+    <div class="stat-sub">cumulative approvals</div>
+  </div>
+</div>
+
+<div class="flex gap-2 mb-3" style="flex-wrap:wrap;">
+  <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary">＋ Submit New Request</a>
+  <a href="{{ url_for('requests.bulk_upload') }}" class="btn btn-outline">↑ Bulk Upload</a>
+  <a href="{{ url_for('requests.download_template') }}" class="btn btn-outline">↓ Download Template</a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-header-title">My Recent Requests</span>
+    <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">View all</a>
+  </div>
+  <div class="table-wrap">
+    {% if my_requests %}
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Date</th>
+          <th>Beneficiary</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>MD Comment</th>
+          <th>Upload</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pr in my_requests %}
+        <tr>
+          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
+          <td>{{ pr.date.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="font-weight:600;">{{ pr.beneficiary_name }}</div>
+            <div style="font-size:11px;color:var(--muted);">{{ pr.beneficiary_bank }}</div>
+          </td>
+          <td class="amount amount-naira">{{ format_naira(pr.requested_amount) }}</td>
+          <td><span class="badge badge-{{ pr.status_color }}">{{ pr.status_label }}</span></td>
+          <td style="font-size:12px;color:var(--muted);max-width:200px;">
+            {{ pr.mds_comment[:60] ~ '…' if pr.mds_comment and pr.mds_comment|length > 60 else (pr.mds_comment or '—') }}
+          </td>
+          <td>
+            {% if pr.upload_status == 'uploaded' %}
+              <span class="badge badge-success">Uploaded</span>
+            {% elif pr.status == 'approved' %}
+              <form method="POST" action="{{ url_for('requests.mark_uploaded', req_id=pr.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark {{ pr.reference }} as uploaded to bank?')">Mark Uploaded</button>
+              </form>
+            {% else %}
+              <span style="color:var(--muted);font-size:12px;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p><strong>No requests yet</strong></p>
+        <p class="mt-1"><a href="{{ url_for('requests.new_request') }}" style="color:var(--primary);">Submit your first payment request →</a></p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

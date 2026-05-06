@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block title %}{{ pr.reference }} — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}{{ pr.reference }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">← All Payments</a>
+  {% if current_user.is_mds and pr.status == 'pending' %}
+    <a href="{{ url_for('approvals.review', req_id=pr.id) }}" class="btn btn-primary btn-sm">Review & Approve</a>
+  {% endif %}
+{% endblock %}
+
+{% block extra_style %}
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.info-group { margin-bottom: 16px; }
+.info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 3px; }
+.info-value { font-size: 14px; color: var(--text); font-weight: 500; }
+.info-value.mono { font-family: 'Courier New', monospace; font-size: 13.5px; }
+.status-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-radius: var(--radius); margin-bottom: 24px;
+  border: 1.5px solid;
+}
+.status-banner.pending  { background: var(--warning-light); border-color: var(--warning);  }
+.status-banner.approved { background: var(--success-light); border-color: var(--success);  }
+.status-banner.rejected { background: var(--danger-light);  border-color: var(--danger);   }
+.status-banner .status-icon { font-size: 22px; }
+.status-banner .status-info .status-text { font-size: 15px; font-weight: 700; }
+.status-banner .status-info .status-sub  { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+@media(max-width:768px) { .detail-grid { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<!-- Status Banner -->
+<div class="status-banner {{ pr.status }}">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span class="status-icon">
+      {% if pr.status == 'pending' %}⏳{% elif pr.status == 'approved' %}✓{% else %}✗{% endif %}
+    </span>
+    <div class="status-info">
+      <div class="status-text">
+        {% if pr.status == 'pending' %}Awaiting MD Approval
+        {% elif pr.status == 'approved' %}Approved
+        {% else %}Rejected{% endif %}
+      </div>
+      <div class="status-sub">
+        {% if pr.reviewed_at %}
+          Reviewed {{ pr.reviewed_at.strftime('%d %b %Y at %H:%M') }}
+        {% else %}
+          Submitted {{ pr.created_at.strftime('%d %b %Y at %H:%M') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    {% if pr.status == 'approved' %}
+      {% if pr.upload_status == 'uploaded' %}
+        <span class="badge badge-success" style="font-size:13px;padding:6px 12px;">✓ Uploaded to Bank</span>
+      {% else %}
+        {% if not current_user.is_mds %}
+        <form method="POST" action="{{ url_for('requests.mark_uploaded', req_id=pr.id) }}">
+          <button type="submit" class="btn btn-success"
+                  onclick="return confirm('Confirm: {{ pr.reference }} has been uploaded to the bank?')">
+            Mark as Uploaded
+          </button>
+        </form>
+        {% else %}
+        <span class="badge badge-secondary" style="font-size:13px;padding:6px 12px;">Not yet uploaded</span>
+        {% endif %}
+      {% endif %}
+    {% endif %}
+    {% if current_user.is_mds %}
+      <form method="POST" action="{{ url_for('requests.delete_request', req_id=pr.id) }}"
+            onsubmit="return confirm('Permanently delete {{ pr.reference }}? This cannot be undone.')">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <!-- Left column -->
+  <div>
+    <!-- Payment Info -->
+    <div class="card mb-3">
+      <div class="card-header"><span class="card-header-title">Payment Information</span></div>
+      <div class="card-body">
+        <div class="form-row cols-2">
+          <div class="info-group">
+            <div class="info-label">Reference</div>
+            <div class="info-value" style="font-weight:700;color:var(--primary);">{{ pr.reference }}</div>
+          </div>
+          <div class="info-group">
+            <div class="info-label">Payment Date</div>
+            <div class="info-value">{{ pr.date.strftime('%d %B %Y') }}</div>
+          </div>
+          <div class="info-group">
+            <div class="info-label">Branch</div>
+            <div class="info-value">{{ pr.branch.name if pr.branch else '—' }}</div>
+          </div>
+          <div class="info-group">
+            <div class="info-label">Source Account</div>
+            <div class="info-value">{{ pr.branch.source_account if pr.branch else '—' }}</div>
+          </div>
+          <div class="info-group">
+            <div class="info-label">Submitted By</div>
+            <div class="info-value">{{ pr.submitter.name if pr.submitter else '—' }}</div>
+          </div>
+          <div class="info-group">
+            <div class="info-label">Submitted On</div>
+            <div class="info-value">{{ pr.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beneficiary Info -->
+    <div class="card mb-3">
+      <div class="card-header"><span class="card-header-title">Beneficiary Details</span></div>
+      <div class="card-body">
+        <div class="info-group">
+          <div class="info-label">Beneficiary Name</div>
+          <div class="info-value" style="font-weight:700;font-size:15px;">{{ pr.beneficiary_name }}</div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="info-group">
+            <div class="info-label">Account Number</div>
+            <div class="info-value mono">{{ pr.beneficiary_account }}</div>
+          </div>
+          <div class="info-group">
+            <div class="info-label">Bank</div>
+            <div class="info-value">{{ pr.beneficiary_bank }}</div>
+          </div>
+          {% if pr.bank_code %}
+          <div class="info-group">
+            <div class="info-label">Bank Code</div>
+            <div class="info-value mono">{{ pr.bank_code }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div>
+    <!-- Amount Summary -->
+    <div class="card mb-3">
+      <div class="card-header"><span class="card-header-title">Amount Summary</span></div>
+      <div class="card-body">
+        <div style="display:grid;gap:14px;">
+          <div>
+            <div class="info-label">Requested Amount</div>
+            <div style="font-size:28px;font-weight:800;color:var(--text);">{{ format_naira(pr.requested_amount) }}</div>
+          </div>
+          {% if pr.status == 'approved' %}
+          <div>
+            <div class="info-label">Approved Amount</div>
+            <div style="font-size:28px;font-weight:800;color:var(--success);">{{ format_naira(pr.approved_amount) }}</div>
+            {% if pr.approved_amount != pr.requested_amount %}
+            <div style="font-size:12px;color:var(--warning);margin-top:4px;">
+              ⚠ Differs from requested amount
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- MD Decision -->
+    {% if pr.status != 'pending' %}
+    <div class="card mb-3">
+      <div class="card-header"><span class="card-header-title">MD Decision</span></div>
+      <div class="card-body">
+        <div class="info-group">
+          <div class="info-label">Decision</div>
+          <span class="badge badge-{{ pr.status_color }}" style="font-size:13px;padding:5px 12px;">{{ pr.status_label }}</span>
+        </div>
+        {% if pr.mds_comment %}
+        <div class="info-group mt-1">
+          <div class="info-label">MD Comment</div>
+          <div class="info-value" style="background:var(--bg);padding:12px;border-radius:6px;font-size:13.5px;line-height:1.6;">
+            {{ pr.mds_comment }}
+          </div>
+        </div>
+        {% else %}
+        <div style="color:var(--muted);font-size:13px;">No comment added.</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Upload Status -->
+    <div class="card">
+      <div class="card-header"><span class="card-header-title">Bank Upload Status</span></div>
+      <div class="card-body">
+        {% if pr.upload_status == 'uploaded' %}
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:28px;">✅</span>
+            <div>
+              <div style="font-weight:700;color:var(--success);">Uploaded to Bank</div>
+              <div style="font-size:12px;color:var(--muted);">Payment has been submitted for processing</div>
+            </div>
+          </div>
+        {% elif pr.status == 'approved' %}
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:28px;">⏳</span>
+            <div>
+              <div style="font-weight:700;color:var(--warning);">Pending Bank Upload</div>
+              <div style="font-size:12px;color:var(--muted);">Approved — waiting to be uploaded</div>
+            </div>
+          </div>
+        {% else %}
+          <div style="color:var(--muted);font-size:13px;">Not applicable for {{ pr.status }} requests.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Line Items -->
+<div class="card mt-2">
+  <div class="card-header"><span class="card-header-title">Line Items</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Type</th>
+          <th style="text-align:center;">Qty</th>
+          <th style="text-align:right;">Rate (₦)</th>
+          <th style="text-align:right;">Amount (₦)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pr.items %}
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
+          <td style="font-weight:500;">{{ item.description }}</td>
+          <td>{{ item.category.name if item.category else '—' }}</td>
+          <td>
+            {% if item.category %}
+              {% if item.category.cost_type == 'direct_cost' %}
+                <span class="badge badge-info">Direct Cost</span>
+              {% else %}
+                <span class="badge badge-secondary">Overhead</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td style="text-align:center;">{{ item.quantity }}</td>
+          <td style="text-align:right;" class="amount">{{ format_naira(item.rate) }}</td>
+          <td style="text-align:right;" class="amount amount-naira">{{ format_naira(item.amount) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" style="text-align:right;font-weight:700;padding:14px;border-top:2px solid var(--border);">
+            Total Requested:
+          </td>
+          <td style="text-align:right;font-weight:800;font-size:16px;color:var(--primary-dark);padding:14px;border-top:2px solid var(--border);">
+            {{ format_naira(pr.requested_amount) }}
+          </td>
+        </tr>
+        {% if pr.approved_amount and pr.status == 'approved' %}
+        <tr>
+          <td colspan="6" style="text-align:right;font-weight:700;padding:8px 14px;color:var(--success);">
+            Total Approved:
+          </td>
+          <td style="text-align:right;font-weight:800;font-size:16px;color:var(--success);padding:8px 14px;">
+            {{ format_naira(pr.approved_amount) }}
+          </td>
+        </tr>
+        {% endif %}
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}New Payment Request — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}New Payment Request{% endblock %}
+
+{% block extra_style %}
+.section-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--primary); margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--primary-light);
+}
+.items-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.items-table th {
+  background: #f0f4f8; color: var(--muted);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 9px 10px; text-align: left; border-bottom: 2px solid var(--border);
+}
+.items-table td { padding: 6px 6px; vertical-align: middle; border-bottom: 1px solid var(--border); }
+.items-table tr:last-child td { border-bottom: none; }
+.items-table input, .items-table select {
+  width: 100%; padding: 7px 9px;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 13px; outline: none; background: #fff;
+  transition: border-color 0.15s;
+}
+.items-table input:focus, .items-table select:focus { border-color: var(--primary); }
+.items-table input[type=number] { text-align: right; }
+.remove-row-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--danger); font-size: 16px; padding: 4px 6px;
+  border-radius: 4px; transition: background 0.15s;
+}
+.remove-row-btn:hover { background: var(--danger-light); }
+.total-bar {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 16px; padding: 14px 16px;
+  background: var(--primary-light); border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+.total-bar .total-label { font-size: 13px; font-weight: 600; color: var(--primary-dark); }
+.total-bar .total-value { font-size: 20px; font-weight: 800; color: var(--primary-dark); }
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('requests.new_request') }}" id="paymentForm">
+
+  <!-- ── Header Details ──────────────────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="section-title">Payment Details</div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label class="form-label">Date <span class="required">*</span></label>
+          <input type="date" name="date" class="form-control" required
+                 value="{{ today }}" max="{{ today }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Branch <span class="required">*</span></label>
+          <select name="branch_id" class="form-control" required>
+            {% for b in branches %}
+            <option value="{{ b.id }}">{{ b.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <!-- spacer -->
+        </div>
+      </div>
+
+      <div class="section-title mt-2">Beneficiary Information</div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label class="form-label">Beneficiary Name <span class="required">*</span></label>
+          <input type="text" name="beneficiary_name" class="form-control"
+                 placeholder="e.g. MedPharm Supplies Ltd" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Number <span class="required">*</span></label>
+          <input type="text" name="beneficiary_account" class="form-control"
+                 placeholder="10-digit account number" maxlength="20" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bank Name <span class="required">*</span></label>
+          <input type="text" name="beneficiary_bank" class="form-control"
+                 placeholder="e.g. Sterling Bank" required />
+        </div>
+      </div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label class="form-label">Bank Code <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+          <input type="text" name="bank_code" class="form-control"
+                 placeholder="3-digit NIBSS code" maxlength="10" />
+          <div class="form-hint">Required for some bank bulk uploads</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Line Items ──────────────────────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-header">
+      <span class="card-header-title">Line Items</span>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addRow()">＋ Add Item</button>
+    </div>
+    <div class="card-body" style="padding-bottom:0;">
+      <div class="table-wrap">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width:32%">Description</th>
+              <th style="width:22%">Category</th>
+              <th style="width:9%">Qty</th>
+              <th style="width:15%">Rate (₦)</th>
+              <th style="width:15%">Amount (₦)</th>
+              <th style="width:7%"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <!-- First row (cannot be removed) -->
+            <tr class="item-row">
+              <td><input type="text" name="description[]" placeholder="Description of item/service" required /></td>
+              <td>
+                <select name="category_id[]" required>
+                  <optgroup label="— Direct Costs —">
+                    {% for c in categories if c.cost_type == 'direct_cost' %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                  </optgroup>
+                  <optgroup label="— Overhead —">
+                    {% for c in categories if c.cost_type == 'overhead' %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                  </optgroup>
+                </select>
+              </td>
+              <td><input type="number" name="quantity[]" value="1" min="1" step="1" class="qty-input" oninput="calcRow(this)" /></td>
+              <td><input type="number" name="rate[]" value="" min="0" step="0.01" placeholder="0.00" class="rate-input" oninput="calcRow(this)" /></td>
+              <td><input type="number" name="amount_display[]" readonly value="0.00" class="amount-display" style="background:#f5f8fb;color:var(--primary-dark);font-weight:700;" /></td>
+              <td><span style="color:var(--muted);font-size:12px;padding:0 6px;">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="total-bar">
+        <span class="total-label">Total Requested:</span>
+        <span class="total-value" id="grandTotal">₦0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Submit ────────────────────────────────────────────────────────── -->
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary btn-lg">Submit Request →</button>
+    <a href="{{ url_for('requests.dashboard') }}" class="btn btn-outline btn-lg">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // date field value is set server-side via Jinja2
+
+  // Category options HTML (for dynamic rows)
+  const catOptionsHTML = `
+    <optgroup label="— Direct Costs —">
+      {% for c in categories if c.cost_type == 'direct_cost' %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="— Overhead —">
+      {% for c in categories if c.cost_type == 'overhead' %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </optgroup>`;
+
+  function addRow() {
+    const tbody = document.getElementById('itemsBody');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    tr.innerHTML = `
+      <td><input type="text" name="description[]" placeholder="Description of item/service" required /></td>
+      <td><select name="category_id[]" required>${catOptionsHTML}</select></td>
+      <td><input type="number" name="quantity[]" value="1" min="1" step="1" class="qty-input" oninput="calcRow(this)" /></td>
+      <td><input type="number" name="rate[]" value="" min="0" step="0.01" placeholder="0.00" class="rate-input" oninput="calcRow(this)" /></td>
+      <td><input type="number" name="amount_display[]" readonly value="0.00" class="amount-display" style="background:#f5f8fb;color:var(--primary-dark);font-weight:700;" /></td>
+      <td><button type="button" class="remove-row-btn" onclick="removeRow(this)" title="Remove">✕</button></td>`;
+    tbody.appendChild(tr);
+  }
+
+  function removeRow(btn) {
+    btn.closest('tr').remove();
+    updateTotal();
+  }
+
+  function calcRow(input) {
+    const row = input.closest('tr');
+    const qty  = parseFloat(row.querySelector('.qty-input').value)  || 0;
+    const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+    const amt  = qty * rate;
+    row.querySelector('.amount-display').value = amt.toFixed(2);
+    updateTotal();
+  }
+
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.amount-display').forEach(el => {
+      total += parseFloat(el.value) || 0;
+    });
+    document.getElementById('grandTotal').textContent =
+      '₦' + total.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Prevent accidental form submission with Enter in number fields
+  document.getElementById('paymentForm').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault();
+    }
+  });
+</script>
+{% endblock %}

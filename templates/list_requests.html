@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}All Payments — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}All Payments{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary btn-sm">＋ New Request</a>
+  <a href="{{ url_for('requests.export_requests', status=status_filter, branch_id=branch_filter, month=month_filter) }}" class="btn btn-outline btn-sm">⇩ Export Excel</a>
+{% endblock %}
+
+{% block extra_style %}
+.filter-bar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px;
+}
+.filter-bar select, .filter-bar input {
+  padding: 7px 10px; border: 1.5px solid var(--border);
+  border-radius: var(--radius); font-size: 13px; outline: none;
+  background: #fff; color: var(--text);
+  transition: border-color 0.15s;
+}
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--primary); }
+.record-count { font-size: 13px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+{% endblock %}
+
+{% block content %}
+<!-- Filter bar -->
+<form method="GET" action="{{ url_for('requests.list_requests') }}" class="filter-bar" id="filterForm">
+  <span style="font-size:13px;font-weight:600;color:var(--muted);">Filter:</span>
+
+  <select name="status" onchange="this.form.submit()">
+    <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+    <option value="pending"  {% if status_filter == 'pending'  %}selected{% endif %}>Pending</option>
+    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+  </select>
+
+  {% if current_user.is_mds %}
+  <select name="branch_id" onchange="this.form.submit()">
+    <option value="" {% if not branch_filter %}selected{% endif %}>All Branches</option>
+    {% for b in branches %}
+    <option value="{{ b.id }}" {% if branch_filter == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+    {% endfor %}
+  </select>
+  {% endif %}
+
+  <input type="month" name="month" value="{{ month_filter }}" onchange="this.form.submit()"
+         style="max-width:160px;" />
+
+  {% if status_filter or branch_filter or month_filter %}
+  <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+  {% endif %}
+
+  <!-- Live search -->
+  <div class="search-bar" style="max-width:280px;margin-left:auto;">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search payments…" oninput="liveSearch(this.value)" />
+    <button class="clear-btn" id="clearSearch" onclick="clearSearch()">✕</button>
+  </div>
+
+  <span class="record-count" id="recordCount">{{ requests|length }} record{{ 's' if requests|length != 1 }}</span>
+</form>
+
+<!-- Table -->
+<div class="card">
+  <div class="table-wrap">
+    {% if requests %}
+    <table id="paymentsTable">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Date</th>
+          <th>Beneficiary</th>
+          <th>Bank / Account</th>
+          {% if current_user.is_mds %}<th>Branch</th>{% endif %}
+          <th>Items</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Upload</th>
+          {% if current_user.is_mds %}<th>Submitted By</th>{% endif %}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        {% for pr in requests %}
+        <tr class="payment-row"
+            data-search="{{ [pr.reference, pr.date|string, pr.beneficiary_name, pr.beneficiary_account, pr.beneficiary_bank, pr.status, pr.branch.name if pr.branch else '', pr.submitter.name if pr.submitter else ''] | join(' ') | lower }}">
+          <td>
+            <a href="{{ url_for('requests.view_request', req_id=pr.id) }}"
+               style="color:var(--primary);font-weight:700;text-decoration:none;font-size:12.5px;">
+              {{ pr.reference }}
+            </a>
+          </td>
+          <td style="white-space:nowrap;">{{ pr.date.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="font-weight:600;">{{ pr.beneficiary_name }}</div>
+          </td>
+          <td style="font-size:12px;">
+            <div>{{ pr.beneficiary_bank }}</div>
+            <div style="color:var(--muted);">{{ pr.beneficiary_account }}</div>
+          </td>
+          {% if current_user.is_mds %}<td style="font-size:12px;">{{ pr.branch.name if pr.branch else '—' }}</td>{% endif %}
+          <td style="font-size:12px;color:var(--muted);">
+            {% for item in pr.items %}
+              <div>{{ item.description[:40] }}{% if item.description|length > 40 %}…{% endif %}</div>
+            {% endfor %}
+          </td>
+          <td class="amount amount-naira" style="white-space:nowrap;">{{ format_naira(pr.requested_amount) }}</td>
+          <td><span class="badge badge-{{ pr.status_color }}">{{ pr.status_label }}</span></td>
+          <td>
+            {% if pr.upload_status == 'uploaded' %}
+              <span class="badge badge-success">Uploaded</span>
+            {% elif pr.status == 'approved' %}
+              <span class="badge badge-secondary">Pending</span>
+            {% else %}
+              <span style="color:var(--muted);font-size:11px;">—</span>
+            {% endif %}
+          </td>
+          {% if current_user.is_mds %}
+          <td style="font-size:12px;color:var(--muted);">{{ pr.submitter.name if pr.submitter else '—' }}</td>
+          {% endif %}
+          <td>
+            <a href="{{ url_for('requests.view_request', req_id=pr.id) }}" class="btn btn-outline btn-sm">View</a>
+            {% if current_user.is_mds and pr.status == 'pending' %}
+            <a href="{{ url_for('approvals.review', req_id=pr.id) }}" class="btn btn-primary btn-sm">Review</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p><strong>No payment requests found</strong></p>
+        <p class="mt-1">
+          {% if status_filter or branch_filter or month_filter %}
+            Try adjusting your filters.
+          {% else %}
+            <a href="{{ url_for('requests.new_request') }}" style="color:var(--primary);">Submit the first request →</a>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const totalRows = document.querySelectorAll('.payment-row').length;
+
+  function liveSearch(query) {
+    const q = query.toLowerCase().trim();
+    const rows = document.querySelectorAll('.payment-row');
+    let visible = 0;
+    rows.forEach(row => {
+      const match = !q || row.dataset.search.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('recordCount').textContent =
+      q ? `${visible} of ${totalRows} records match` : `${totalRows} record${totalRows !== 1 ? 's' : ''}`;
+    document.getElementById('clearSearch').style.display = q ? 'block' : 'none';
+  }
+
+  function clearSearch() {
+    const inp = document.getElementById('searchInput');
+    inp.value = '';
+    liveSearch('');
+    inp.focus();
+  }
+</script>
+{% endblock %}

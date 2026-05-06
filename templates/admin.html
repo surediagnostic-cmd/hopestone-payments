@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}Settings — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Settings & Administration{% endblock %}
+
+{% block extra_style %}
+.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.admin-section { margin-bottom: 28px; }
+.section-head {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--primary); margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--primary-light);
+}
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.tag-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #f0f4f8; border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 5px 12px; font-size: 13px;
+}
+.tag-item.inactive { opacity: 0.55; }
+.tag-item .tag-label { font-weight: 600; }
+.tag-item .tag-type  { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.inline-form { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+.inline-form .form-group { margin-bottom: 0; }
+.user-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 10px;
+}
+.user-card:last-child { margin-bottom: 0; }
+.user-card.inactive { opacity: 0.6; }
+.user-info .user-name  { font-weight: 700; font-size: 14px; }
+.user-info .user-email { font-size: 12px; color: var(--muted); }
+.user-info .user-meta  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.user-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+details.collapsible { margin-top: 8px; }
+details.collapsible summary {
+  font-size: 12px; color: var(--primary); cursor: pointer; font-weight: 600;
+  padding: 4px 0; user-select: none;
+}
+details.collapsible .detail-body {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; margin-top: 8px;
+}
+@media(max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<div class="admin-grid">
+
+  <!-- Left column: Branches & Categories -->
+  <div>
+
+    <!-- ── Branches ──────────────────────────────────────────────────────── -->
+    <div class="card mb-3">
+      <div class="card-header"><span class="card-header-title">Branches</span></div>
+      <div class="card-body">
+        <div class="tag-list">
+          {% for b in branches %}
+          <div class="tag-item {% if not b.is_active %}inactive{% endif %}">
+            <div>
+              <div class="tag-label">{{ b.name }}</div>
+              <div class="tag-type">{{ b.source_account }}</div>
+            </div>
+            <form method="POST" action="{{ url_for('admin.toggle_branch', branch_id=b.id) }}" style="margin:0;">
+              <button type="submit" class="btn btn-sm {% if b.is_active %}btn-outline{% else %}btn-success{% endif %}"
+                      title="{{ 'Deactivate' if b.is_active else 'Activate' }}">
+                {{ '✓ Active' if b.is_active else '+ Activate' }}
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="section-head">Add Branch</div>
+        <form method="POST" action="{{ url_for('admin.add_branch') }}" class="inline-form">
+          <div class="form-group" style="flex:1;min-width:160px;">
+            <label class="form-label">Branch Name</label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. Hopestone Lekki" required />
+          </div>
+          <div class="form-group" style="flex:1;min-width:140px;">
+            <label class="form-label">Source Account</label>
+            <input type="text" name="source_account" class="form-control" placeholder="e.g. Sterling Bank" required />
+          </div>
+          <button type="submit" class="btn btn-primary">＋ Add</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Categories ───────────────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header"><span class="card-header-title">Payment Categories</span></div>
+      <div class="card-body">
+
+        <!-- Direct Costs -->
+        <div class="section-head">Direct Costs</div>
+        <div class="tag-list">
+          {% for c in categories if c.cost_type == 'direct_cost' %}
+          <div class="tag-item {% if not c.is_active %}inactive{% endif %}">
+            <span class="tag-label">{{ c.name }}</span>
+            <div style="display:flex;gap:4px;">
+              <!-- Edit inline -->
+              <details class="collapsible" style="display:inline;">
+                <summary style="display:inline;padding:0;">✎</summary>
+              </details>
+              <form method="POST" action="{{ url_for('admin.toggle_category', cat_id=c.id) }}" style="margin:0;">
+                <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline{% else %}btn-success{% endif %}"
+                        style="padding:2px 8px;font-size:11px;">
+                  {{ 'On' if c.is_active else 'Off' }}
+                </button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <span style="color:var(--muted);font-size:13px;">No direct cost categories.</span>
+          {% endfor %}
+        </div>
+
+        <!-- Overhead -->
+        <div class="section-head">Overhead</div>
+        <div class="tag-list">
+          {% for c in categories if c.cost_type == 'overhead' %}
+          <div class="tag-item {% if not c.is_active %}inactive{% endif %}">
+            <span class="tag-label">{{ c.name }}</span>
+            <form method="POST" action="{{ url_for('admin.toggle_category', cat_id=c.id) }}" style="margin:0;">
+              <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline{% else %}btn-success{% endif %}"
+                      style="padding:2px 8px;font-size:11px;">
+                {{ 'On' if c.is_active else 'Off' }}
+              </button>
+            </form>
+          </div>
+          {% else %}
+          <span style="color:var(--muted);font-size:13px;">No overhead categories.</span>
+          {% endfor %}
+        </div>
+
+        <!-- Category table with edit -->
+        <details class="collapsible">
+          <summary>Edit existing categories</summary>
+          <div class="detail-body">
+            <table style="width:100%;font-size:13px;">
+              <thead>
+                <tr>
+                  <th style="padding:6px 10px;background:#f5f8fb;border-bottom:2px solid var(--border);">Name</th>
+                  <th style="padding:6px 10px;background:#f5f8fb;border-bottom:2px solid var(--border);">Type</th>
+                  <th style="padding:6px 10px;background:#f5f8fb;border-bottom:2px solid var(--border);">Status</th>
+                  <th style="padding:6px 10px;background:#f5f8fb;border-bottom:2px solid var(--border);"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in categories %}
+                <tr>
+                  <form method="POST" action="{{ url_for('admin.edit_category', cat_id=c.id) }}" style="display:contents;">
+                    <td style="padding:6px 10px;border-bottom:1px solid var(--border);">
+                      <input type="text" name="name" value="{{ c.name }}" class="form-control" style="padding:5px 8px;font-size:12.5px;" required />
+                    </td>
+                    <td style="padding:6px 10px;border-bottom:1px solid var(--border);">
+                      <select name="cost_type" class="form-control" style="padding:5px 8px;font-size:12.5px;">
+                        <option value="direct_cost" {% if c.cost_type == 'direct_cost' %}selected{% endif %}>Direct Cost</option>
+                        <option value="overhead"    {% if c.cost_type == 'overhead'    %}selected{% endif %}>Overhead</option>
+                      </select>
+                    </td>
+                    <td style="padding:6px 10px;border-bottom:1px solid var(--border);">
+                      <span class="badge {% if c.is_active %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ 'Active' if c.is_active else 'Inactive' }}
+                      </span>
+                    </td>
+                    <td style="padding:6px 10px;border-bottom:1px solid var(--border);">
+                      <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </td>
+                  </form>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <hr class="divider" />
+        <div class="section-head">Add Category</div>
+        <form method="POST" action="{{ url_for('admin.add_category') }}" class="inline-form">
+          <div class="form-group" style="flex:1;min-width:160px;">
+            <label class="form-label">Category Name</label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. Physiotherapy" required />
+          </div>
+          <div class="form-group" style="min-width:150px;">
+            <label class="form-label">Cost Type</label>
+            <select name="cost_type" class="form-control">
+              <option value="direct_cost">Direct Cost</option>
+              <option value="overhead">Overhead</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">＋ Add</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right column: Users ──────────────────────────────────────────────── -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">Users</span>
+        <span style="font-size:12px;color:var(--muted);">{{ users|length }} total</span>
+      </div>
+      <div class="card-body">
+
+        {% for u in users %}
+        <div class="user-card {% if not u.is_active %}inactive{% endif %}">
+          <div class="user-info">
+            <div class="user-name">
+              {{ u.name }}
+              {% if u.is_mds %}<span class="badge badge-info" style="font-size:10px;margin-left:6px;">MD</span>{% endif %}
+              {% if not u.is_active %}<span class="badge badge-secondary" style="font-size:10px;margin-left:4px;">Inactive</span>{% endif %}
+            </div>
+            <div class="user-email">{{ u.email }}</div>
+            <div class="user-meta">
+              {% if u.branches %}
+                {% for b in u.branches %}{{ b.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+              {% else %}
+                No branch assigned
+              {% endif %}
+            </div>
+          </div>
+          <div class="user-actions">
+            {% if u.id != current_user.id %}
+            <form method="POST" action="{{ url_for('admin.toggle_user', user_id=u.id) }}">
+              <button type="submit" class="btn btn-sm btn-outline"
+                      onclick="return confirm('{{ 'Deactivate' if u.is_active else 'Activate' }} {{ u.name }}?')">
+                {{ 'Deactivate' if u.is_active else 'Activate' }}
+              </button>
+            </form>
+            {% endif %}
+            <details class="collapsible" style="display:inline-block;">
+              <summary style="display:inline-block;">Reset pwd</summary>
+              <div class="detail-body" style="position:absolute;z-index:10;min-width:220px;box-shadow:var(--shadow-lg);">
+                <form method="POST" action="{{ url_for('admin.reset_password', user_id=u.id) }}" class="inline-form" style="flex-direction:column;gap:8px;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:12px;">New Password (min 6 chars)</label>
+                    <input type="password" name="new_password" class="form-control" style="padding:6px 10px;" required minlength="6" />
+                  </div>
+                  <button type="submit" class="btn btn-warning btn-sm w-full">Set Password</button>
+                </form>
+              </div>
+            </details>
+          </div>
+        </div>
+        {% endfor %}
+
+        <hr class="divider" />
+        <div class="section-head">Create New User</div>
+        <form method="POST" action="{{ url_for('admin.add_user') }}">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="form-label">Full Name <span class="required">*</span></label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Amaka Obi" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email <span class="required">*</span></label>
+              <input type="email" name="email" class="form-control" placeholder="amaka@hopestone.ng" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password <span class="required">*</span></label>
+              <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required minlength="6" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Role <span class="required">*</span></label>
+              <select name="role" class="form-control">
+                <option value="accountant">Accountant</option>
+                <option value="mds">MD / Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assign to Branch(es)</label>
+            <div style="display:flex;flex-direction:column;gap:8px;background:#f5f8fb;padding:12px;border-radius:var(--radius);border:1.5px solid var(--border);">
+              {% for b in all_branches %}
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;">
+                <input type="checkbox" name="branch_ids" value="{{ b.id }}" {% if not loop.first %}{% endif %} checked />
+                {{ b.name }}
+                <span style="font-size:11px;color:var(--muted);">· {{ b.source_account }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">＋ Create User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
