@@ -404,6 +404,7 @@
     </a>
 
     <div class="nav-section-label">Actions</div>
+    {% if not current_user.is_mds %}
     <a href="{{ url_for('requests.new_request') }}" class="nav-link {% if request.endpoint == 'requests.new_request' %}active{% endif %}">
       <span class="nav-icon">＋</span> New Request
     </a>
@@ -413,6 +414,7 @@
     <a href="{{ url_for('requests.download_template') }}" class="nav-link">
       <span class="nav-icon">↓</span> Download Template
     </a>
+    {% endif %}
     <a href="{{ url_for('requests.export_requests') }}" class="nav-link">
       <span class="nav-icon">⇩</span> Export to Excel
     </a>
