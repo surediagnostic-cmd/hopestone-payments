@@ -3,23 +3,46 @@
 {% block page_title %}All Payments{% endblock %}
 
 {% block topbar_actions %}
+  {% if not current_user.is_mds %}
   <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary btn-sm">＋ New Request</a>
   <a href="{{ url_for('requests.export_requests', status=status_filter, branch_id=branch_filter, month=month_filter) }}" class="btn btn-outline btn-sm">⇩ Export Excel</a>
+  {% endif %}
 {% endblock %}
 
 {% block extra_style %}
 .filter-bar {
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px;
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px;
 }
-.filter-bar select, .filter-bar input {
+.filter-bar select, .filter-bar input[type="month"] {
   padding: 7px 10px; border: 1.5px solid var(--border);
   border-radius: var(--radius); font-size: 13px; outline: none;
-  background: #fff; color: var(--text);
+  background: var(--card); color: var(--text);
   transition: border-color 0.15s;
 }
 .filter-bar select:focus, .filter-bar input:focus { border-color: var(--primary); }
+.search-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 16px; margin-bottom: 16px;
+}
+.search-row .search-wrap {
+  position: relative; flex: 1; max-width: 480px;
+}
+.search-row .search-wrap input {
+  width: 100%; padding: 8px 12px 8px 34px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 13.5px; background: var(--card); color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+.search-row .search-wrap input:focus { border-color: var(--primary); }
+.search-row .search-wrap .s-icon { position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px; }
+.search-row .search-wrap .s-clear {
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;font-size:13px;
+  color:var(--muted);display:none;padding:2px 4px;
+}
 .record-count { font-size: 13px; color: var(--muted); margin-left: auto; white-space: nowrap; }
 {% endblock %}
 
@@ -44,22 +67,22 @@
   </select>
   {% endif %}
 
-  <input type="month" name="month" value="{{ month_filter }}" onchange="this.form.submit()"
-         style="max-width:160px;" />
+  <input type="month" name="month" value="{{ month_filter }}" onchange="this.form.submit()" style="max-width:160px;" />
 
   {% if status_filter or branch_filter or month_filter %}
-  <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+  <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">✕ Clear filters</a>
   {% endif %}
-
-  <!-- Live search -->
-  <div class="search-bar" style="max-width:280px;margin-left:auto;">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search payments…" oninput="liveSearch(this.value)" />
-    <button class="clear-btn" id="clearSearch" onclick="clearSearch()">✕</button>
-  </div>
-
-  <span class="record-count" id="recordCount">{{ requests|length }} record{{ 's' if requests|length != 1 }}</span>
 </form>
+
+<!-- Live search row -->
+<div class="search-row">
+  <div class="search-wrap">
+    <span class="s-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by name, reference, bank, status…" oninput="liveSearch(this.value)" />
+    <button class="s-clear" id="clearSearch" onclick="clearSearch()" type="button">✕</button>
+  </div>
+  <span class="record-count" id="recordCount">{{ requests|length }} record{{ 's' if requests|length != 1 }}</span>
+</div>
 
 <!-- Table -->
 <div class="card">
@@ -137,7 +160,7 @@
         <p class="mt-1">
           {% if status_filter or branch_filter or month_filter %}
             Try adjusting your filters.
-          {% else %}
+          {% elif not current_user.is_mds %}
             <a href="{{ url_for('requests.new_request') }}" style="color:var(--primary);">Submit the first request →</a>
           {% endif %}
         </p>

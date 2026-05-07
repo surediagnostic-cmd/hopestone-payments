@@ -300,11 +300,18 @@
       border-radius: var(--radius);
       font-size: 14px;
       color: var(--text);
-      background: #fff;
+      background: var(--card);
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(58,159,216,0.15); }
+    /* Global dark-mode fix for ALL form inputs/selects */
+    input, select, textarea {
+      background: var(--card);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    input::placeholder { color: var(--muted); }
     .form-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
     .form-row { display: grid; gap: 16px; }
     .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
@@ -435,11 +442,6 @@
     </a>
 
     {% if current_user.is_mds %}
-    <div class="nav-section-label">Analytics</div>
-    <a href="{{ url_for('reports.reports') }}" class="nav-link {% if request.endpoint == 'reports.reports' %}active{% endif %}">
-      <span class="nav-icon">◑</span> Reports
-    </a>
-
     <div class="nav-section-label">Admin</div>
     <a href="{{ url_for('admin.admin') }}" class="nav-link {% if request.endpoint == 'admin.admin' %}active{% endif %}">
       <span class="nav-icon">⚙</span> Settings
