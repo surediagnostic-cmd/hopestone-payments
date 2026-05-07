@@ -3,10 +3,7 @@
 {% block page_title %}Payment Dashboard{% endblock %}
 
 {% block topbar_actions %}
-  {% if current_user.is_mds %}
-    <a href="{{ url_for('requests.export_requests', year=year_filter, month=month_filter, branch_id=branch_id_filter) }}"
-       class="btn btn-primary btn-sm">⬇ Export Excel</a>
-  {% else %}
+  {% if not current_user.is_mds %}
     <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary btn-sm">＋ New Request</a>
   {% endif %}
 {% endblock %}
