@@ -34,6 +34,21 @@
       --shadow-lg:     0 4px 20px rgba(26,58,92,0.14);
     }
 
+    [data-theme="dark"] {
+      --bg:            #0f1923;
+      --card:          #1a2638;
+      --text:          #e2eaf3;
+      --muted:         #7a95ad;
+      --border:        #263547;
+      --primary-light: #1a3a5c;
+      --success-light: #0d2e1a;
+      --warning-light: #2b2000;
+      --danger-light:  #2b0d0d;
+      --info-light:    #0d2233;
+      --shadow:        0 2px 8px rgba(0,0,0,0.30);
+      --shadow-lg:     0 4px 20px rgba(0,0,0,0.40);
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
@@ -448,6 +463,10 @@
     </div>
     <div class="topbar-actions">
       {% block topbar_actions %}{% endblock %}
+      <button id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode"
+              style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:16px;color:var(--muted);line-height:1;transition:all 0.15s;">
+        🌙
+      </button>
     </div>
   </header>
 
@@ -472,6 +491,26 @@
   function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('show');
+  }
+
+  // Dark / light mode
+  (function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateIcon(saved);
+  })();
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateIcon(next);
+  }
+
+  function updateIcon(theme) {
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
 </script>
 {% block extra_js %}{% endblock %}
