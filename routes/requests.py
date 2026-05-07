@@ -49,46 +49,169 @@ def dashboard():
 
 def _dashboard_inner():
     now = datetime.now(timezone.utc)
+    months_list = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
     if current_user.is_mds:
-        pending = _eager_pr().filter_by(status="pending").order_by(PaymentRequest.created_at.desc()).all()
-        recent = _eager_pr().order_by(PaymentRequest.created_at.desc()).limit(15).all()
+        year_filter = int(request.args.get("year", now.year))
+        month_filter = int(request.args.get("month", now.month))   # 0 = all months
+        branch_id_filter = int(request.args.get("branch_id", 0))   # 0 = all branches
 
-        pending_count = PaymentRequest.query.filter_by(status="pending").count()
-        approved_month = PaymentRequest.query.filter(
-            PaymentRequest.status == "approved",
-            extract("month", PaymentRequest.created_at) == now.month,
-            extract("year", PaymentRequest.created_at) == now.year,
-        ).count()
+        all_branches = Branch.query.order_by(Branch.name).all()
+
+        def _apply_period(q):
+            q = q.filter(extract("year", PaymentRequest.created_at) == year_filter)
+            if month_filter:
+                q = q.filter(extract("month", PaymentRequest.created_at) == month_filter)
+            if branch_id_filter:
+                q = q.filter(PaymentRequest.branch_id == branch_id_filter)
+            return q
+
+        # KPI 1: all pending (global — always what needs attention now)
+        all_pending_count = PaymentRequest.query.filter_by(status="pending").count()
+
+        # KPI 2: approved amount in period
+        approved_amt = _apply_period(
+            db.session.query(func.sum(PaymentRequest.approved_amount))
+            .filter(PaymentRequest.status == "approved")
+        ).scalar() or 0
+
+        # KPI 3: total pending amount (global)
         total_pending_amt = (
             db.session.query(func.sum(PaymentRequest.requested_amount))
-            .filter_by(status="pending")
+            .filter(PaymentRequest.status == "pending")
             .scalar() or 0
         )
-        total_approved_amt = (
-            db.session.query(func.sum(PaymentRequest.approved_amount))
+
+        # KPI 4: approval rate in period
+        period_approved_count = _apply_period(
+            PaymentRequest.query.filter(PaymentRequest.status == "approved")
+        ).count()
+        period_rejected_count = _apply_period(
+            PaymentRequest.query.filter(PaymentRequest.status == "rejected")
+        ).count()
+        period_reviewed = period_approved_count + period_rejected_count
+        approval_rate = round((period_approved_count / period_reviewed * 100) if period_reviewed else 0)
+
+        # KPI 5 & 6: direct costs and overhead (approved items in period)
+        def _item_cost(cost_type):
+            q = (
+                db.session.query(func.sum(PaymentRequestItem.amount))
+                .join(PaymentRequest, PaymentRequest.id == PaymentRequestItem.request_id)
+                .join(Category, Category.id == PaymentRequestItem.category_id)
+                .filter(
+                    PaymentRequest.status == "approved",
+                    Category.cost_type == cost_type,
+                    extract("year", PaymentRequest.created_at) == year_filter,
+                )
+            )
+            if month_filter:
+                q = q.filter(extract("month", PaymentRequest.created_at) == month_filter)
+            if branch_id_filter:
+                q = q.filter(PaymentRequest.branch_id == branch_id_filter)
+            return q.scalar() or 0
+
+        direct_costs_amt = _item_cost("direct_cost")
+        overhead_amt = _item_cost("overhead")
+
+        # Status pill counts
+        uploaded_count = _apply_period(
+            PaymentRequest.query.filter(
+                PaymentRequest.upload_status == "uploaded",
+                PaymentRequest.status == "approved",
+            )
+        ).count()
+        status_counts = {
+            "pending": all_pending_count,
+            "approved": period_approved_count,
+            "rejected": period_rejected_count,
+            "uploaded": uploaded_count,
+        }
+
+        # Bar chart: approved amount by branch in period
+        bq = (
+            db.session.query(Branch.name, func.sum(PaymentRequest.approved_amount))
+            .join(PaymentRequest, PaymentRequest.branch_id == Branch.id)
             .filter(
                 PaymentRequest.status == "approved",
-                extract("month", PaymentRequest.created_at) == now.month,
-                extract("year", PaymentRequest.created_at) == now.year,
+                extract("year", PaymentRequest.created_at) == year_filter,
             )
-            .scalar() or 0
         )
-        total_month = PaymentRequest.query.filter(
-            extract("month", PaymentRequest.created_at) == now.month,
-            extract("year", PaymentRequest.created_at) == now.year,
-        ).count()
-        approval_rate = round((approved_month / total_month * 100) if total_month > 0 else 0)
+        if month_filter:
+            bq = bq.filter(extract("month", PaymentRequest.created_at) == month_filter)
+        if branch_id_filter:
+            bq = bq.filter(PaymentRequest.branch_id == branch_id_filter)
+        branch_rows = bq.group_by(Branch.name).order_by(func.sum(PaymentRequest.approved_amount).desc()).all()
+        branch_labels = [r[0] for r in branch_rows]
+        branch_values = [float(r[1] or 0) for r in branch_rows]
+
+        # Donut chart + category table
+        cq = (
+            db.session.query(
+                Category.name,
+                Category.cost_type,
+                func.sum(PaymentRequestItem.amount).label("total"),
+                func.count(PaymentRequestItem.id).label("cnt"),
+            )
+            .join(PaymentRequestItem, PaymentRequestItem.category_id == Category.id)
+            .join(PaymentRequest, PaymentRequest.id == PaymentRequestItem.request_id)
+            .filter(
+                PaymentRequest.status == "approved",
+                extract("year", PaymentRequest.created_at) == year_filter,
+            )
+        )
+        if month_filter:
+            cq = cq.filter(extract("month", PaymentRequest.created_at) == month_filter)
+        if branch_id_filter:
+            cq = cq.filter(PaymentRequest.branch_id == branch_id_filter)
+        cat_rows = cq.group_by(Category.name, Category.cost_type).order_by(func.sum(PaymentRequestItem.amount).desc()).all()
+
+        cat_total = sum(float(r.total or 0) for r in cat_rows)
+        cat_data = [
+            {
+                "name": r.name,
+                "cost_type": r.cost_type,
+                "total": float(r.total or 0),
+                "count": r.cnt,
+                "share": round(float(r.total or 0) / cat_total * 100, 1) if cat_total else 0,
+            }
+            for r in cat_rows
+        ]
+        cat_labels = [d["name"] for d in cat_data]
+        cat_values = [d["total"] for d in cat_data]
+
+        # Recent transactions in period (limit 25)
+        recent_txns = _apply_period(
+            _eager_pr()
+        ).order_by(PaymentRequest.created_at.desc()).limit(25).all()
+
+        # Pending for review (global, for the pending section below charts)
+        pending = _eager_pr().filter_by(status="pending").order_by(PaymentRequest.created_at.desc()).all()
+
+        period_label = (months_list[month_filter - 1] + " " if month_filter else "") + str(year_filter)
 
         return render_template(
             "dashboard.html",
-            pending=pending,
-            recent=recent,
-            pending_count=pending_count,
-            approved_month=approved_month,
+            year_filter=year_filter,
+            month_filter=month_filter,
+            branch_id_filter=branch_id_filter,
+            all_branches=all_branches,
+            months_list=months_list,
+            now=now,
+            period_label=period_label,
+            all_pending_count=all_pending_count,
+            approved_amt=approved_amt,
             total_pending_amt=total_pending_amt,
-            total_approved_amt=total_approved_amt,
             approval_rate=approval_rate,
+            direct_costs_amt=direct_costs_amt,
+            overhead_amt=overhead_amt,
+            status_counts=status_counts,
+            branch_labels=branch_labels,
+            branch_values=branch_values,
+            cat_labels=cat_labels,
+            cat_values=cat_values,
+            cat_data=cat_data,
+            recent_txns=recent_txns,
+            pending=pending,
             format_naira=format_naira,
         )
     else:

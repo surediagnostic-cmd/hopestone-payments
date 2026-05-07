@@ -1,38 +1,238 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Hopestone Payment Tracker{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
+{% block page_title %}Payment Dashboard{% endblock %}
 
 {% block topbar_actions %}
-  <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary btn-sm">＋ New Request</a>
+  {% if current_user.is_mds %}
+    <a href="{{ url_for('requests.export_requests', year=year_filter, month=month_filter, branch_id=branch_id_filter) }}"
+       class="btn btn-primary btn-sm">⬇ Export Excel</a>
+  {% else %}
+    <a href="{{ url_for('requests.new_request') }}" class="btn btn-primary btn-sm">＋ New Request</a>
+  {% endif %}
 {% endblock %}
 
 {% block content %}
 {% if current_user.is_mds %}
-<!-- ─── MD Dashboard ─────────────────────────────────────────────────────── -->
-<div class="stat-grid">
+
+<!-- ── Filters ──────────────────────────────────────────────────────────────── -->
+<form method="GET" action="{{ url_for('requests.dashboard') }}" class="dash-filters mb-3">
+  <div class="filter-group">
+    <label class="filter-label">Year</label>
+    <select name="year" class="form-control form-control-sm filter-select">
+      {% for y in range(now.year, now.year - 4, -1) %}
+        <option value="{{ y }}" {% if y == year_filter %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label class="filter-label">Month</label>
+    <select name="month" class="form-control form-control-sm filter-select">
+      <option value="0" {% if month_filter == 0 %}selected{% endif %}>All Months</option>
+      {% for m in months_list %}
+        <option value="{{ loop.index }}" {% if loop.index == month_filter %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label class="filter-label">Branch</label>
+    <select name="branch_id" class="form-control form-control-sm filter-select">
+      <option value="0" {% if branch_id_filter == 0 %}selected{% endif %}>All Branches</option>
+      {% for b in all_branches %}
+        <option value="{{ b.id }}" {% if b.id == branch_id_filter %}selected{% endif %}>{{ b.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+</form>
+
+<!-- ── 6 KPI Cards ──────────────────────────────────────────────────────────── -->
+<div class="stat-grid stat-grid-6 mb-3">
   <div class="stat-card warning">
-    <div class="stat-label">Pending Approval</div>
-    <div class="stat-value">{{ pending_count }}</div>
-    <div class="stat-sub">awaiting your review</div>
+    <div class="stat-label">ALL PENDING</div>
+    <div class="stat-value">{{ all_pending_count }}</div>
+    <div class="stat-sub">Awaiting your review</div>
   </div>
   <div class="stat-card success">
-    <div class="stat-label">Approved This Month</div>
-    <div class="stat-value">{{ approved_month }}</div>
-    <div class="stat-sub">requests approved</div>
+    <div class="stat-label">APPROVED — {{ period_label.upper() }}</div>
+    <div class="stat-value" style="font-size:17px;">{{ format_naira(approved_amt) }}</div>
+    <div class="stat-sub">Total approved value</div>
   </div>
   <div class="stat-card danger">
-    <div class="stat-label">Total Pending Amount</div>
-    <div class="stat-value" style="font-size:18px;">{{ format_naira(total_pending_amt) }}</div>
-    <div class="stat-sub">across all pending requests</div>
+    <div class="stat-label">TOTAL ₦ PENDING</div>
+    <div class="stat-value" style="font-size:17px;">{{ format_naira(total_pending_amt) }}</div>
+    <div class="stat-sub">Across all branches</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Approved This Month</div>
-    <div class="stat-value" style="font-size:18px;">{{ format_naira(total_approved_amt) }}</div>
-    <div class="stat-sub">approval rate: {{ approval_rate }}%</div>
+    <div class="stat-label">APPROVAL RATE</div>
+    <div class="stat-value">{{ approval_rate }}%</div>
+    <div class="stat-sub">Of reviewed {{ period_label }}</div>
+  </div>
+  <div class="stat-card" style="border-top-color:#e74c3c;">
+    <div class="stat-label">DIRECT COSTS — {{ period_label.upper() }}</div>
+    <div class="stat-value" style="font-size:15px;color:#e74c3c;">{{ format_naira(direct_costs_amt) }}</div>
+    <div class="stat-sub">Approved direct costs</div>
+  </div>
+  <div class="stat-card" style="border-top-color:#8e44ad;">
+    <div class="stat-label">OVERHEAD — {{ period_label.upper() }}</div>
+    <div class="stat-value" style="font-size:15px;color:#8e44ad;">{{ format_naira(overhead_amt) }}</div>
+    <div class="stat-sub">Approved overhead</div>
   </div>
 </div>
 
-<!-- Pending approvals -->
+<!-- ── Status Pills ─────────────────────────────────────────────────────────── -->
+<div class="status-pills mb-3">
+  <a href="{{ url_for('requests.list_requests', status='pending') }}" class="pill pill-warning">
+    <span class="pill-dot"></span> Pending <strong>{{ status_counts.pending }}</strong>
+  </a>
+  <a href="{{ url_for('requests.list_requests', status='approved') }}" class="pill pill-success">
+    <span class="pill-dot"></span> Approved <strong>{{ status_counts.approved }}</strong>
+  </a>
+  <a href="{{ url_for('requests.list_requests', status='rejected') }}" class="pill pill-danger">
+    <span class="pill-dot"></span> Rejected <strong>{{ status_counts.rejected }}</strong>
+  </a>
+  <a href="{{ url_for('requests.list_requests', status='uploaded') }}" class="pill pill-info">
+    <span class="pill-dot"></span> Uploaded <strong>{{ status_counts.uploaded }}</strong>
+  </a>
+</div>
+
+<!-- ── Charts ───────────────────────────────────────────────────────────────── -->
+<div class="charts-row mb-3">
+  <div class="card chart-card">
+    <div class="card-header">
+      <span class="card-header-title">{{ period_label.upper() }} — APPROVED BY BRANCH</span>
+    </div>
+    <div class="card-body">
+      {% if branch_labels %}
+        <canvas id="branchChart" height="220"></canvas>
+      {% else %}
+        <div class="empty-state"><div class="empty-icon">📊</div><p>No approved data for this period.</p></div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card chart-card">
+    <div class="card-header">
+      <span class="card-header-title">{{ period_label.upper() }} — SPEND BY CATEGORY</span>
+    </div>
+    <div class="card-body" style="display:flex;align-items:center;justify-content:center;">
+      {% if cat_labels %}
+        <canvas id="catChart" height="220"></canvas>
+      {% else %}
+        <div class="empty-state"><div class="empty-icon">🥧</div><p>No approved data for this period.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Category Spend Table ─────────────────────────────────────────────────── -->
+{% if cat_data %}
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-header-title">{{ period_label.upper() }} — CATEGORY SPEND</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th style="text-align:center;">Transactions</th>
+          <th style="text-align:right;">Approved (₦)</th>
+          <th style="min-width:200px;">Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in cat_data %}
+        <tr>
+          <td>
+            <span style="font-weight:600;">{{ row.name }}</span>
+            <span class="badge badge-{{ 'danger' if row.cost_type == 'direct_cost' else 'secondary' }}" style="margin-left:6px;font-size:10px;">
+              {{ 'Direct' if row.cost_type == 'direct_cost' else 'Overhead' }}
+            </span>
+          </td>
+          <td style="text-align:center;color:var(--muted);">{{ row.count }}</td>
+          <td class="amount amount-naira" style="color:var(--primary);font-weight:700;">{{ "{:,.2f}".format(row.total) }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="flex:1;background:#e9ecef;border-radius:4px;height:6px;">
+                <div style="width:{{ row.share }}%;background:var(--primary);height:6px;border-radius:4px;"></div>
+              </div>
+              <span style="font-size:12px;color:var(--muted);white-space:nowrap;">{{ row.share }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── All Transactions ─────────────────────────────────────────────────────── -->
+<div class="card mb-3">
+  <div class="card-header">
+    <span class="card-header-title">{{ period_label.upper() }} — ALL TRANSACTIONS</span>
+    <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">View full list →</a>
+  </div>
+  <div class="table-wrap">
+    {% if recent_txns %}
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Date</th>
+          <th>Branch</th>
+          <th>Description</th>
+          <th style="text-align:right;">Requested (₦)</th>
+          <th style="text-align:right;">Approved (₦)</th>
+          <th>Status</th>
+          <th>Upload</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pr in recent_txns %}
+        <tr>
+          <td>
+            <a href="{{ url_for('requests.view_request', req_id=pr.id) }}"
+               style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a>
+          </td>
+          <td style="white-space:nowrap;">{{ pr.date.strftime('%d %b') }}</td>
+          <td>
+            {% if pr.branch %}
+              <span class="badge badge-secondary" style="font-size:11px;">{{ pr.branch.name | truncate(12, True, '…') }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {% if pr.items %}{{ pr.items[0].description }}{% if pr.items|length > 1 %} <span style="color:var(--muted);font-size:11px;">+{{ pr.items|length - 1 }} more</span>{% endif %}{% else %}—{% endif %}
+          </td>
+          <td class="amount" style="text-align:right;">{{ "{:,.2f}".format(pr.requested_amount) }}</td>
+          <td class="amount" style="text-align:right;color:var(--success);font-weight:600;">
+            {{ "{:,.2f}".format(pr.approved_amount) if pr.approved_amount else '—' }}
+          </td>
+          <td><span class="badge badge-{{ pr.status_color }}">{{ pr.status_label }}</span></td>
+          <td>
+            {% if pr.upload_status == 'uploaded' %}
+              <span class="badge badge-success" style="font-size:11px;">Uploaded</span>
+            {% elif pr.status == 'approved' %}
+              <span style="color:var(--muted);font-size:11px;">—</span>
+            {% else %}
+              <span style="color:var(--muted);font-size:11px;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No transactions for this period.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Pending Approvals ─────────────────────────────────────────────────────── -->
 {% if pending %}
 <div class="card mb-3">
   <div class="card-header">
@@ -47,25 +247,24 @@
           <th>Date</th>
           <th>Beneficiary</th>
           <th>Branch</th>
-          <th>Amount</th>
+          <th style="text-align:right;">Amount (₦)</th>
           <th>Submitted By</th>
-          <th>Submitted</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         {% for pr in pending %}
         <tr>
-          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
-          <td>{{ pr.date.strftime('%d %b %Y') }}</td>
+          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}"
+                 style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
+          <td style="white-space:nowrap;">{{ pr.date.strftime('%d %b %Y') }}</td>
           <td>
             <div style="font-weight:600;">{{ pr.beneficiary_name }}</div>
             <div style="font-size:11px;color:var(--muted);">{{ pr.beneficiary_bank }}</div>
           </td>
           <td>{{ pr.branch.name if pr.branch else '—' }}</td>
-          <td class="amount amount-naira">{{ format_naira(pr.requested_amount) }}</td>
+          <td class="amount" style="text-align:right;">{{ "{:,.2f}".format(pr.requested_amount) }}</td>
           <td>{{ pr.submitter.name if pr.submitter else '—' }}</td>
-          <td style="color:var(--muted);font-size:12px;">{{ pr.created_at.strftime('%d %b, %H:%M') }}</td>
           <td>
             <a href="{{ url_for('approvals.review', req_id=pr.id) }}" class="btn btn-primary btn-sm">Review</a>
           </td>
@@ -75,72 +274,82 @@
     </table>
   </div>
 </div>
-{% else %}
-<div class="card mb-3">
-  <div class="card-body">
-    <div class="empty-state">
-      <div class="empty-icon">✓</div>
-      <p><strong>No pending approvals</strong></p>
-      <p>All payment requests have been reviewed.</p>
-    </div>
-  </div>
-</div>
 {% endif %}
 
-<!-- Recent payments -->
-<div class="card">
-  <div class="card-header">
-    <span class="card-header-title">Recent Payments</span>
-    <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">View all</a>
-  </div>
-  <div class="table-wrap">
-    {% if recent %}
-    <table>
-      <thead>
-        <tr>
-          <th>Reference</th>
-          <th>Date</th>
-          <th>Beneficiary</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Upload</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for pr in recent %}
-        <tr>
-          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
-          <td>{{ pr.date.strftime('%d %b %Y') }}</td>
-          <td>{{ pr.beneficiary_name }}</td>
-          <td class="amount amount-naira">{{ format_naira(pr.requested_amount) }}</td>
-          <td><span class="badge badge-{{ pr.status_color }}">{{ pr.status_label }}</span></td>
-          <td>
-            {% if pr.upload_status == 'uploaded' %}
-              <span class="badge badge-success">Uploaded</span>
-            {% elif pr.status == 'approved' %}
-              <span class="badge badge-secondary">Not uploaded</span>
-            {% else %}
-              <span style="color:var(--muted);font-size:12px;">—</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="card-body">
-      <div class="empty-state">
-        <div class="empty-icon">📋</div>
-        <p>No payment requests yet.</p>
-      </div>
-    </div>
-    {% endif %}
-  </div>
-</div>
+<!-- ── Chart.js ──────────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const PALETTE = ['#3a9fd8','#f5a623','#2ecc71','#e74c3c','#9b59b6','#1abc9c','#e67e22','#2980b9','#27ae60','#c0392b','#8e44ad','#16a085'];
+
+{% if branch_labels %}
+new Chart(document.getElementById('branchChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ branch_labels | tojson }},
+    datasets: [{
+      label: 'Approved (₦)',
+      data: {{ branch_values | tojson }},
+      backgroundColor: PALETTE.slice(0, {{ branch_labels | length }}),
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => '₦' + ctx.parsed.y.toLocaleString('en-NG', {minimumFractionDigits:2})
+        }
+      }
+    },
+    scales: {
+      y: {
+        ticks: {
+          callback: v => '₦' + (v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v)
+        },
+        grid: { color: '#f0f0f0' }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+{% endif %}
+
+{% if cat_labels %}
+new Chart(document.getElementById('catChart'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ cat_labels | tojson }},
+    datasets: [{
+      data: {{ cat_values | tojson }},
+      backgroundColor: PALETTE,
+      borderWidth: 2,
+      borderColor: '#fff',
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '60%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { boxWidth: 12, font: { size: 11 } }
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.label + ': ₦' + ctx.parsed.toLocaleString('en-NG', {minimumFractionDigits:2})
+        }
+      }
+    }
+  }
+});
+{% endif %}
+</script>
 
 {% else %}
 <!-- ─── Accountant Dashboard ──────────────────────────────────────────────── -->
-<div class="stat-grid">
+<div class="stat-grid mb-3">
   <div class="stat-card warning">
     <div class="stat-label">My Pending</div>
     <div class="stat-value">{{ my_pending }}</div>
@@ -186,7 +395,8 @@
       <tbody>
         {% for pr in my_requests %}
         <tr>
-          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
+          <td><a href="{{ url_for('requests.view_request', req_id=pr.id) }}"
+                 style="color:var(--primary);font-weight:600;text-decoration:none;">{{ pr.reference }}</a></td>
           <td>{{ pr.date.strftime('%d %b %Y') }}</td>
           <td>
             <div style="font-weight:600;">{{ pr.beneficiary_name }}</div>
@@ -202,7 +412,8 @@
               <span class="badge badge-success">Uploaded</span>
             {% elif pr.status == 'approved' %}
               <form method="POST" action="{{ url_for('requests.mark_uploaded', req_id=pr.id) }}" style="display:inline;">
-                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark {{ pr.reference }} as uploaded to bank?')">Mark Uploaded</button>
+                <button type="submit" class="btn btn-success btn-sm"
+                        onclick="return confirm('Mark {{ pr.reference }} as uploaded to bank?')">Mark Uploaded</button>
               </form>
             {% else %}
               <span style="color:var(--muted);font-size:12px;">—</span>
