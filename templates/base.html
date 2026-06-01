@@ -344,28 +344,81 @@
     .amount { font-weight: 700; font-variant-numeric: tabular-nums; }
     .amount-naira { color: var(--primary-dark); }
 
-    /* ── Responsive ── */
-    .hamburger {
-      display: none;
-      background: none; border: none; cursor: pointer;
-      padding: 4px; color: var(--text); font-size: 20px;
-    }
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
-      .sidebar.open { transform: translateX(0); }
-      .main-wrapper { margin-left: 0; }
-      .hamburger { display: block; }
-      .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
-    }
-
     /* ── Overlay ── */
     .overlay {
       display: none;
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.5);
       z-index: 99;
+      -webkit-tap-highlight-color: transparent;
     }
     .overlay.show { display: block; }
+
+    /* ── Hamburger ── */
+    .hamburger {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      width: 40px; height: 40px;
+      align-items: center; justify-content: center;
+      color: var(--text); font-size: 22px;
+      border-radius: var(--radius);
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hamburger:active { background: var(--primary-light); }
+
+    /* ── Dark mode table row hover ── */
+    tbody tr:hover { background: var(--primary-light); }
+
+    /* ── Mobile / Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar {
+        transform: translateX(-240px);
+        will-change: transform;
+        box-shadow: none;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+      }
+      .main-wrapper { margin-left: 0; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 768px) {
+      .topbar { padding: 10px 14px; }
+      .topbar-title { font-size: 15px; }
+      .page-content { padding: 14px; }
+      .form-row.cols-2,
+      .form-row.cols-3  { grid-template-columns: 1fr; }
+      .charts-row       { grid-template-columns: 1fr; }
+      .stat-grid        { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-grid-6      { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card        { padding: 14px; }
+      .stat-value       { font-size: 20px; }
+      .dash-filters     { gap: 6px; padding: 10px 12px; }
+      .filter-group     { flex: 1 1 calc(50% - 6px); min-width: 120px; }
+      .filter-select    { width: 100%; min-width: unset; }
+      .status-pills     { gap: 6px; }
+      .pill             { padding: 5px 10px; font-size: 12px; }
+      .search-row       { padding: 8px 12px; }
+      .card-header      { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+      td, th            { padding: 9px 10px; font-size: 12.5px; }
+      .btn-sm           { padding: 4px 8px; font-size: 11.5px; }
+    }
+
+    @media (max-width: 480px) {
+      .topbar { padding: 8px 12px; }
+      .topbar-title { font-size: 14px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .page-content { padding: 10px; }
+      .stat-grid, .stat-grid-6 { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stat-card { padding: 12px 10px; }
+      .stat-label { font-size: 9.5px; }
+      .stat-value { font-size: 18px; }
+      .stat-sub   { font-size: 11px; }
+      .filter-group { flex: 1 1 100%; }
+      .topbar-actions { gap: 6px; }
+    }
 
     /* ── Misc utilities ── */
     .text-muted { color: var(--muted); }
@@ -460,7 +513,7 @@
 <div class="main-wrapper">
   <header class="topbar">
     <div class="flex-center gap-2">
-      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
       <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
     </div>
     <div class="topbar-actions">
@@ -486,14 +539,27 @@
 </div>
 
 <script>
+  var _sidebar  = document.getElementById('sidebar');
+  var _overlay  = document.getElementById('overlay');
+
   function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('overlay').classList.add('show');
+    _sidebar.classList.add('open');
+    _overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';   // prevent scroll behind overlay
   }
   function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('show');
+    _sidebar.classList.remove('open');
+    _overlay.classList.remove('show');
+    document.body.style.overflow = '';
   }
+  function toggleSidebar() {
+    if (_sidebar.classList.contains('open')) { closeSidebar(); } else { openSidebar(); }
+  }
+
+  // Close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
 
   // Dark / light mode
   (function() {
