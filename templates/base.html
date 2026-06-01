@@ -143,7 +143,11 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      transition: margin-left 0.25s ease;
     }
+    /* Desktop collapse */
+    body.nav-collapsed .sidebar      { transform: translateX(-240px); }
+    body.nav-collapsed .main-wrapper { margin-left: 0; }
 
     .topbar {
       background: var(--card);
@@ -354,18 +358,19 @@
     }
     .overlay.show { display: block; }
 
-    /* ── Hamburger ── */
+    /* ── Hamburger (always visible) ── */
     .hamburger {
-      display: none;
+      display: flex;
+      align-items: center; justify-content: center;
       background: none; border: none; cursor: pointer;
       width: 40px; height: 40px;
-      align-items: center; justify-content: center;
       color: var(--text); font-size: 22px;
       border-radius: var(--radius);
       flex-shrink: 0;
       -webkit-tap-highlight-color: transparent;
     }
-    .hamburger:active { background: var(--primary-light); }
+    .hamburger:hover  { background: var(--primary-light); }
+    .hamburger:active { opacity: 0.7; }
 
     /* ── Dark mode table row hover ── */
     tbody tr:hover { background: var(--primary-light); }
@@ -382,7 +387,9 @@
         box-shadow: 4px 0 24px rgba(0,0,0,0.3);
       }
       .main-wrapper { margin-left: 0; }
-      .hamburger { display: flex; }
+      /* On mobile, nav-collapsed has no extra effect — sidebar already starts hidden */
+      body.nav-collapsed .sidebar      { transform: translateX(-240px); }
+      body.nav-collapsed .main-wrapper { margin-left: 0; }
     }
 
     @media (max-width: 768px) {
@@ -541,22 +548,44 @@
 <script>
   var _sidebar  = document.getElementById('sidebar');
   var _overlay  = document.getElementById('overlay');
+  var _body     = document.body;
 
+  function isMobile() { return window.innerWidth <= 900; }
+
+  // Desktop: collapse/expand (no overlay, content fills space)
+  function collapseDesktop() {
+    var collapsed = _body.classList.toggle('nav-collapsed');
+    localStorage.setItem('nav-collapsed', collapsed ? '1' : '0');
+  }
+
+  // Mobile: overlay drawer
   function openSidebar() {
     _sidebar.classList.add('open');
     _overlay.classList.add('show');
-    document.body.style.overflow = 'hidden';   // prevent scroll behind overlay
+    _body.style.overflow = 'hidden';
   }
   function closeSidebar() {
     _sidebar.classList.remove('open');
     _overlay.classList.remove('show');
-    document.body.style.overflow = '';
-  }
-  function toggleSidebar() {
-    if (_sidebar.classList.contains('open')) { closeSidebar(); } else { openSidebar(); }
+    _body.style.overflow = '';
   }
 
-  // Close sidebar on ESC key
+  function toggleSidebar() {
+    if (isMobile()) {
+      _sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    } else {
+      collapseDesktop();
+    }
+  }
+
+  // Restore desktop collapsed state on load
+  (function() {
+    if (!isMobile() && localStorage.getItem('nav-collapsed') === '1') {
+      _body.classList.add('nav-collapsed');
+    }
+  })();
+
+  // Close overlay on ESC
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeSidebar();
   });
