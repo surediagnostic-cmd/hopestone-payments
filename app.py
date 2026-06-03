@@ -38,12 +38,14 @@ def create_app():
     from routes.approvals import approvals_bp
     from routes.reports import reports_bp
     from routes.admin import admin_bp
+    from routes.budget import budget_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(requests_bp)
     app.register_blueprint(approvals_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(budget_bp)
 
     @app.errorhandler(500)
     def internal_error(error):

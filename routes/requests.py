@@ -10,7 +10,7 @@ from sqlalchemy import extract, func
 from sqlalchemy.orm import subqueryload, joinedload
 
 from extensions import db
-from models import PaymentRequest, PaymentRequestItem, Branch, Category
+from models import PaymentRequest, PaymentRequestItem, Branch, Category, Budget
 from utils import format_naira
 
 requests_bp = Blueprint("requests", __name__)
@@ -189,6 +189,17 @@ def _dashboard_inner():
 
         period_label = (months_list[month_filter - 1] + " " if month_filter else "") + str(year_filter)
 
+        # ── Budget vs actual for dashboard card ───────────────────────────
+        budget_month  = month_filter if month_filter else now.month
+        budget_year   = year_filter
+        budget_total  = float(
+            db.session.query(func.sum(Budget.monthly_amount))
+            .filter_by(year=budget_year, month=budget_month)
+            .scalar() or 0
+        )
+        budget_pct    = round(float(approved_amt) / budget_total * 100, 1) if budget_total > 0 else None
+        budget_label  = months_list[budget_month - 1] + " " + str(budget_year)
+
         return render_template(
             "dashboard.html",
             year_filter=year_filter,
@@ -212,6 +223,9 @@ def _dashboard_inner():
             cat_data=cat_data,
             recent_txns=recent_txns,
             pending=pending,
+            budget_total=budget_total,
+            budget_pct=budget_pct,
+            budget_label=budget_label,
             format_naira=format_naira,
         )
     else:

@@ -492,6 +492,11 @@
     </a>
 
     {% if current_user.is_mds %}
+    <div class="nav-section-label">Finance</div>
+    <a href="{{ url_for('budget.budget') }}" class="nav-link {% if request.endpoint == 'budget.budget' %}active{% endif %}">
+      <span class="nav-icon">💰</span> Budget
+    </a>
+
     <div class="nav-section-label">Admin</div>
     <a href="{{ url_for('admin.admin') }}" class="nav-link {% if request.endpoint == 'admin.admin' %}active{% endif %}">
       <span class="nav-icon">⚙</span> Settings

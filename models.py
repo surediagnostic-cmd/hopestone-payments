@@ -103,6 +103,28 @@ class PaymentRequest(db.Model):
         return {"pending": "Pending", "approved": "Approved", "rejected": "Rejected"}.get(self.status, self.status.title())
 
 
+class Budget(db.Model):
+    __tablename__ = "hop_budgets"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    branch_id   = db.Column(db.Integer, db.ForeignKey("hop_branches.id"),   nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("hop_categories.id"), nullable=False)
+    year        = db.Column(db.Integer, nullable=False)
+    month       = db.Column(db.Integer, nullable=False)  # 1-12
+    monthly_amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+
+    __table_args__ = (
+        db.UniqueConstraint("branch_id", "category_id", "year", "month", name="uq_hop_budget"),
+    )
+
+    branch   = db.relationship("Branch",   lazy="joined")
+    category = db.relationship("Category", lazy="joined")
+
+    @property
+    def weekly_amount(self):
+        return round(float(self.monthly_amount) / 4.33, 2)
+
+
 class PaymentRequestItem(db.Model):
     __tablename__ = "hop_payment_request_items"
 

@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% block title %}Budget — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Budget{% endblock %}
+
+{% block extra_style %}
+.budget-filters {
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px;
+}
+.budget-filters .filter-group { display: flex; flex-direction: column; gap: 4px; }
+.budget-filters .filter-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
+
+.budget-legend {
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 14px; font-size: 12px; color: var(--muted);
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+/* Grid table */
+.budget-wrap { overflow-x: auto; }
+.budget-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+.budget-table th {
+  background: #f5f8fb; color: var(--muted);
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 8px 6px; text-align: center; border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.budget-table th.cat-col { text-align: left; padding-left: 14px; min-width: 160px; }
+.budget-table th.total-col { background: #eef2f7; }
+.budget-table td { padding: 4px 4px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.budget-table td.cat-cell { padding: 10px 14px; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+.budget-table td.total-cell { background: #f8fafc; text-align: right; padding: 8px 10px; vertical-align: middle; }
+.budget-table tr.total-row td { background: #f0f4f8; font-weight: 700; border-top: 2px solid var(--border); }
+[data-theme="dark"] .budget-table th { background: #1e2e40; }
+[data-theme="dark"] .budget-table td.total-cell,
+[data-theme="dark"] .budget-table tr.total-row td { background: #1a2638; }
+
+/* Month cell */
+.month-cell { display: flex; flex-direction: column; gap: 2px; padding: 4px; }
+.budget-input {
+  width: 80px; padding: 5px 6px;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 12px; font-weight: 600; text-align: right;
+  background: var(--card); color: var(--text);
+  outline: none; transition: border-color 0.15s;
+}
+.budget-input:focus { border-color: var(--primary); }
+.budget-input.saved  { border-color: var(--success); }
+.budget-input.saving { border-color: var(--warning); }
+.budget-input.error  { border-color: var(--danger); }
+
+.actual-line { font-size: 10.5px; text-align: right; padding: 0 2px; }
+.actual-ok   { color: var(--success); }
+.actual-warn { color: var(--warning); }
+.actual-over { color: var(--danger);  font-weight: 700; }
+.actual-none { color: var(--muted);   }
+.weekly-line { font-size: 10px; color: var(--muted); text-align: right; padding: 0 2px; }
+
+/* Summary cards */
+.budget-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.budget-summary-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  box-shadow: var(--shadow);
+}
+.budget-summary-card .bs-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+.budget-summary-card .bs-value { font-size: 20px; font-weight: 800; color: var(--text); margin: 6px 0 4px; }
+.budget-summary-card .bs-sub   { font-size: 12px; color: var(--muted); }
+
+.progress-bar-wrap { background: var(--border); border-radius: 4px; height: 6px; margin-top: 8px; }
+.progress-bar-fill { height: 6px; border-radius: 4px; background: var(--primary); transition: width 0.4s; }
+.progress-bar-fill.warn { background: var(--warning); }
+.progress-bar-fill.over { background: var(--danger); }
+{% endblock %}
+
+{% block content %}
+
+<!-- Filters -->
+<form method="GET" action="{{ url_for('budget.budget') }}" class="budget-filters">
+  <div class="filter-group">
+    <label class="filter-label">Year</label>
+    <select name="year" class="form-control form-control-sm" style="min-width:100px;" onchange="this.form.submit()">
+      {% for y in range(now.year+1, now.year - 3, -1) %}
+        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label class="filter-label">Branch</label>
+    <select name="branch_id" class="form-control form-control-sm" style="min-width:200px;" onchange="this.form.submit()">
+      {% if all_branches|length > 1 %}
+        <option value="0" {% if branch_id == 0 %}selected{% endif %}>All Branches</option>
+      {% endif %}
+      {% for b in all_branches %}
+        <option value="{{ b.id }}" {% if b.id == branch_id %}selected{% endif %}>{{ b.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+{% if branch_id == 0 and all_branches|length > 1 %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="empty-state">
+      <div class="empty-icon">🏥</div>
+      <p><strong>Select a branch</strong> to view and edit its budget.</p>
+    </div>
+  </div>
+</div>
+{% else %}
+
+<!-- Summary cards -->
+{% set total_budget_year = namespace(v=0) %}
+{% set total_actual_year = namespace(v=0) %}
+{% set total_budget_month = namespace(v=0) %}
+{% set total_actual_month = namespace(v=0) %}
+{% for cat in categories %}
+  {% for m in range(1,13) %}
+    {% set bv = budget_map.get((cat.id, m), 0) %}
+    {% set av = actuals_map.get((cat.id, m), 0) %}
+    {% set total_budget_year.v = total_budget_year.v + bv %}
+    {% set total_actual_year.v = total_actual_year.v + av %}
+    {% if m == now.month %}
+      {% set total_budget_month.v = total_budget_month.v + bv %}
+      {% set total_actual_month.v = total_actual_month.v + av %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+{% set yr_pct = ((total_actual_year.v / total_budget_year.v * 100) | round(1)) if total_budget_year.v > 0 else 0 %}
+{% set mo_pct = ((total_actual_month.v / total_budget_month.v * 100) | round(1)) if total_budget_month.v > 0 else 0 %}
+{% set total_budget_week = total_budget_month.v / weeks_per_month %}
+
+<div class="budget-summary mb-3">
+  <div class="budget-summary-card">
+    <div class="bs-label">{{ year }} Annual Budget</div>
+    <div class="bs-value">{{ format_naira(total_budget_year.v) }}</div>
+    <div class="bs-sub">Across all categories</div>
+  </div>
+  <div class="budget-summary-card">
+    <div class="bs-label">{{ months[now.month-1] }} {{ year }} Budget</div>
+    <div class="bs-value">{{ format_naira(total_budget_month.v) }}</div>
+    <div class="bs-sub">Weekly ≈ {{ format_naira(total_budget_week) }}</div>
+  </div>
+  <div class="budget-summary-card">
+    <div class="bs-label">{{ year }} Actual Spend</div>
+    <div class="bs-value" style="color:{% if yr_pct > 100 %}var(--danger){% elif yr_pct > 80 %}var(--warning){% else %}var(--success){% endif %}">{{ format_naira(total_actual_year.v) }}</div>
+    <div class="bs-sub">{{ yr_pct }}% of annual budget used</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill {% if yr_pct > 100 %}over{% elif yr_pct > 80 %}warn{% endif %}"
+           style="width:{{ [yr_pct, 100]|min }}%"></div>
+    </div>
+  </div>
+  <div class="budget-summary-card">
+    <div class="bs-label">{{ months[now.month-1] }} Actual Spend</div>
+    <div class="bs-value" style="color:{% if mo_pct > 100 %}var(--danger){% elif mo_pct > 80 %}var(--warning){% else %}var(--success){% endif %}">{{ format_naira(total_actual_month.v) }}</div>
+    <div class="bs-sub">{{ mo_pct }}% of monthly budget used</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill {% if mo_pct > 100 %}over{% elif mo_pct > 80 %}warn{% endif %}"
+           style="width:{{ [mo_pct, 100]|min }}%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="budget-legend">
+  <strong style="color:var(--text);">Actual spend:</strong>
+  <span><span class="legend-dot" style="background:var(--success)"></span>Within budget</span>
+  <span><span class="legend-dot" style="background:var(--warning)"></span>&gt; 80% used</span>
+  <span><span class="legend-dot" style="background:var(--danger)"></span>Over budget</span>
+  <span style="margin-left:auto;font-size:11px;">Click a cell to edit monthly budget. Yearly & weekly auto-calculate.</span>
+</div>
+
+<!-- Budget grid -->
+<div class="card">
+  <div class="budget-wrap">
+    <table class="budget-table" id="budgetTable">
+      <thead>
+        <tr>
+          <th class="cat-col">Category</th>
+          {% for m in months %}
+            <th>{{ m }}</th>
+          {% endfor %}
+          <th class="total-col">Year Total</th>
+          <th class="total-col">Avg / Week</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        {% set row_budget_total = namespace(v=0) %}
+        {% for m in range(1,13) %}{% set row_budget_total.v = row_budget_total.v + budget_map.get((cat.id, m), 0) %}{% endfor %}
+        <tr>
+          <td class="cat-cell">
+            {{ cat.name }}
+            <div style="font-size:10px;color:var(--muted);font-weight:400;">
+              {{ "Direct" if cat.cost_type == "direct_cost" else "Overhead" }}
+            </div>
+          </td>
+          {% for mi in range(1, 13) %}
+          {% set bv = budget_map.get((cat.id, mi), 0) %}
+          {% set av = actuals_map.get((cat.id, mi), 0) %}
+          {% if bv > 0 %}
+            {% set pct = av / bv * 100 %}
+          {% else %}
+            {% set pct = 0 %}
+          {% endif %}
+          <td>
+            <div class="month-cell">
+              <input type="number" min="0" step="1000"
+                     class="budget-input"
+                     value="{{ bv | int if bv > 0 else '' }}"
+                     placeholder="0"
+                     data-cat="{{ cat.id }}"
+                     data-month="{{ mi }}"
+                     data-branch="{{ branch_id }}"
+                     data-year="{{ year }}"
+                     onblur="saveCell(this)"
+                     onkeydown="if(event.key==='Enter'){this.blur();}" />
+              {% if av > 0 %}
+                <span class="actual-line {% if bv == 0 %}actual-none{% elif pct > 100 %}actual-over{% elif pct > 80 %}actual-warn{% else %}actual-ok{% endif %}">
+                  ₦{{ "{:,.0f}".format(av) }}
+                </span>
+              {% elif bv > 0 %}
+                <span class="actual-line actual-none">₦0</span>
+              {% endif %}
+              {% if bv > 0 %}
+                <span class="weekly-line">≈₦{{ "{:,.0f}".format(bv / weeks_per_month) }}/wk</span>
+              {% endif %}
+            </div>
+          </td>
+          {% endfor %}
+          <td class="total-cell" id="yr-{{ cat.id }}">
+            {{ format_naira(row_budget_total.v) if row_budget_total.v > 0 else "—" }}
+          </td>
+          <td class="total-cell" id="wk-{{ cat.id }}">
+            {% if row_budget_total.v > 0 %}≈{{ format_naira(row_budget_total.v / 12 / weeks_per_month) }}/wk{% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td class="cat-cell">TOTAL</td>
+          {% for mi in range(1, 13) %}
+          {% set col_total = namespace(v=0) %}
+          {% for cat in categories %}{% set col_total.v = col_total.v + budget_map.get((cat.id, mi), 0) %}{% endfor %}
+          <td class="total-cell" id="col-{{ mi }}">
+            {{ format_naira(col_total.v) if col_total.v > 0 else "—" }}
+          </td>
+          {% endfor %}
+          <td class="total-cell" id="grand-year">{{ format_naira(total_budget_year.v) if total_budget_year.v > 0 else "—" }}</td>
+          <td class="total-cell" id="grand-week">{% if total_budget_year.v > 0 %}≈{{ format_naira(total_budget_year.v / 12 / weeks_per_month) }}/wk{% else %}—{% endif %}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const WEEKS = {{ weeks_per_month }};
+
+function fmt(n) {
+  if (n <= 0) return '—';
+  return '₦' + n.toLocaleString('en-NG', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+function fmtWk(n) {
+  if (n <= 0) return '—';
+  return '≈₦' + n.toLocaleString('en-NG', {minimumFractionDigits:0, maximumFractionDigits:0}) + '/wk';
+}
+
+async function saveCell(inp) {
+  const amount   = parseFloat(inp.value) || 0;
+  const catId    = inp.dataset.cat;
+  const month    = parseInt(inp.dataset.month);
+  const branchId = inp.dataset.branch;
+  const year     = inp.dataset.year;
+
+  inp.classList.remove('saved','error');
+  inp.classList.add('saving');
+
+  try {
+    const res  = await fetch('/budget/set', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({branch_id: branchId, category_id: catId, year: year, month: month, amount: amount})
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'failed');
+
+    inp.classList.remove('saving');
+    inp.classList.add('saved');
+    setTimeout(() => inp.classList.remove('saved'), 2000);
+
+    // Update year-total and weekly cells for this row
+    const yrCell = document.getElementById('yr-' + catId);
+    const wkCell = document.getElementById('wk-' + catId);
+    if (yrCell) yrCell.textContent = fmt(data.year_total);
+    if (wkCell) wkCell.textContent = fmtWk(data.year_total / 12 / WEEKS);
+
+    // Update weekly hint below the input
+    const wkLine = inp.parentElement.querySelector('.weekly-line');
+    if (amount > 0) {
+      if (wkLine) { wkLine.textContent = '≈₦' + Math.round(amount / WEEKS).toLocaleString('en-NG') + '/wk'; }
+      else {
+        const span = document.createElement('span');
+        span.className = 'weekly-line';
+        span.textContent = '≈₦' + Math.round(amount / WEEKS).toLocaleString('en-NG') + '/wk';
+        inp.parentElement.appendChild(span);
+      }
+    } else if (wkLine) { wkLine.textContent = ''; }
+
+    // Update column total for this month
+    updateColTotal(month);
+    updateGrandTotals();
+
+  } catch(e) {
+    inp.classList.remove('saving');
+    inp.classList.add('error');
+    console.error('Budget save error:', e);
+  }
+}
+
+function updateColTotal(month) {
+  const inputs = document.querySelectorAll('.budget-input[data-month="' + month + '"]');
+  let sum = 0;
+  inputs.forEach(i => sum += parseFloat(i.value) || 0);
+  const cell = document.getElementById('col-' + month);
+  if (cell) cell.textContent = fmt(sum);
+}
+
+function updateGrandTotals() {
+  let grandYear = 0;
+  document.querySelectorAll('.budget-input').forEach(i => grandYear += parseFloat(i.value) || 0);
+  const gy = document.getElementById('grand-year');
+  const gw = document.getElementById('grand-week');
+  if (gy) gy.textContent = fmt(grandYear);
+  if (gw) gw.textContent = fmtWk(grandYear / 12 / WEEKS);
+}
+</script>
+{% endblock %}

@@ -250,3 +250,59 @@
   });
 </script>
 {% endblock %}
+
+{% block content %}
+{{ super() }}
+
+{% if budget_vs_actual %}
+<!-- ── Budget vs Actual ──────────────────────────────────────────────────── -->
+<div class="card mt-3">
+  <div class="card-header">
+    <span class="card-header-title">💰 {{ year_filter }} — BUDGET vs ACTUAL BY CATEGORY</span>
+    <a href="{{ url_for('budget.budget', year=year_filter) }}" class="btn btn-outline btn-sm">Edit Budget →</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th style="text-align:right;">Budget (₦)</th>
+          <th style="text-align:right;">Actual (₦)</th>
+          <th style="text-align:right;">Variance (₦)</th>
+          <th style="min-width:160px;">Used</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in budget_vs_actual %}
+        <tr>
+          <td>
+            <span style="font-weight:600;">{{ row.name }}</span>
+            <span class="badge badge-{{ 'danger' if row.cost_type == 'direct_cost' else 'secondary' }}" style="font-size:10px;margin-left:6px;">
+              {{ 'Direct' if row.cost_type == 'direct_cost' else 'Overhead' }}
+            </span>
+          </td>
+          <td style="text-align:right;font-weight:600;">{{ format_naira(row.budget) }}</td>
+          <td style="text-align:right;font-weight:600;color:{% if row.pct and row.pct > 100 %}var(--danger){% elif row.pct and row.pct > 80 %}var(--warning){% else %}var(--success){% endif %};">
+            {{ format_naira(row.actual) }}
+          </td>
+          <td style="text-align:right;font-weight:600;color:{% if row.variance > 0 %}var(--danger){% else %}var(--success){% endif %};">
+            {% if row.variance > 0 %}+{% endif %}{{ format_naira(row.variance) }}
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="flex:1;background:var(--border);border-radius:4px;height:6px;">
+                <div style="width:{{ [row.pct or 0, 100]|min }}%;background:{% if row.pct and row.pct > 100 %}var(--danger){% elif row.pct and row.pct > 80 %}var(--warning){% else %}var(--success){% endif %};height:6px;border-radius:4px;"></div>
+              </div>
+              <span style="font-size:12px;color:var(--muted);white-space:nowrap;">
+                {{ row.pct if row.pct is not none else '—' }}{% if row.pct is not none %}%{% endif %}
+              </span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

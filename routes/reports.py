@@ -5,7 +5,7 @@ from flask_login import login_required
 from sqlalchemy import func, extract
 
 from extensions import db
-from models import PaymentRequest, PaymentRequestItem, Branch, Category
+from models import PaymentRequest, PaymentRequestItem, Branch, Category, Budget
 from utils import format_naira
 
 reports_bp = Blueprint("reports", __name__)
@@ -80,6 +80,41 @@ def reports():
 
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
+    # ── Budget vs actual by category ───────────────────────────────────────
+    budget_rows = (
+        db.session.query(
+            Category.id.label("cat_id"),
+            Category.name.label("cat_name"),
+            Category.cost_type.label("cost_type"),
+            func.sum(Budget.monthly_amount).label("budget_total"),
+        )
+        .join(Budget, Budget.category_id == Category.id)
+        .filter(Budget.year == year_filter)
+        .group_by(Category.id, Category.name, Category.cost_type)
+        .order_by(func.sum(Budget.monthly_amount).desc())
+        .all()
+    )
+
+    # actual per category for the year
+    actual_by_cat = {
+        row.category: float(row.total or 0) for row in cat_data
+    }
+
+    budget_vs_actual = []
+    for br in budget_rows:
+        budget_amt = float(br.budget_total or 0)
+        actual_amt = actual_by_cat.get(br.cat_name, 0)
+        variance   = actual_amt - budget_amt
+        pct        = round(actual_amt / budget_amt * 100, 1) if budget_amt > 0 else None
+        budget_vs_actual.append({
+            "name":      br.cat_name,
+            "cost_type": br.cost_type,
+            "budget":    budget_amt,
+            "actual":    actual_amt,
+            "variance":  variance,
+            "pct":       pct,
+        })
+
     return render_template(
         "reports.html",
         monthly_data=monthly_data,
@@ -92,4 +127,5 @@ def reports():
         now=now,
         total_requested=total_requested,
         total_approved=total_approved,
+        budget_vs_actual=budget_vs_actual,
     )

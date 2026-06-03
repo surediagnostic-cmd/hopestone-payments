@@ -42,7 +42,7 @@
   <button type="submit" class="btn btn-outline btn-sm">Apply</button>
 </form>
 
-<!-- ── 6 KPI Cards ──────────────────────────────────────────────────────────── -->
+<!-- ── 6 KPI Cards + Budget ─────────────────────────────────────────────────── -->
 <div class="stat-grid stat-grid-6 mb-3">
   <div class="stat-card warning">
     <div class="stat-label">ALL PENDING</div>
@@ -73,6 +73,21 @@
     <div class="stat-label">OVERHEAD — {{ period_label.upper() }}</div>
     <div class="stat-value" style="font-size:15px;color:#8e44ad;">{{ format_naira(overhead_amt) }}</div>
     <div class="stat-sub">Approved overhead</div>
+  </div>
+  <div class="stat-card" style="border-top-color:#16a085;">
+    <div class="stat-label">BUDGET — {{ budget_label.upper() }}</div>
+    {% if budget_total > 0 %}
+      <div class="stat-value" style="font-size:15px;color:{% if budget_pct and budget_pct > 100 %}var(--danger){% elif budget_pct and budget_pct > 80 %}var(--warning){% else %}#16a085{% endif %};">
+        {{ budget_pct if budget_pct is not none else 0 }}%
+      </div>
+      <div class="stat-sub">{{ format_naira(approved_amt) }} of {{ format_naira(budget_total) }} budget</div>
+      <div style="background:var(--border);border-radius:4px;height:5px;margin-top:8px;">
+        <div style="width:{{ [budget_pct or 0, 100]|min }}%;height:5px;border-radius:4px;background:{% if budget_pct and budget_pct > 100 %}var(--danger){% elif budget_pct and budget_pct > 80 %}var(--warning){% else %}#16a085{% endif %};transition:width 0.4s;"></div>
+      </div>
+    {% else %}
+      <div class="stat-value" style="font-size:14px;color:var(--muted);">Not set</div>
+      <div class="stat-sub"><a href="{{ url_for('budget.budget') }}" style="color:#16a085;">Set budget →</a></div>
+    {% endif %}
   </div>
 </div>
 
