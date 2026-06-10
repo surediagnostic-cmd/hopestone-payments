@@ -361,21 +361,55 @@ new Chart(document.getElementById('catChart'), {
 
 {% else %}
 <!-- ─── Accountant Dashboard ──────────────────────────────────────────────── -->
-<div class="stat-grid mb-3">
+
+<!-- Period filter -->
+<form method="GET" action="{{ url_for('requests.dashboard') }}" class="dash-filters mb-3">
+  <div class="filter-group">
+    <label class="filter-label">Year</label>
+    <select name="year" class="form-control form-control-sm filter-select" onchange="this.form.submit()">
+      {% for y in range(now.year, now.year - 4, -1) %}
+        <option value="{{ y }}" {% if y == acc_year %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label class="filter-label">Month</label>
+    <select name="month" class="form-control form-control-sm filter-select" onchange="this.form.submit()">
+      <option value="0" {% if acc_month == 0 %}selected{% endif %}>All Months</option>
+      {% for m in acc_months_list %}
+        <option value="{{ loop.index }}" {% if loop.index == acc_month %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+</form>
+
+<!-- 5 KPI cards -->
+<div class="stat-grid stat-grid-6 mb-3">
   <div class="stat-card warning">
-    <div class="stat-label">My Pending</div>
+    <div class="stat-label">MY PENDING</div>
     <div class="stat-value">{{ my_pending }}</div>
-    <div class="stat-sub">awaiting MD review</div>
+    <div class="stat-sub">Awaiting MD review</div>
   </div>
   <div class="stat-card success">
-    <div class="stat-label">Approved This Month</div>
-    <div class="stat-value">{{ my_approved_month }}</div>
-    <div class="stat-sub">requests approved</div>
+    <div class="stat-label">APPROVED — {{ acc_period_label.upper() }}</div>
+    <div class="stat-value">{{ my_approved_count }}</div>
+    <div class="stat-sub">Requests approved</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-label">Total Approved (All Time)</div>
-    <div class="stat-value" style="font-size:18px;">{{ format_naira(my_total_approved) }}</div>
-    <div class="stat-sub">cumulative approvals</div>
+  <div class="stat-card" style="border-top-color:#27ae60;">
+    <div class="stat-label">APPROVED ₦ — {{ acc_period_label.upper() }}</div>
+    <div class="stat-value" style="font-size:16px;color:#27ae60;">{{ format_naira(my_total_approved) }}</div>
+    <div class="stat-sub">Total approved value</div>
+  </div>
+  <div class="stat-card" style="border-top-color:#3a9fd8;">
+    <div class="stat-label">REQUESTED ₦ — {{ acc_period_label.upper() }}</div>
+    <div class="stat-value" style="font-size:16px;color:var(--primary);">{{ format_naira(my_total_requested) }}</div>
+    <div class="stat-sub">Total submitted value</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-label">REJECTED — {{ acc_period_label.upper() }}</div>
+    <div class="stat-value">{{ my_rejected_count }}</div>
+    <div class="stat-sub">Requests rejected</div>
   </div>
 </div>
 
@@ -387,7 +421,7 @@ new Chart(document.getElementById('catChart'), {
 
 <div class="card">
   <div class="card-header">
-    <span class="card-header-title">My Recent Requests</span>
+    <span class="card-header-title">{{ acc_period_label.upper() }} — MY REQUESTS</span>
     <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">View all</a>
   </div>
   <div class="table-wrap">

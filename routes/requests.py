@@ -241,37 +241,60 @@ def _dashboard_inner():
             format_naira=format_naira,
         )
     else:
-        my_requests = (
+        acc_year  = int(request.args.get("year",  now.year))
+        acc_month = int(request.args.get("month", now.month))  # 0 = all months
+
+        def _my_period(q):
+            q = q.filter(
+                PaymentRequest.submitted_by_id == current_user.id,
+                extract("year", PaymentRequest.created_at) == acc_year,
+            )
+            if acc_month:
+                q = q.filter(extract("month", PaymentRequest.created_at) == acc_month)
+            return q
+
+        my_requests = _my_period(
             _eager_pr()
-            .filter_by(submitted_by_id=current_user.id)
-            .order_by(PaymentRequest.created_at.desc())
-            .limit(15)
-            .all()
-        )
+        ).order_by(PaymentRequest.created_at.desc()).limit(25).all()
+
+        # Global pending — always show what needs MD attention regardless of period
         my_pending = PaymentRequest.query.filter_by(
             submitted_by_id=current_user.id, status="pending"
         ).count()
-        my_approved_month = PaymentRequest.query.filter(
-            PaymentRequest.submitted_by_id == current_user.id,
-            PaymentRequest.status == "approved",
-            extract("month", PaymentRequest.created_at) == now.month,
-            extract("year", PaymentRequest.created_at) == now.year,
+
+        my_approved_count = _my_period(
+            PaymentRequest.query.filter(PaymentRequest.status == "approved")
         ).count()
-        my_total_approved = (
+
+        my_rejected_count = _my_period(
+            PaymentRequest.query.filter(PaymentRequest.status == "rejected")
+        ).count()
+
+        my_total_approved = _my_period(
             db.session.query(func.sum(PaymentRequest.approved_amount))
-            .filter(
-                PaymentRequest.submitted_by_id == current_user.id,
-                PaymentRequest.status == "approved",
-            )
-            .scalar() or 0
-        )
+            .filter(PaymentRequest.status == "approved")
+        ).scalar() or 0
+
+        my_total_requested = _my_period(
+            db.session.query(func.sum(PaymentRequest.requested_amount))
+        ).scalar() or 0
+
+        acc_months_list = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        acc_period_label = (acc_months_list[acc_month - 1] + " " if acc_month else "") + str(acc_year)
 
         return render_template(
             "dashboard.html",
             my_requests=my_requests,
             my_pending=my_pending,
-            my_approved_month=my_approved_month,
+            my_approved_count=my_approved_count,
+            my_rejected_count=my_rejected_count,
             my_total_approved=my_total_approved,
+            my_total_requested=my_total_requested,
+            acc_year=acc_year,
+            acc_month=acc_month,
+            acc_period_label=acc_period_label,
+            acc_months_list=acc_months_list,
+            now=now,
             format_naira=format_naira,
         )
 
