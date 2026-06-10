@@ -1,4 +1,5 @@
 import io
+import json
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
@@ -19,9 +20,19 @@ requests_bp = Blueprint("requests", __name__)
 def _eager_pr():
     return PaymentRequest.query.options(
         subqueryload(PaymentRequest.items).joinedload(PaymentRequestItem.category),
+        subqueryload(PaymentRequest.items).subqueryload(PaymentRequestItem.children).joinedload(PaymentRequestItem.category),
         joinedload(PaymentRequest.branch),
         joinedload(PaymentRequest.submitter),
     )
+
+
+def _leaf_filter(q):
+    """Filter a query on PaymentRequestItem to only return leaf items (no children).
+    Use this on all financial aggregation queries to avoid double-counting parent roll-up rows."""
+    parent_ids_sq = db.session.query(PaymentRequestItem.parent_id).filter(
+        PaymentRequestItem.parent_id.isnot(None)
+    ).subquery()
+    return q.filter(~PaymentRequestItem.id.in_(parent_ids_sq))
 
 
 # ── Dashboard ────────────────────────────────────────────────────────────────
@@ -92,7 +103,7 @@ def _dashboard_inner():
         period_reviewed = period_approved_count + period_rejected_count
         approval_rate = round((period_approved_count / period_reviewed * 100) if period_reviewed else 0)
 
-        # KPI 5 & 6: direct costs and overhead (approved items in period)
+        # KPI 5 & 6: direct costs and overhead (approved leaf items in period)
         def _item_cost(cost_type):
             q = (
                 db.session.query(func.sum(PaymentRequestItem.amount))
@@ -108,7 +119,7 @@ def _dashboard_inner():
                 q = q.filter(extract("month", PaymentRequest.created_at) == month_filter)
             if branch_id_filter:
                 q = q.filter(PaymentRequest.branch_id == branch_id_filter)
-            return q.scalar() or 0
+            return _leaf_filter(q).scalar() or 0
 
         direct_costs_amt = _item_cost("direct_cost")
         overhead_amt = _item_cost("overhead")
@@ -144,7 +155,7 @@ def _dashboard_inner():
         branch_labels = [r[0] for r in branch_rows]
         branch_values = [float(r[1] or 0) for r in branch_rows]
 
-        # Donut chart + category table
+        # Donut chart + category table (leaf items only — no double-counting of parent roll-ups)
         cq = (
             db.session.query(
                 Category.name,
@@ -163,6 +174,7 @@ def _dashboard_inner():
             cq = cq.filter(extract("month", PaymentRequest.created_at) == month_filter)
         if branch_id_filter:
             cq = cq.filter(PaymentRequest.branch_id == branch_id_filter)
+        cq = _leaf_filter(cq)
         cat_rows = cq.group_by(Category.name, Category.cost_type).order_by(func.sum(PaymentRequestItem.amount).desc()).all()
 
         cat_total = sum(float(r.total or 0) for r in cat_rows)
@@ -291,34 +303,18 @@ def new_request():
                     flash("Invalid branch selection.", "danger")
                     return redirect(url_for("requests.new_request"))
 
-            descriptions = request.form.getlist("description[]")
-            cat_ids = request.form.getlist("category_id[]")
-            quantities = request.form.getlist("quantity[]")
-            rates = request.form.getlist("rate[]")
+            items_json_str = request.form.get("items_json", "[]")
+            try:
+                tree = json.loads(items_json_str)
+            except (json.JSONDecodeError, ValueError):
+                tree = []
 
-            if not any(d.strip() for d in descriptions):
+            if not tree or not any(node.get("desc", "").strip() for node in tree):
                 flash("At least one line item is required.", "danger")
-                return render_template("new_request.html", branches=branches, categories=categories)
+                return render_template("new_request.html", branches=branches, categories=categories,
+                                       today=date.today().isoformat())
 
-            items = []
-            total = Decimal("0")
-            for i, desc in enumerate(descriptions):
-                if not desc.strip():
-                    continue
-                qty = int(quantities[i]) if quantities[i] else 1
-                rate = Decimal(str(rates[i])) if rates[i] else Decimal("0")
-                amount = qty * rate
-                total += amount
-                items.append(
-                    PaymentRequestItem(
-                        description=desc.strip(),
-                        category_id=int(cat_ids[i]),
-                        quantity=qty,
-                        rate=rate,
-                        amount=amount,
-                    )
-                )
-
+            # Build the PaymentRequest first, then items
             pr = PaymentRequest(
                 reference=PaymentRequest.generate_reference(),
                 date=payment_date,
@@ -327,11 +323,67 @@ def new_request():
                 beneficiary_account=beneficiary_account,
                 beneficiary_bank=beneficiary_bank,
                 bank_code=bank_code,
-                requested_amount=total,
+                requested_amount=Decimal("0"),  # updated below
                 submitted_by_id=current_user.id,
             )
-            pr.items = items
             db.session.add(pr)
+            db.session.flush()  # get pr.id
+
+            total = Decimal("0")
+            for node in tree:
+                desc = node.get("desc", "").strip()
+                if not desc:
+                    continue
+                children_data = node.get("children", [])
+
+                if children_data:
+                    # Parent is a roll-up row — qty=1, rate=0, amount = sum of children
+                    parent_item = PaymentRequestItem(
+                        request_id=pr.id,
+                        description=desc,
+                        category_id=int(node.get("cat_id", 1)),
+                        quantity=1,
+                        rate=Decimal("0"),
+                        amount=Decimal("0"),  # updated after children saved
+                    )
+                    db.session.add(parent_item)
+                    db.session.flush()  # get parent_item.id
+
+                    child_total = Decimal("0")
+                    for child in children_data:
+                        cdesc = child.get("desc", "").strip()
+                        if not cdesc:
+                            continue
+                        cqty = int(child.get("qty") or 1)
+                        crate = Decimal(str(child.get("rate") or 0))
+                        camount = cqty * crate
+                        child_total += camount
+                        db.session.add(PaymentRequestItem(
+                            request_id=pr.id,
+                            parent_id=parent_item.id,
+                            description=cdesc,
+                            category_id=int(child.get("cat_id", 1)),
+                            quantity=cqty,
+                            rate=crate,
+                            amount=camount,
+                        ))
+                    parent_item.amount = child_total
+                    total += child_total
+                else:
+                    qty = int(node.get("qty") or 1)
+                    rate = Decimal(str(node.get("rate") or 0))
+                    amount = qty * rate
+                    total += amount
+                    db.session.add(PaymentRequestItem(
+                        request_id=pr.id,
+                        description=desc,
+                        category_id=int(node.get("cat_id", 1)),
+                        quantity=qty,
+                        rate=rate,
+                        amount=amount,
+                    ))
+
+            pr.requested_amount = total
             db.session.commit()
             flash(f"Payment request {pr.reference} submitted successfully.", "success")
             return redirect(url_for("requests.view_request", req_id=pr.id))
@@ -639,7 +691,8 @@ def export_requests():
     headers = [
         "Reference", "Date", "Branch", "Beneficiary Name", "Account Number",
         "Bank", "Bank Code", "Requested (₦)", "Approved (₦)", "Status",
-        "Category", "Description", "Qty", "Rate (₦)", "Upload Status", "Submitted By",
+        "Category", "Parent Item", "Description", "Qty", "Rate (₦)", "Amount (₦)",
+        "Upload Status", "Submitted By",
     ]
     for col, h in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=h)
@@ -649,7 +702,11 @@ def export_requests():
 
     row = 2
     for pr in records:
+        # Collect leaf items only (no double-counting of parent roll-ups)
         for item in pr.items:
+            # Skip parent roll-up rows (items that have children)
+            if item.children:
+                continue
             ws.cell(row=row, column=1, value=pr.reference)
             ws.cell(row=row, column=2, value=str(pr.date))
             ws.cell(row=row, column=3, value=pr.branch.name if pr.branch else "")
@@ -661,11 +718,13 @@ def export_requests():
             ws.cell(row=row, column=9, value=float(pr.approved_amount) if pr.approved_amount else "")
             ws.cell(row=row, column=10, value=pr.status.title())
             ws.cell(row=row, column=11, value=item.category.name if item.category else "")
-            ws.cell(row=row, column=12, value=item.description)
-            ws.cell(row=row, column=13, value=item.quantity)
-            ws.cell(row=row, column=14, value=float(item.rate))
-            ws.cell(row=row, column=15, value=pr.upload_status.replace("_", " ").title())
-            ws.cell(row=row, column=16, value=pr.submitter.name if pr.submitter else "")
+            ws.cell(row=row, column=12, value=item.parent_item.description if item.parent_id else "")
+            ws.cell(row=row, column=13, value=item.description)
+            ws.cell(row=row, column=14, value=item.quantity)
+            ws.cell(row=row, column=15, value=float(item.rate))
+            ws.cell(row=row, column=16, value=float(item.amount))
+            ws.cell(row=row, column=17, value=pr.upload_status.replace("_", " ").title())
+            ws.cell(row=row, column=18, value=pr.submitter.name if pr.submitter else "")
             row += 1
 
     for col in ws.columns:

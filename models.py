@@ -75,6 +75,7 @@ class PaymentRequest(db.Model):
 
     items = db.relationship(
         "PaymentRequestItem",
+        foreign_keys="[PaymentRequestItem.request_id]",
         backref="request",
         lazy="subquery",
         cascade="all, delete-orphan",
@@ -134,6 +135,11 @@ class PaymentRequestItem(db.Model):
         db.ForeignKey("hop_payment_requests.id", ondelete="CASCADE"),
         nullable=False,
     )
+    parent_id = db.Column(
+        db.Integer,
+        db.ForeignKey("hop_payment_request_items.id"),
+        nullable=True,
+    )
     description = db.Column(db.String(500), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("hop_categories.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
@@ -141,3 +147,11 @@ class PaymentRequestItem(db.Model):
     amount = db.Column(db.Numeric(14, 2), nullable=False)
 
     category = db.relationship("Category", lazy="joined")
+    # Self-referential: one parent item → many sub-items
+    children = db.relationship(
+        "PaymentRequestItem",
+        foreign_keys="[PaymentRequestItem.parent_id]",
+        backref=db.backref("parent_item", remote_side="[PaymentRequestItem.id]"),
+        lazy="select",
+        cascade="all, delete-orphan",
+    )

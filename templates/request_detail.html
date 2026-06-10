@@ -235,10 +235,18 @@
         </tr>
       </thead>
       <tbody>
-        {% for item in pr.items %}
+        {% set top_items = pr.items | selectattr('parent_id', 'none') | list %}
+        {% for item in top_items %}
         <tr>
           <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
-          <td style="font-weight:500;">{{ item.description }}</td>
+          <td style="font-weight:500;">
+            {{ item.description }}
+            {% if item.children %}
+              <span class="badge badge-secondary" style="font-size:10px;margin-left:4px;vertical-align:middle;">
+                {{ item.children|length }} sub-item{{ 's' if item.children|length != 1 else '' }}
+              </span>
+            {% endif %}
+          </td>
           <td>{{ item.category.name if item.category else '—' }}</td>
           <td>
             {% if item.category %}
@@ -249,10 +257,31 @@
               {% endif %}
             {% endif %}
           </td>
-          <td style="text-align:center;">{{ item.quantity }}</td>
-          <td style="text-align:right;" class="amount">{{ format_naira(item.rate) }}</td>
+          <td style="text-align:center;">{{ item.quantity if not item.children else '—' }}</td>
+          <td style="text-align:right;" class="amount">{{ format_naira(item.rate) if not item.children else '—' }}</td>
           <td style="text-align:right;" class="amount amount-naira">{{ format_naira(item.amount) }}</td>
         </tr>
+        {% for sub in item.children %}
+        <tr style="background:var(--bg);">
+          <td></td>
+          <td style="padding-left:26px;border-left:3px solid var(--primary);font-size:13px;color:var(--muted);">
+            ↳ {{ sub.description }}
+          </td>
+          <td style="font-size:12px;">{{ sub.category.name if sub.category else '—' }}</td>
+          <td style="font-size:12px;">
+            {% if sub.category %}
+              {% if sub.category.cost_type == 'direct_cost' %}
+                <span class="badge badge-info" style="font-size:10px;">Direct</span>
+              {% else %}
+                <span class="badge badge-secondary" style="font-size:10px;">Overhead</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td style="text-align:center;font-size:13px;">{{ sub.quantity }}</td>
+          <td style="text-align:right;font-size:13px;" class="amount">{{ format_naira(sub.rate) }}</td>
+          <td style="text-align:right;font-size:13px;" class="amount amount-naira">{{ format_naira(sub.amount) }}</td>
+        </tr>
+        {% endfor %}
         {% endfor %}
       </tbody>
       <tfoot>

@@ -19,7 +19,7 @@
 .items-table input, .items-table select {
   width: 100%; padding: 7px 9px;
   border: 1.5px solid var(--border); border-radius: 6px;
-  font-size: 13px; outline: none; background: #fff;
+  font-size: 13px; outline: none; background: var(--card); color: var(--text);
   transition: border-color 0.15s;
 }
 .items-table input:focus, .items-table select:focus { border-color: var(--primary); }
@@ -30,6 +30,21 @@
   border-radius: 4px; transition: background 0.15s;
 }
 .remove-row-btn:hover { background: var(--danger-light); }
+.sub-btn {
+  font-size: 11px; padding: 3px 7px; white-space: nowrap;
+  color: var(--primary); border-color: var(--primary);
+}
+.sub-item-row td:first-child {
+  border-left: 3px solid var(--primary);
+  background: var(--bg);
+}
+.sub-item-row td { background: var(--bg); font-size: 13px; }
+.sub-item-row .item-desc-input { padding-left: 20px; }
+.locked-cell { color: var(--muted); text-align: center; font-size: 13px; padding: 0 8px; }
+.amount-display-cell {
+  text-align: right; font-weight: 700; color: var(--primary-dark);
+  font-size: 13px; white-space: nowrap; padding-right: 8px;
+}
 .total-bar {
   display: flex; justify-content: flex-end; align-items: center;
   gap: 16px; padding: 14px 16px;
@@ -42,6 +57,7 @@
 
 {% block content %}
 <form method="POST" action="{{ url_for('requests.new_request') }}" id="paymentForm">
+  <input type="hidden" name="items_json" id="items_json">
 
   <!-- ── Header Details ──────────────────────────────────────────────────── -->
   <div class="card mb-3">
@@ -106,20 +122,21 @@
         <table class="items-table">
           <thead>
             <tr>
-              <th style="width:32%">Description</th>
-              <th style="width:22%">Category</th>
-              <th style="width:9%">Qty</th>
-              <th style="width:15%">Rate (₦)</th>
-              <th style="width:15%">Amount (₦)</th>
-              <th style="width:7%"></th>
+              <th style="width:30%">Description</th>
+              <th style="width:20%">Category</th>
+              <th style="width:8%">Qty</th>
+              <th style="width:13%">Rate (₦)</th>
+              <th style="width:12%">Amount (₦)</th>
+              <th style="width:9%"></th>
+              <th style="width:8%"></th>
             </tr>
           </thead>
           <tbody id="itemsBody">
-            <!-- First row (cannot be removed) -->
-            <tr class="item-row">
-              <td><input type="text" name="description[]" placeholder="Description of item/service" required /></td>
+            <!-- First item row (index 0, not removable) -->
+            <tr class="item-row" data-item-idx="0">
+              <td><input type="text" class="item-desc" placeholder="Description of item/service" /></td>
               <td>
-                <select name="category_id[]" required>
+                <select class="item-cat">
                   <optgroup label="— Direct Costs —">
                     {% for c in categories if c.cost_type == 'direct_cost' %}
                     <option value="{{ c.id }}">{{ c.name }}</option>
@@ -132,9 +149,16 @@
                   </optgroup>
                 </select>
               </td>
-              <td><input type="number" name="quantity[]" value="1" min="1" step="1" class="qty-input" oninput="calcRow(this)" /></td>
-              <td><input type="number" name="rate[]" value="" min="0" step="0.01" placeholder="0.00" class="rate-input" oninput="calcRow(this)" /></td>
-              <td><input type="number" name="amount_display[]" readonly value="0.00" class="amount-display" style="background:#f5f8fb;color:var(--primary-dark);font-weight:700;" /></td>
+              <td class="qty-cell">
+                <input type="number" class="item-qty qty-input" value="1" min="1" step="1" oninput="calcRow(this, 0)" />
+                <span class="locked-cell qty-locked" style="display:none;">—</span>
+              </td>
+              <td class="rate-cell">
+                <input type="number" class="item-rate rate-input" value="" min="0" step="0.01" placeholder="0.00" oninput="calcRow(this, 0)" />
+                <span class="locked-cell rate-locked" style="display:none;">—</span>
+              </td>
+              <td class="amount-display-cell"><span class="amount-display">₦0.00</span></td>
+              <td><button type="button" class="btn sub-btn" onclick="addSubItem(0)" title="Add sub-item">⊕ Sub</button></td>
               <td><span style="color:var(--muted);font-size:12px;padding:0 6px;">—</span></td>
             </tr>
           </tbody>
@@ -158,8 +182,6 @@
 
 {% block extra_js %}
 <script>
-  // date field value is set server-side via Jinja2
-
   // Category options HTML (for dynamic rows)
   const catOptionsHTML = `
     <optgroup label="— Direct Costs —">
@@ -173,42 +195,198 @@
       {% endfor %}
     </optgroup>`;
 
+  let rowCounter = 1; // global counter; row 0 is the first hard-coded row
+
+  // ── Add a top-level parent item row ────────────────────────────────────
   function addRow() {
+    const idx = rowCounter++;
     const tbody = document.getElementById('itemsBody');
     const tr = document.createElement('tr');
     tr.className = 'item-row';
+    tr.dataset.itemIdx = idx;
     tr.innerHTML = `
-      <td><input type="text" name="description[]" placeholder="Description of item/service" required /></td>
-      <td><select name="category_id[]" required>${catOptionsHTML}</select></td>
-      <td><input type="number" name="quantity[]" value="1" min="1" step="1" class="qty-input" oninput="calcRow(this)" /></td>
-      <td><input type="number" name="rate[]" value="" min="0" step="0.01" placeholder="0.00" class="rate-input" oninput="calcRow(this)" /></td>
-      <td><input type="number" name="amount_display[]" readonly value="0.00" class="amount-display" style="background:#f5f8fb;color:var(--primary-dark);font-weight:700;" /></td>
-      <td><button type="button" class="remove-row-btn" onclick="removeRow(this)" title="Remove">✕</button></td>`;
+      <td><input type="text" class="item-desc" placeholder="Description of item/service" /></td>
+      <td><select class="item-cat">${catOptionsHTML}</select></td>
+      <td class="qty-cell">
+        <input type="number" class="item-qty qty-input" value="1" min="1" step="1" oninput="calcRow(this, ${idx})" />
+        <span class="locked-cell qty-locked" style="display:none;">—</span>
+      </td>
+      <td class="rate-cell">
+        <input type="number" class="item-rate rate-input" min="0" step="0.01" placeholder="0.00" oninput="calcRow(this, ${idx})" />
+        <span class="locked-cell rate-locked" style="display:none;">—</span>
+      </td>
+      <td class="amount-display-cell"><span class="amount-display">₦0.00</span></td>
+      <td><button type="button" class="btn sub-btn" onclick="addSubItem(${idx})" title="Add sub-item">⊕ Sub</button></td>
+      <td><button type="button" class="remove-row-btn" onclick="removeItem(this, ${idx})" title="Remove">✕</button></td>`;
     tbody.appendChild(tr);
   }
 
-  function removeRow(btn) {
+  // ── Add a sub-item row under a parent ──────────────────────────────────
+  function addSubItem(parentIdx) {
+    const subIdx = rowCounter++;
+    const tbody = document.getElementById('itemsBody');
+
+    // Find parent row and lock its qty/rate
+    lockParent(parentIdx, true);
+
+    // Find the last sub-item row for this parent (or the parent row itself) to insert after
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let insertAfter = null;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i].dataset.parentIdx == parentIdx) { insertAfter = rows[i]; break; }
+    }
+    if (!insertAfter) {
+      // No existing sub-items, insert after parent row
+      insertAfter = tbody.querySelector(`tr[data-item-idx="${parentIdx}"]`);
+    }
+
+    const tr = document.createElement('tr');
+    tr.className = 'sub-item-row';
+    tr.dataset.parentIdx = parentIdx;
+    tr.dataset.subIdx = subIdx;
+    tr.innerHTML = `
+      <td class="item-desc-indent">
+        <input type="text" class="item-desc" placeholder="↳ Sub-item description" style="padding-left:20px;" />
+      </td>
+      <td><select class="item-cat">${catOptionsHTML}</select></td>
+      <td><input type="number" class="item-qty qty-input" value="1" min="1" step="1" oninput="calcSubRow(this, ${parentIdx})" /></td>
+      <td><input type="number" class="item-rate rate-input" min="0" step="0.01" placeholder="0.00" oninput="calcSubRow(this, ${parentIdx})" /></td>
+      <td class="amount-display-cell"><span class="amount-display">₦0.00</span></td>
+      <td></td>
+      <td><button type="button" class="remove-row-btn" onclick="removeSubItem(this, ${parentIdx})" title="Remove sub-item">✕</button></td>`;
+
+    if (insertAfter.nextSibling) {
+      tbody.insertBefore(tr, insertAfter.nextSibling);
+    } else {
+      tbody.appendChild(tr);
+    }
+    tr.querySelector('.item-desc').focus();
+  }
+
+  // ── Lock/unlock parent row's qty+rate when sub-items are present ───────
+  function lockParent(parentIdx, locked) {
+    const parentRow = document.querySelector(`tr[data-item-idx="${parentIdx}"]`);
+    if (!parentRow) return;
+    parentRow.querySelector('.item-qty').style.display    = locked ? 'none' : '';
+    parentRow.querySelector('.qty-locked').style.display  = locked ? '' : 'none';
+    parentRow.querySelector('.item-rate').style.display   = locked ? 'none' : '';
+    parentRow.querySelector('.rate-locked').style.display = locked ? '' : 'none';
+    if (!locked) {
+      // Reset qty/rate and recalc
+      parentRow.querySelector('.item-qty').value = '1';
+      parentRow.querySelector('.item-rate').value = '';
+      parentRow.querySelector('.amount-display').textContent = '₦0.00';
+      updateTotal();
+    }
+  }
+
+  // ── Remove a top-level parent item (and all its sub-items) ─────────────
+  function removeItem(btn, parentIdx) {
+    // Remove all sub-items first
+    document.querySelectorAll(`tr[data-parent-idx="${parentIdx}"]`).forEach(r => r.remove());
     btn.closest('tr').remove();
     updateTotal();
   }
 
-  function calcRow(input) {
+  // ── Remove a sub-item row ──────────────────────────────────────────────
+  function removeSubItem(btn, parentIdx) {
+    btn.closest('tr').remove();
+    // If no more sub-items for this parent, unlock the parent row
+    const remaining = document.querySelectorAll(`tr[data-parent-idx="${parentIdx}"]`);
+    if (remaining.length === 0) {
+      lockParent(parentIdx, false);
+    } else {
+      rollupParent(parentIdx);
+    }
+  }
+
+  // ── Recalculate amount for a standalone parent row ─────────────────────
+  function calcRow(input, parentIdx) {
     const row = input.closest('tr');
-    const qty  = parseFloat(row.querySelector('.qty-input').value)  || 0;
-    const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+    const qty  = parseFloat(row.querySelector('.item-qty').value)  || 0;
+    const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
     const amt  = qty * rate;
-    row.querySelector('.amount-display').value = amt.toFixed(2);
+    row.querySelector('.amount-display').textContent =
+      '₦' + amt.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     updateTotal();
   }
 
+  // ── Recalculate amount for a sub-item row, then roll up to parent ───────
+  function calcSubRow(input, parentIdx) {
+    const row = input.closest('tr');
+    const qty  = parseFloat(row.querySelector('.item-qty').value)  || 0;
+    const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+    const amt  = qty * rate;
+    row.querySelector('.amount-display').textContent =
+      '₦' + amt.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    rollupParent(parentIdx);
+  }
+
+  // ── Sum sub-items and update parent's amount display ───────────────────
+  function rollupParent(parentIdx) {
+    let total = 0;
+    document.querySelectorAll(`tr[data-parent-idx="${parentIdx}"] .amount-display`).forEach(el => {
+      const raw = el.textContent.replace(/[₦,]/g, '');
+      total += parseFloat(raw) || 0;
+    });
+    const parentRow = document.querySelector(`tr[data-item-idx="${parentIdx}"]`);
+    if (parentRow) {
+      parentRow.querySelector('.amount-display').textContent =
+        '₦' + total.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    updateTotal();
+  }
+
+  // ── Sum all top-level item amounts for the grand total ─────────────────
   function updateTotal() {
     let total = 0;
-    document.querySelectorAll('.amount-display').forEach(el => {
-      total += parseFloat(el.value) || 0;
+    document.querySelectorAll('.item-row .amount-display').forEach(el => {
+      const raw = el.textContent.replace(/[₦,]/g, '');
+      total += parseFloat(raw) || 0;
     });
     document.getElementById('grandTotal').textContent =
       '₦' + total.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+
+  // ── Serialise the item tree to JSON before form submit ─────────────────
+  function buildItemsJson() {
+    const result = [];
+    const parentRows = document.querySelectorAll('#itemsBody tr.item-row');
+    parentRows.forEach(parentRow => {
+      const parentIdx = parentRow.dataset.itemIdx;
+      const desc    = parentRow.querySelector('.item-desc').value.trim();
+      const catId   = parentRow.querySelector('.item-cat').value;
+      const subRows = document.querySelectorAll(`#itemsBody tr[data-parent-idx="${parentIdx}"]`);
+
+      const node = { desc, cat_id: catId, children: [] };
+
+      if (subRows.length > 0) {
+        // Parent is a roll-up; qty/rate come from sub-items
+        node.qty  = 1;
+        node.rate = 0;
+        subRows.forEach(subRow => {
+          const sdesc  = subRow.querySelector('.item-desc').value.trim();
+          const scatId = subRow.querySelector('.item-cat').value;
+          const sqty   = subRow.querySelector('.item-qty').value || '1';
+          const srate  = subRow.querySelector('.item-rate').value || '0';
+          if (sdesc) {
+            node.children.push({ desc: sdesc, cat_id: scatId, qty: sqty, rate: srate });
+          }
+        });
+      } else {
+        node.qty  = parentRow.querySelector('.item-qty').value || '1';
+        node.rate = parentRow.querySelector('.item-rate').value || '0';
+      }
+
+      if (desc) result.push(node);
+    });
+    document.getElementById('items_json').value = JSON.stringify(result);
+  }
+
+  // ── Wire form submit ───────────────────────────────────────────────────
+  document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    buildItemsJson();
+  });
 
   // Prevent accidental form submission with Enter in number fields
   document.getElementById('paymentForm').addEventListener('keydown', e => {

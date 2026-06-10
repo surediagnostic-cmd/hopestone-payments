@@ -32,6 +32,11 @@ def reports():
         .all()
     )
 
+    # Leaf-items-only subquery (exclude parent roll-up rows to avoid double-counting)
+    _parent_ids_sq = db.session.query(PaymentRequestItem.parent_id).filter(
+        PaymentRequestItem.parent_id.isnot(None)
+    ).subquery()
+
     cat_data = (
         db.session.query(
             Category.name.label("category"),
@@ -44,6 +49,7 @@ def reports():
         .filter(
             PaymentRequest.status == "approved",
             extract("year", PaymentRequest.created_at) == year_filter,
+            ~PaymentRequestItem.id.in_(_parent_ids_sq),
         )
         .group_by(Category.name, Category.cost_type)
         .order_by(func.sum(PaymentRequestItem.amount).desc())

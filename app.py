@@ -114,6 +114,21 @@ def _run_migrations():
             except Exception:
                 pass
 
+        result = conn.execute(text(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name='hop_payment_request_items' AND column_name='parent_id'"
+        ))
+        if not result.fetchone():
+            try:
+                conn.execute(text(
+                    "ALTER TABLE hop_payment_request_items ADD COLUMN parent_id INTEGER "
+                    "REFERENCES hop_payment_request_items(id)"
+                ))
+                conn.commit()
+                print("[migration] Added parent_id to hop_payment_request_items", flush=True)
+            except Exception:
+                pass
+
 
 def _seed_defaults():
     from models import Branch, Category, User

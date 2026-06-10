@@ -49,6 +49,11 @@ def budget():
     budget_map = {(b.category_id, b.month): float(b.monthly_amount) for b in bq.all()}
 
     # Fetch actual approved spend → map {(category_id, month): float}
+    # Leaf items only — exclude parent roll-up rows to avoid double-counting
+    _parent_ids_sq = db.session.query(PaymentRequestItem.parent_id).filter(
+        PaymentRequestItem.parent_id.isnot(None)
+    ).subquery()
+
     aq = (
         db.session.query(
             PaymentRequestItem.category_id,
@@ -59,6 +64,7 @@ def budget():
         .filter(
             PaymentRequest.status == "approved",
             extract("year", PaymentRequest.created_at) == year,
+            ~PaymentRequestItem.id.in_(_parent_ids_sq),
         )
     )
     if branch_id:
