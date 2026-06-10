@@ -341,6 +341,7 @@ def new_request():
                     parent_item = PaymentRequestItem(
                         request_id=pr.id,
                         description=desc,
+                        note=node.get("note", "").strip() or None,
                         category_id=int(node.get("cat_id", 1)),
                         quantity=1,
                         rate=Decimal("0"),
@@ -362,6 +363,7 @@ def new_request():
                             request_id=pr.id,
                             parent_id=parent_item.id,
                             description=cdesc,
+                            note=child.get("note", "").strip() or None,
                             category_id=int(child.get("cat_id", 1)),
                             quantity=cqty,
                             rate=crate,
@@ -377,6 +379,7 @@ def new_request():
                     db.session.add(PaymentRequestItem(
                         request_id=pr.id,
                         description=desc,
+                        note=node.get("note", "").strip() or None,
                         category_id=int(node.get("cat_id", 1)),
                         quantity=qty,
                         rate=rate,
@@ -691,7 +694,7 @@ def export_requests():
     headers = [
         "Reference", "Date", "Branch", "Beneficiary Name", "Account Number",
         "Bank", "Bank Code", "Requested (₦)", "Approved (₦)", "Status",
-        "Category", "Parent Item", "Description", "Qty", "Rate (₦)", "Amount (₦)",
+        "Category", "Parent Item", "Description", "Note", "Qty", "Rate (₦)", "Amount (₦)",
         "Upload Status", "Submitted By",
     ]
     for col, h in enumerate(headers, 1):
@@ -720,11 +723,12 @@ def export_requests():
             ws.cell(row=row, column=11, value=item.category.name if item.category else "")
             ws.cell(row=row, column=12, value=item.parent_item.description if item.parent_id else "")
             ws.cell(row=row, column=13, value=item.description)
-            ws.cell(row=row, column=14, value=item.quantity)
-            ws.cell(row=row, column=15, value=float(item.rate))
-            ws.cell(row=row, column=16, value=float(item.amount))
-            ws.cell(row=row, column=17, value=pr.upload_status.replace("_", " ").title())
-            ws.cell(row=row, column=18, value=pr.submitter.name if pr.submitter else "")
+            ws.cell(row=row, column=14, value=item.note or "")
+            ws.cell(row=row, column=15, value=item.quantity)
+            ws.cell(row=row, column=16, value=float(item.rate))
+            ws.cell(row=row, column=17, value=float(item.amount))
+            ws.cell(row=row, column=18, value=pr.upload_status.replace("_", " ").title())
+            ws.cell(row=row, column=19, value=pr.submitter.name if pr.submitter else "")
             row += 1
 
     for col in ws.columns:

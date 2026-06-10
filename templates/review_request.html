@@ -107,6 +107,9 @@
                     {{ item.children|length }} sub-item{{ 's' if item.children|length != 1 else '' }}
                   </span>
                 {% endif %}
+                {% if item.note %}
+                  <div style="font-size:11px;color:var(--muted);font-weight:400;margin-top:3px;font-style:italic;">📝 {{ item.note }}</div>
+                {% endif %}
               </td>
               <td>
                 <div style="font-size:13px;">{{ item.category.name if item.category else '—' }}</div>
@@ -125,6 +128,9 @@
               <td></td>
               <td style="padding-left:26px;border-left:3px solid var(--primary);font-size:13px;color:var(--muted);">
                 ↳ {{ sub.description }}
+                {% if sub.note %}
+                  <div style="font-size:11px;font-style:italic;margin-top:2px;">📝 {{ sub.note }}</div>
+                {% endif %}
               </td>
               <td>
                 <div style="font-size:12px;">{{ sub.category.name if sub.category else '—' }}</div>

@@ -141,6 +141,7 @@ class PaymentRequestItem(db.Model):
         nullable=True,
     )
     description = db.Column(db.String(500), nullable=False)
+    note        = db.Column(db.String(1000), nullable=True)
     category_id = db.Column(db.Integer, db.ForeignKey("hop_categories.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     rate = db.Column(db.Numeric(14, 2), nullable=False)

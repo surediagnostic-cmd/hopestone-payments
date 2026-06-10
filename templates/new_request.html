@@ -24,6 +24,13 @@
 }
 .items-table input:focus, .items-table select:focus { border-color: var(--primary); }
 .items-table input[type=number] { text-align: right; }
+.item-note {
+  margin-top: 4px; font-size: 11px !important; padding: 4px 8px !important;
+  color: var(--muted) !important; border-color: transparent !important;
+  background: var(--bg) !important;
+}
+.item-note:focus { border-color: var(--primary) !important; background: var(--card) !important; }
+.item-note::placeholder { color: var(--muted); opacity: 0.7; }
 .remove-row-btn {
   background: none; border: none; cursor: pointer;
   color: var(--danger); font-size: 16px; padding: 4px 6px;
@@ -134,7 +141,10 @@
           <tbody id="itemsBody">
             <!-- First item row (index 0, not removable) -->
             <tr class="item-row" data-item-idx="0">
-              <td><input type="text" class="item-desc" placeholder="Description of item/service" /></td>
+              <td>
+                <input type="text" class="item-desc" placeholder="Description of item/service" />
+                <input type="text" class="item-note" placeholder="📝 Note (optional)" />
+              </td>
               <td>
                 <select class="item-cat">
                   <optgroup label="— Direct Costs —">
@@ -205,7 +215,10 @@
     tr.className = 'item-row';
     tr.dataset.itemIdx = idx;
     tr.innerHTML = `
-      <td><input type="text" class="item-desc" placeholder="Description of item/service" /></td>
+      <td>
+        <input type="text" class="item-desc" placeholder="Description of item/service" />
+        <input type="text" class="item-note" placeholder="📝 Note (optional)" />
+      </td>
       <td><select class="item-cat">${catOptionsHTML}</select></td>
       <td class="qty-cell">
         <input type="number" class="item-qty qty-input" value="1" min="1" step="1" oninput="calcRow(this, ${idx})" />
@@ -247,6 +260,7 @@
     tr.innerHTML = `
       <td class="item-desc-indent">
         <input type="text" class="item-desc" placeholder="↳ Sub-item description" style="padding-left:20px;" />
+        <input type="text" class="item-note" placeholder="📝 Note (optional)" style="padding-left:20px;" />
       </td>
       <td><select class="item-cat">${catOptionsHTML}</select></td>
       <td><input type="number" class="item-qty qty-input" value="1" min="1" step="1" oninput="calcSubRow(this, ${parentIdx})" /></td>
@@ -356,9 +370,10 @@
       const parentIdx = parentRow.dataset.itemIdx;
       const desc    = parentRow.querySelector('.item-desc').value.trim();
       const catId   = parentRow.querySelector('.item-cat').value;
+      const note    = (parentRow.querySelector('.item-note')?.value || '').trim();
       const subRows = document.querySelectorAll(`#itemsBody tr[data-parent-idx="${parentIdx}"]`);
 
-      const node = { desc, cat_id: catId, children: [] };
+      const node = { desc, cat_id: catId, note, children: [] };
 
       if (subRows.length > 0) {
         // Parent is a roll-up; qty/rate come from sub-items
@@ -369,8 +384,9 @@
           const scatId = subRow.querySelector('.item-cat').value;
           const sqty   = subRow.querySelector('.item-qty').value || '1';
           const srate  = subRow.querySelector('.item-rate').value || '0';
+          const snote  = (subRow.querySelector('.item-note')?.value || '').trim();
           if (sdesc) {
-            node.children.push({ desc: sdesc, cat_id: scatId, qty: sqty, rate: srate });
+            node.children.push({ desc: sdesc, cat_id: scatId, qty: sqty, rate: srate, note: snote });
           }
         });
       } else {
