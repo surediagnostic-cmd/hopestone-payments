@@ -152,7 +152,7 @@ class PaymentRequestItem(db.Model):
     children = db.relationship(
         "PaymentRequestItem",
         foreign_keys="[PaymentRequestItem.parent_id]",
-        backref=db.backref("parent_item", remote_side="[PaymentRequestItem.id]"),
+        backref=db.backref("parent_item", remote_side="PaymentRequestItem.id"),
         lazy="select",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge",
     )

@@ -19,8 +19,10 @@ requests_bp = Blueprint("requests", __name__)
 
 def _eager_pr():
     return PaymentRequest.query.options(
-        subqueryload(PaymentRequest.items).joinedload(PaymentRequestItem.category),
-        subqueryload(PaymentRequest.items).subqueryload(PaymentRequestItem.children).joinedload(PaymentRequestItem.category),
+        subqueryload(PaymentRequest.items).options(
+            joinedload(PaymentRequestItem.category),
+            subqueryload(PaymentRequestItem.children).joinedload(PaymentRequestItem.category),
+        ),
         joinedload(PaymentRequest.branch),
         joinedload(PaymentRequest.submitter),
     )
