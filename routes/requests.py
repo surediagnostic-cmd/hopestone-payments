@@ -427,6 +427,159 @@ def new_request():
                            today=date.today().isoformat())
 
 
+# ── Edit Request ─────────────────────────────────────────────────────────────
+
+@requests_bp.route("/requests/<int:req_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_request(req_id):
+    pr = _eager_pr().filter_by(id=req_id).first_or_404()
+
+    if current_user.is_mds or pr.submitted_by_id != current_user.id:
+        flash("Access denied.", "danger")
+        return redirect(url_for("requests.view_request", req_id=req_id))
+    if pr.status != "pending":
+        flash("Only pending requests can be edited.", "warning")
+        return redirect(url_for("requests.view_request", req_id=req_id))
+
+    branches = [b for b in current_user.branches if b.is_active]
+    categories = Category.query.filter_by(is_active=True).order_by(Category.cost_type, Category.name).all()
+
+    if request.method == "POST":
+        try:
+            payment_date = datetime.strptime(request.form["date"], "%Y-%m-%d").date()
+            branch_id = int(request.form["branch_id"])
+            beneficiary_name = request.form["beneficiary_name"].strip()
+            beneficiary_account = request.form["beneficiary_account"].strip()
+            beneficiary_bank = request.form["beneficiary_bank"].strip()
+            bank_code = request.form.get("bank_code", "").strip() or None
+
+            branch_ids = [b.id for b in current_user.branches]
+            if branch_id not in branch_ids:
+                flash("Invalid branch selection.", "danger")
+                return redirect(url_for("requests.edit_request", req_id=req_id))
+
+            items_json_str = request.form.get("items_json", "[]")
+            try:
+                tree = json.loads(items_json_str)
+            except (json.JSONDecodeError, ValueError):
+                tree = []
+
+            if not tree or not any(node.get("desc", "").strip() for node in tree):
+                flash("At least one line item is required.", "danger")
+                return redirect(url_for("requests.edit_request", req_id=req_id))
+
+            # Delete existing items and rebuild
+            PaymentRequestItem.query.filter_by(request_id=pr.id).delete()
+            db.session.flush()
+
+            total = Decimal("0")
+            for node in tree:
+                desc = node.get("desc", "").strip()
+                if not desc:
+                    continue
+                children_data = node.get("children", [])
+
+                if children_data:
+                    parent_item = PaymentRequestItem(
+                        request_id=pr.id,
+                        description=desc,
+                        note=node.get("note", "").strip() or None,
+                        category_id=int(node.get("cat_id", 1)),
+                        quantity=1,
+                        rate=Decimal("0"),
+                        amount=Decimal("0"),
+                    )
+                    db.session.add(parent_item)
+                    db.session.flush()
+
+                    child_total = Decimal("0")
+                    for child in children_data:
+                        cdesc = child.get("desc", "").strip()
+                        if not cdesc:
+                            continue
+                        cqty = int(child.get("qty") or 1)
+                        crate = Decimal(str(child.get("rate") or 0))
+                        camount = cqty * crate
+                        child_total += camount
+                        db.session.add(PaymentRequestItem(
+                            request_id=pr.id,
+                            parent_id=parent_item.id,
+                            description=cdesc,
+                            note=child.get("note", "").strip() or None,
+                            category_id=int(child.get("cat_id", 1)),
+                            quantity=cqty,
+                            rate=crate,
+                            amount=camount,
+                        ))
+                    parent_item.amount = child_total
+                    total += child_total
+                else:
+                    qty = int(node.get("qty") or 1)
+                    rate = Decimal(str(node.get("rate") or 0))
+                    amount = qty * rate
+                    total += amount
+                    db.session.add(PaymentRequestItem(
+                        request_id=pr.id,
+                        description=desc,
+                        note=node.get("note", "").strip() or None,
+                        category_id=int(node.get("cat_id", 1)),
+                        quantity=qty,
+                        rate=rate,
+                        amount=amount,
+                    ))
+
+            pr.date = payment_date
+            pr.branch_id = branch_id
+            pr.beneficiary_name = beneficiary_name
+            pr.beneficiary_account = beneficiary_account
+            pr.beneficiary_bank = beneficiary_bank
+            pr.bank_code = bank_code
+            pr.requested_amount = total
+            db.session.commit()
+            flash(f"{pr.reference} updated successfully.", "success")
+            return redirect(url_for("requests.view_request", req_id=pr.id))
+
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            flash(f"Error updating request: {str(e)}", "danger")
+
+    # Serialize existing items for JS pre-population
+    existing_items = []
+    for item in sorted(pr.items, key=lambda i: i.id):
+        if item.parent_id is not None:
+            continue
+        node = {
+            "desc": item.description,
+            "cat_id": item.category_id,
+            "note": item.note or "",
+            "qty": item.quantity,
+            "rate": float(item.rate),
+            "children": [],
+        }
+        for child in sorted(item.children, key=lambda c: c.id):
+            node["children"].append({
+                "desc": child.description,
+                "cat_id": child.category_id,
+                "note": child.note or "",
+                "qty": child.quantity,
+                "rate": float(child.rate),
+            })
+        existing_items.append(node)
+
+    return render_template(
+        "edit_request.html",
+        pr=pr,
+        branches=branches,
+        categories=categories,
+        existing_items_json=json.dumps(existing_items),
+        today=date.today().isoformat(),
+        format_naira=format_naira,
+    )
+
+
 # ── List Requests ────────────────────────────────────────────────────────────
 
 @requests_bp.route("/requests/", strict_slashes=False)

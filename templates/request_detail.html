@@ -4,6 +4,9 @@
 
 {% block topbar_actions %}
   <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline btn-sm">← All Payments</a>
+  {% if not current_user.is_mds and pr.status == 'pending' and pr.submitted_by_id == current_user.id %}
+    <a href="{{ url_for('requests.edit_request', req_id=pr.id) }}" class="btn btn-outline btn-sm">✏ Edit</a>
+  {% endif %}
   {% if current_user.is_mds and pr.status == 'pending' %}
     <a href="{{ url_for('approvals.review', req_id=pr.id) }}" class="btn btn-primary btn-sm">Review & Approve</a>
   {% endif %}

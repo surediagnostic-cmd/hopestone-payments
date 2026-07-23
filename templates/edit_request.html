@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ pr.reference }} — Hopestone Payment Tracker{% endblock %}
+{% block page_title %}Edit {{ pr.reference }}{% endblock %}
+
+{% block extra_style %}
+.section-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--primary); margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--primary-light);
+}
+.items-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.items-table th {
+  background: #f0f4f8; color: var(--muted);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 9px 10px; text-align: left; border-bottom: 2px solid var(--border);
+}
+.items-table td { padding: 6px 6px; vertical-align: middle; border-bottom: 1px solid var(--border); }
+.items-table tr:last-child td { border-bottom: none; }
+.items-table input, .items-table select {
+  width: 100%; padding: 7px 9px;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 13px; outline: none; background: var(--card); color: var(--text);
+  transition: border-color 0.15s;
+}
+.items-table input:focus, .items-table select:focus { border-color: var(--primary); }
+.items-table input[type=number] { text-align: right; }
+.item-note {
+  margin-top: 4px; font-size: 11px !important; padding: 4px 8px !important;
+  color: var(--muted) !important; border-color: transparent !important;
+  background: var(--bg) !important;
+}
+.item-note:focus { border-color: var(--primary) !important; background: var(--card) !important; }
+.item-note::placeholder { color: var(--muted); opacity: 0.7; }
+.remove-row-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--danger); font-size: 16px; padding: 4px 6px;
+  border-radius: 4px; transition: background 0.15s;
+}
+.remove-row-btn:hover { background: var(--danger-light); }
+.sub-btn {
+  font-size: 11px; padding: 3px 7px; white-space: nowrap;
+  color: var(--primary); border-color: var(--primary);
+}
+.sub-item-row td:first-child { border-left: 3px solid var(--primary); background: var(--bg); }
+.sub-item-row td { background: var(--bg); font-size: 13px; }
+.locked-cell { color: var(--muted); text-align: center; font-size: 13px; padding: 0 8px; }
+.amount-display-cell {
+  text-align: right; font-weight: 700; color: var(--primary-dark);
+  font-size: 13px; white-space: nowrap; padding-right: 8px;
+}
+.total-bar {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 16px; padding: 14px 16px;
+  background: var(--primary-light); border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+.total-bar .total-label { font-size: 13px; font-weight: 600; color: var(--primary-dark); }
+.total-bar .total-value { font-size: 20px; font-weight: 800; color: var(--primary-dark); }
+{% endblock %}
+
+{% block content %}
+<div style="background:var(--warning-light);border:1px solid var(--warning);border-radius:var(--radius);padding:10px 16px;margin-bottom:20px;font-size:13px;color:var(--text);">
+  ⚠ You are editing <strong>{{ pr.reference }}</strong>. Changes will replace the existing line items. This request has not yet been reviewed by the MD.
+</div>
+
+<form method="POST" action="{{ url_for('requests.edit_request', req_id=pr.id) }}" id="paymentForm">
+  <input type="hidden" name="items_json" id="items_json">
+
+  <!-- ── Header Details ──────────────────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="section-title">Payment Details</div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label class="form-label">Date <span class="required">*</span></label>
+          <input type="date" name="date" class="form-control" required
+                 value="{{ pr.date.isoformat() }}" max="{{ today }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Branch <span class="required">*</span></label>
+          <select name="branch_id" class="form-control" required>
+            {% for b in branches %}
+            <option value="{{ b.id }}" {% if b.id == pr.branch_id %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group"><!-- spacer --></div>
+      </div>
+
+      <div class="section-title mt-2">Beneficiary Information</div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label class="form-label">Beneficiary Name <span class="required">*</span></label>
+          <input type="text" name="beneficiary_name" class="form-control"
+                 value="{{ pr.beneficiary_name }}" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Number <span class="required">*</span></label>
+          <input type="text" name="beneficiary_account" class="form-control"
+                 value="{{ pr.beneficiary_account }}" maxlength="20" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bank Name <span class="required">*</span></label>
+          <input type="text" name="beneficiary_bank" class="form-control"
+                 value="{{ pr.beneficiary_bank }}" required />
+        </div>
+      </div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label class="form-label">Bank Code <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+          <input type="text" name="bank_code" class="form-control"
+                 value="{{ pr.bank_code or '' }}" maxlength="10" />
+          <div class="form-hint">Required for some bank bulk uploads</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Line Items ──────────────────────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-header">
+      <span class="card-header-title">Line Items</span>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addRow()">＋ Add Item</button>
+    </div>
+    <div class="card-body" style="padding-bottom:0;">
+      <div class="table-wrap">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width:30%">Description</th>
+              <th style="width:20%">Category</th>
+              <th style="width:8%">Qty</th>
+              <th style="width:13%">Rate (₦)</th>
+              <th style="width:12%">Amount (₦)</th>
+              <th style="width:9%"></th>
+              <th style="width:8%"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <!-- Populated by JS from existing_items_json -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="total-bar">
+        <span class="total-label">Total Requested:</span>
+        <span class="total-value" id="grandTotal">₦0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Submit ────────────────────────────────────────────────────────── -->
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary btn-lg">Save Changes →</button>
+    <a href="{{ url_for('requests.view_request', req_id=pr.id) }}" class="btn btn-outline btn-lg">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const catOptionsHTML = `
+    <optgroup label="— Direct Costs —">
+      {% for c in categories if c.cost_type == 'direct_cost' %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="— Overhead —">
+      {% for c in categories if c.cost_type == 'overhead' %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </optgroup>`;
+
+  let rowCounter = 0;
+
+  function makeCatSelect(selectedId) {
+    const sel = document.createElement('select');
+    sel.className = 'item-cat';
+    sel.innerHTML = catOptionsHTML;
+    if (selectedId) {
+      const opt = sel.querySelector(`option[value="${selectedId}"]`);
+      if (opt) opt.selected = true;
+    }
+    return sel.outerHTML;
+  }
+
+  function addRow(data) {
+    const idx = rowCounter++;
+    const desc  = data ? data.desc  : '';
+    const note  = data ? data.note  : '';
+    const qty   = data ? data.qty   : 1;
+    const rate  = data ? data.rate  : '';
+    const catId = data ? data.cat_id : null;
+    const tbody = document.getElementById('itemsBody');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    tr.dataset.itemIdx = idx;
+    tr.innerHTML = `
+      <td>
+        <input type="text" class="item-desc" placeholder="Description of item/service" value="${escHtml(desc)}" />
+        <input type="text" class="item-note" placeholder="📝 Note (optional)" value="${escHtml(note)}" />
+      </td>
+      <td>${makeCatSelect(catId)}</td>
+      <td class="qty-cell">
+        <input type="number" class="item-qty qty-input" value="${qty}" min="1" step="1" oninput="calcRow(this, ${idx})" />
+        <span class="locked-cell qty-locked" style="display:none;">—</span>
+      </td>
+      <td class="rate-cell">
+        <input type="number" class="item-rate rate-input" value="${rate}" min="0" step="0.01" placeholder="0.00" oninput="calcRow(this, ${idx})" />
+        <span class="locked-cell rate-locked" style="display:none;">—</span>
+      </td>
+      <td class="amount-display-cell"><span class="amount-display">₦0.00</span></td>
+      <td><button type="button" class="btn sub-btn" onclick="addSubItem(${idx})" title="Add sub-item">⊕ Sub</button></td>
+      <td><button type="button" class="remove-row-btn" onclick="removeItem(this, ${idx})" title="Remove">✕</button></td>`;
+    tbody.appendChild(tr);
+
+    // If this row has children, lock the parent and add sub-rows
+    if (data && data.children && data.children.length > 0) {
+      lockParent(idx, true);
+      data.children.forEach(child => addSubItem(idx, child));
+    }
+
+    calcRow(tr.querySelector('.item-rate'), idx);
+    return idx;
+  }
+
+  function addSubItem(parentIdx, data) {
+    const subIdx = rowCounter++;
+    const tbody = document.getElementById('itemsBody');
+    const desc  = data ? data.desc  : '';
+    const note  = data ? data.note  : '';
+    const qty   = data ? data.qty   : 1;
+    const rate  = data ? data.rate  : '';
+    const catId = data ? data.cat_id : null;
+
+    if (!data) lockParent(parentIdx, true);
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let insertAfter = null;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i].dataset.parentIdx == parentIdx) { insertAfter = rows[i]; break; }
+    }
+    if (!insertAfter) insertAfter = tbody.querySelector(`tr[data-item-idx="${parentIdx}"]`);
+
+    const tr = document.createElement('tr');
+    tr.className = 'sub-item-row';
+    tr.dataset.parentIdx = parentIdx;
+    tr.dataset.subIdx = subIdx;
+    tr.innerHTML = `
+      <td class="item-desc-indent">
+        <input type="text" class="item-desc" placeholder="↳ Sub-item description" style="padding-left:20px;" value="${escHtml(desc)}" />
+        <input type="text" class="item-note" placeholder="📝 Note (optional)" style="padding-left:20px;" value="${escHtml(note)}" />
+      </td>
+      <td>${makeCatSelect(catId)}</td>
+      <td><input type="number" class="item-qty qty-input" value="${qty}" min="1" step="1" oninput="calcSubRow(this, ${parentIdx})" /></td>
+      <td><input type="number" class="item-rate rate-input" value="${rate}" min="0" step="0.01" placeholder="0.00" oninput="calcSubRow(this, ${parentIdx})" /></td>
+      <td class="amount-display-cell"><span class="amount-display">₦0.00</span></td>
+      <td></td>
+      <td><button type="button" class="remove-row-btn" onclick="removeSubItem(this, ${parentIdx})" title="Remove sub-item">✕</button></td>`;
+
+    if (insertAfter.nextSibling) tbody.insertBefore(tr, insertAfter.nextSibling);
+    else tbody.appendChild(tr);
+
+    calcSubRow(tr.querySelector('.item-rate'), parentIdx);
+    if (!data) tr.querySelector('.item-desc').focus();
+  }
+
+  function lockParent(parentIdx, locked) {
+    const parentRow = document.querySelector(`tr[data-item-idx="${parentIdx}"]`);
+    if (!parentRow) return;
+    parentRow.querySelector('.item-qty').style.display    = locked ? 'none' : '';
+    parentRow.querySelector('.qty-locked').style.display  = locked ? '' : 'none';
+    parentRow.querySelector('.item-rate').style.display   = locked ? 'none' : '';
+    parentRow.querySelector('.rate-locked').style.display = locked ? '' : 'none';
+    if (!locked) {
+      parentRow.querySelector('.item-qty').value = '1';
+      parentRow.querySelector('.item-rate').value = '';
+      parentRow.querySelector('.amount-display').textContent = '₦0.00';
+      updateTotal();
+    }
+  }
+
+  function removeItem(btn, parentIdx) {
+    document.querySelectorAll(`tr[data-parent-idx="${parentIdx}"]`).forEach(r => r.remove());
+    btn.closest('tr').remove();
+    updateTotal();
+  }
+
+  function removeSubItem(btn, parentIdx) {
+    btn.closest('tr').remove();
+    const remaining = document.querySelectorAll(`tr[data-parent-idx="${parentIdx}"]`);
+    if (remaining.length === 0) lockParent(parentIdx, false);
+    else rollupParent(parentIdx);
+  }
+
+  function calcRow(input, parentIdx) {
+    const row = input.closest('tr');
+    const qty  = parseFloat(row.querySelector('.item-qty').value)  || 0;
+    const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+    row.querySelector('.amount-display').textContent =
+      '₦' + (qty * rate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    updateTotal();
+  }
+
+  function calcSubRow(input, parentIdx) {
+    const row = input.closest('tr');
+    const qty  = parseFloat(row.querySelector('.item-qty').value)  || 0;
+    const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+    row.querySelector('.amount-display').textContent =
+      '₦' + (qty * rate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    rollupParent(parentIdx);
+  }
+
+  function rollupParent(parentIdx) {
+    let total = 0;
+    document.querySelectorAll(`tr[data-parent-idx="${parentIdx}"] .amount-display`).forEach(el => {
+      total += parseFloat(el.textContent.replace(/[₦,]/g, '')) || 0;
+    });
+    const parentRow = document.querySelector(`tr[data-item-idx="${parentIdx}"]`);
+    if (parentRow) {
+      parentRow.querySelector('.amount-display').textContent =
+        '₦' + total.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    updateTotal();
+  }
+
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-row .amount-display').forEach(el => {
+      total += parseFloat(el.textContent.replace(/[₦,]/g, '')) || 0;
+    });
+    document.getElementById('grandTotal').textContent =
+      '₦' + total.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function buildItemsJson() {
+    const result = [];
+    document.querySelectorAll('#itemsBody tr.item-row').forEach(parentRow => {
+      const parentIdx = parentRow.dataset.itemIdx;
+      const desc    = parentRow.querySelector('.item-desc').value.trim();
+      const catId   = parentRow.querySelector('.item-cat').value;
+      const note    = (parentRow.querySelector('.item-note')?.value || '').trim();
+      const subRows = document.querySelectorAll(`#itemsBody tr[data-parent-idx="${parentIdx}"]`);
+      const node = { desc, cat_id: catId, note, children: [] };
+      if (subRows.length > 0) {
+        node.qty = 1; node.rate = 0;
+        subRows.forEach(subRow => {
+          const sdesc = subRow.querySelector('.item-desc').value.trim();
+          if (sdesc) {
+            node.children.push({
+              desc: sdesc,
+              cat_id: subRow.querySelector('.item-cat').value,
+              qty: subRow.querySelector('.item-qty').value || '1',
+              rate: subRow.querySelector('.item-rate').value || '0',
+              note: (subRow.querySelector('.item-note')?.value || '').trim(),
+            });
+          }
+        });
+      } else {
+        node.qty  = parentRow.querySelector('.item-qty').value || '1';
+        node.rate = parentRow.querySelector('.item-rate').value || '0';
+      }
+      if (desc) result.push(node);
+    });
+    document.getElementById('items_json').value = JSON.stringify(result);
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Initialise from existing items ────────────────────────────────────────
+  const existingItems = {{ existing_items_json | safe }};
+  if (existingItems.length > 0) {
+    existingItems.forEach(item => addRow(item));
+  } else {
+    addRow(null);  // fallback: at least one empty row
+  }
+
+  document.getElementById('paymentForm').addEventListener('submit', function() {
+    buildItemsJson();
+  });
+  document.getElementById('paymentForm').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') e.preventDefault();
+  });
+</script>
+{% endblock %}
